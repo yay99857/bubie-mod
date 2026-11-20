@@ -131,7 +131,9 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
                 .add(Attributes.MAX_HEALTH, 20.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.28)
                 .add(Attributes.FOLLOW_RANGE, 48.0)
-                .add(Attributes.STEP_HEIGHT, 1.0);
+                .add(Attributes.STEP_HEIGHT, 1.0)
+                .add(Attributes.ATTACK_DAMAGE, 2.0) // the Guard; a weapon in the tool slot adds its own damage
+                .add(Attributes.ATTACK_KNOCKBACK, 0.3);
     }
 
     @Override
@@ -405,10 +407,15 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         if (marked != null) return marked;
         BlockPos home = getHome();
         JobType job = getJob();
-        if (home != null && (job == JobType.LUMBERJACK || job == JobType.FARMER || job == JobType.COLLECTOR)) {
+        if (home != null && (job == JobType.LUMBERJACK || job == JobType.FARMER || job == JobType.COLLECTOR || job == JobType.GUARD)) {
             return WorkArea.around(home, BubieConfig.HOME_RADIUS.get(), 3, 12);
         }
         return null;
+    }
+
+    /** Whether this job is locked until a Program Chip is installed (server config). */
+    public boolean jobLocked() {
+        return getJob().advanced() && BubieConfig.ADVANCED_JOBS_NEED_CHIP.get() && chipCount(ChipType.PROGRAM) == 0;
     }
 
     public int maxAreaSide() {

@@ -17,7 +17,10 @@ public class BubieFleeGoal extends AvoidEntityGoal<Monster> {
 
     @Override
     public boolean canUse() {
-        return bubie.getMode() != Mode.STAY && super.canUse();
+        // a working Guard stands its ground (it still runs when it is almost broken)
+        boolean guarding = bubie.getMode() == Mode.WORK && bubie.getJob() == com.bubie.entity.JobType.GUARD
+                && bubie.getHealth() > bubie.getMaxHealth() * 0.25F;
+        return bubie.getMode() != Mode.STAY && !guarding && super.canUse();
     }
 
     @Override

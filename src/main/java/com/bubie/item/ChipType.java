@@ -13,7 +13,9 @@ public enum ChipType {
     /** Raw ores come out smelted, for extra energy. */
     SMELTING,
     /** 40% less energy per chip. */
-    EFFICIENCY;
+    EFFICIENCY,
+    /** Unlocks the advanced jobs (Miner, Builder, Courier, Guard) when the server config asks for it. */
+    PROGRAM;
 
     public String id() {
         return "chip_" + name().toLowerCase();

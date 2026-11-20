@@ -121,7 +121,9 @@ public class Bubie {
         modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
                 .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle)
                 .playToServer(com.bubie.network.DjLinkPayload.TYPE, com.bubie.network.DjLinkPayload.STREAM_CODEC,
-                        com.bubie.network.DjLinkPayload::handle));
+                        com.bubie.network.DjLinkPayload::handle)
+                .playToClient(com.bubie.network.StationBubiesPayload.TYPE, com.bubie.network.StationBubiesPayload.STREAM_CODEC,
+                        com.bubie.network.StationBubiesPayload::handle));
         modBus.addListener(StationChunks::register);
         // the DJ's .mp3 decoder ships inside the jar (Jar-in-Jar); say so in the log, for bug reports
         com.mojang.logging.LogUtils.getLogger().info("Bubie DJ: mp3 decoder {}",

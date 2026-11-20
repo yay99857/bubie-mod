@@ -61,6 +61,7 @@ Um Bubie novo já vem com a energia de um carvão.
 | **Minerador** | Veio: minérios expostos na área (um veio inteiro, bloco a bloco). Túnel: galeria 1×2 no fundo da área com ramificações a cada 4 blocos, pegando todo minério que aparece e pondo tochas. Minérios pela tag `c:ores` (inclui All the Ores) |
 | **Coletor** | Junta todos os itens do chão na área |
 | **Construtor** (com o mod Base Blueprint) | Configure uma Planta de Base (forma, tamanho, material) e clique no Bubie com ela, onde a base deve ficar: ele constrói bloco por bloco, de baixo para cima, pegando os blocos no baú dele. A porta fica virada para você. Sem material, mostra "Esperando material" (com o bloco e quantos faltam) e continua quando o baú recebe mais, então outro Bubie (um Lenhador ou uma Pedreira) pode abastecer o mesmo baú enquanto ele constrói. O menu e o Jade mostram o progresso (blocos feitos / total). Com a Base Blueprint 1.3.0+, o botão **Construir com Bubie** no menu da planta entrega a planta ao seu Bubie mais próximo, para construir onde você está olhando |
+| **Guarda** | Enfrenta os monstros que entram na área (ou em volta da Estação) com a arma do slot de ferramenta e junta o que eles largam. Não foge, não descansa à noite e deixa os creepers em paz (acertar um de perto só faz ele explodir na base) |
 | **Entregador** | Esvazia os baús, funis e saídas de fornalha da área no baú dele (a fornalha fica com o combustível). Se o baú dele é o de um Construtor, leva só o que a planta ainda precisa |
 
 Sem área marcada, o Lenhador, o Fazendeiro e o Coletor trabalham em volta da Estação (raio 8).
@@ -96,6 +97,13 @@ Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja
 - A **Estação** é a casa: carrega o Bubie com FE (de qualquer mod) ou com combustível no slot dela, e guarda 27 pilhas. Com uma casa, ele volta para carregar quando a bateria baixa e para descansar à noite.
 - Opcional (configuração do servidor): a Estação mantém os chunks em volta carregados.
 
+## Chip de programa e progressão
+Com `advancedJobsNeedChip = true` no servidor (o Bubie Pack liga), o Minerador, o Construtor, o Entregador e o Guarda só trabalham
+com um **chip de programa** instalado; até lá mostram "Precisa de um chip de programa". Fora do pack a opção vem desligada.
+
+## Estação
+O menu da Estação lista, ao lado dos slots, os Bubies que moram nela: rosto, nome, tarefa, situação e bateria.
+
 ## Chips (4 slots)
 Velocidade (+50% minerar, +20% andar), Armazenamento (+9 espaços, até 36), Alcance (área maior), Ímã (pega itens a 5 blocos),
 Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips iguais somam.
@@ -103,7 +111,7 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 ## Configuração (`serverconfig/bubie-server.toml`)
 `maxPerPlayer` (3), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
 `areaSize` (32), `scanPerTick`, `restAtNight`, `stationLoadsChunks` (false), `teleportWhenStuck` (true), `homeRadius`,
-`djLinks` (true). No cliente (`config/bubie-client.toml`): `djPlayLinks` (true).
+`djLinks` (true), `advancedJobsNeedChip` (false). No cliente (`config/bubie-client.toml`): `djPlayLinks` (true).
 
 ## Compatibilidade
 Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./gradlew runPackGameTest`, 21 testes).

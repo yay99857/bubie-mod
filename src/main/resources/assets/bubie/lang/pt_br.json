@@ -214,5 +214,15 @@
   "bubie.dj.added": "Link adicionado à playlist.",
   "bubie.dj.bad_link": "Isso não é um link http(s).",
   "bubie.dj.too_many": "A playlist cabe %s links.",
-  "bubie.dj.links_off": "Este servidor só deixa o DJ tocar discos."
+  "bubie.dj.links_off": "Este servidor só deixa o DJ tocar discos.",
+  "item.bubie.chip_program": "Chip de programa",
+  "item.bubie.chip_program.desc": "Libera as tarefas de Minerador, Construtor, Entregador e Guarda, nos servidores que exigem.",
+  "bubie.job.guard": "Guarda",
+  "bubie.job.guard.desc": "Enfrenta os monstros que entram na área dele (deixa os creepers em paz) com a arma do slot de ferramenta e junta o que eles largam. Fica de vigia à noite.",
+  "bubie.status.needs_program": "Precisa de um chip de programa",
+  "bubie.status.needs_program.help": "Neste servidor, o Minerador, o Construtor, o Entregador e o Guarda precisam de um chip de programa. Ponha um num slot de chip.",
+  "bubie.status.guarding": "Lutando contra um monstro!",
+  "bubie.status.on_guard": "De guarda. Nenhum monstro por perto.",
+  "bubie.ui.station.bubies": "Bubies que moram aqui",
+  "bubie.ui.station.none": "Nenhum Bubie mora aqui ainda. Shift + clique nesta Estação com a Prancheta e depois clique num Bubie."
 }

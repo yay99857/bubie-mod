@@ -93,6 +93,7 @@ public class JobRunner {
     // ------------------------------------------------------------------ lifecycle
 
     public void reset() {
+        enemy = null;
         clearCrack();
         unclaim();
         stuckChecks = 0;
@@ -165,6 +166,7 @@ public class JobRunner {
             case COLLECTOR -> new CollectJob(bubie, area);
             case BUILDER -> new BuilderJob(bubie, area);
             case COURIER -> new CourierJob(bubie, area);
+            case GUARD -> new GuardJob(bubie, area);
         };
     }
 
@@ -176,6 +178,10 @@ public class JobRunner {
         if (bubie.getJob() == JobType.BUILDER
                 && (!com.bubie.compat.BlueprintCompat.loaded() || bubie.getBuildPlan().isEmpty())) {
             idle(Status.NO_BLUEPRINT);
+            return;
+        }
+        if (bubie.jobLocked()) {
+            idle(Status.NEEDS_PROGRAM);
             return;
         }
         WorkArea area = bubie.getWorkArea();
@@ -248,7 +254,8 @@ public class JobRunner {
      * going when the config allows it, else stop and show STUCK so the owner can come and help.
      */
     private void watchStuck() {
-        boolean walking = state == State.MOVE || state == State.DEPOSIT || state == State.FETCH;
+        // fighting means standing still a lot: that is not being stuck
+        boolean walking = enemy == null && (state == State.MOVE || state == State.DEPOSIT || state == State.FETCH);
         if (!walking) {
             stuckChecks = 0;
             lastCheckPos = null;
@@ -294,6 +301,15 @@ public class JobRunner {
     // ------------------------------------------------------------------ SEEK
 
     private void seek() {
+        if (job instanceof GuardJob guard) {
+            LivingEntity enemy = guard.findEnemy();
+            if (enemy != null) {
+                this.enemy = enemy;
+                bubie.setStatus(Status.GUARDING);
+                setState(State.MOVE);
+                return;
+            }
+        }
         if (!bubie.hasFreeSlot() && depositableItems()) {
             startDeposit(true);
             return;
@@ -327,7 +343,7 @@ public class JobRunner {
                 }
                 rest(Status.DONE, 200);
             } else {
-                rest(Status.NOTHING_TO_DO, 100);
+                rest(job instanceof GuardJob ? Status.ON_GUARD : Status.NOTHING_TO_DO, job instanceof GuardJob ? 10 : 100);
             }
             return;
         }
@@ -448,7 +464,44 @@ public class JobRunner {
 
     // ------------------------------------------------------------------ MOVE
 
+    // ------------------------------------------------------------------ GUARD
+
+    @Nullable
+    private LivingEntity enemy;
+    private int attackCooldown;
+
+    /** Chase the monster and hit it with the tool-slot weapon; back to watching when it is gone. */
+    private boolean fight() {
+        if (enemy == null) return false;
+        if (!enemy.isAlive() || !(job instanceof GuardJob guard) || !guard.isEnemy(enemy) || stateTicks > 600) {
+            enemy = null;
+            bubie.getNavigation().stop();
+            setState(State.SEEK);
+            return true;
+        }
+        bubie.setStatus(Status.GUARDING);
+        bubie.getLookControl().setLookAt(enemy, 30F, 30F);
+        if (attackCooldown > 0) attackCooldown--;
+        double reach = bubie.getBbWidth() * 2 + enemy.getBbWidth() + 0.8;
+        if (bubie.distanceToSqr(enemy) <= reach * reach) {
+            bubie.getNavigation().stop();
+            if (attackCooldown <= 0) {
+                bubie.swing(InteractionHand.MAIN_HAND);
+                if (bubie.doHurtTarget(enemy)) {
+                    ItemStack weapon = bubie.getTool();
+                    if (weapon.isDamageableItem()) weapon.hurtAndBreak(1, bubie, net.minecraft.world.entity.EquipmentSlot.MAINHAND);
+                }
+                bubie.spendEnergy(5.0);
+                attackCooldown = 12;
+            }
+        } else if (stateTicks % 10 == 1 || bubie.getNavigation().isDone()) {
+            bubie.getNavigation().moveTo(enemy, 1.25);
+        }
+        return true;
+    }
+
     private void move() {
+        if (fight()) return;
         if (itemTarget != null) {
             if (!itemTarget.isAlive()) {
                 itemTarget = null;

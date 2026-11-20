@@ -19,6 +19,7 @@ public final class BubieConfig {
     public static final ModConfigSpec.BooleanValue TELEPORT_WHEN_STUCK;
     public static final ModConfigSpec.IntValue HOME_RADIUS;
     public static final ModConfigSpec.BooleanValue DJ_LINKS;
+    public static final ModConfigSpec.BooleanValue ADVANCED_JOBS_NEED_CHIP;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -49,6 +50,9 @@ public final class BubieConfig {
         DJ_LINKS = b.comment("The DJ may play audio links (.ogg, .mp3). Every player near the Bubie downloads them from that",
                         "address, which sees their IP. Off: discs only. Players can also turn links off for themselves (client config).")
                 .define("djLinks", true);
+        ADVANCED_JOBS_NEED_CHIP = b.comment("The Miner, Builder, Courier and Guard jobs need a Program Chip installed.",
+                        "Off: every job is open from the start. Packs can turn it on to pace progression.")
+                .define("advancedJobsNeedChip", false);
         SPEC = b.build();
     }
 

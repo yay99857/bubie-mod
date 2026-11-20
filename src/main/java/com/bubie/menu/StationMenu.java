@@ -22,6 +22,9 @@ public class StationMenu extends AbstractContainerMenu {
 
     private final ContainerData data;
     private final BlockPos pos;
+    private final Player player;
+    private int ticks;
+    private java.util.List<com.bubie.network.StationBubiesPayload.Entry> sent;
 
     public StationMenu(int id, Inventory inventory, StationBlockEntity station, ContainerData data) {
         this(id, inventory, station.items(), data, station.getBlockPos());
@@ -41,6 +44,7 @@ public class StationMenu extends AbstractContainerMenu {
         super(Bubie.STATION_MENU.get(), id);
         this.data = data;
         this.pos = pos;
+        this.player = inventory.player;
         for (int i = 0; i < STORAGE; i++) addSlot(new SlotItemHandler(items, i, 8 + (i % 9) * 18, 18 + (i / 9) * 18));
         addSlot(new SlotItemHandler(items, FUEL, FUEL_X, FUEL_Y));
         for (int row = 0; row < 3; row++) {
@@ -60,6 +64,24 @@ public class StationMenu extends AbstractContainerMenu {
 
     public boolean charging() {
         return data.get(3) != 0;
+    }
+
+    /** Once a second, the Bubies living at this station go to the screen (only when something changed). */
+    @Override
+    public void broadcastChanges() {
+        super.broadcastChanges();
+        if (!(player instanceof net.minecraft.server.level.ServerPlayer server) || ticks++ % 20 != 0) return;
+        java.util.List<com.bubie.network.StationBubiesPayload.Entry> list = new java.util.ArrayList<>();
+        for (com.bubie.entity.BubieEntity b : server.serverLevel().getEntitiesOfClass(com.bubie.entity.BubieEntity.class,
+                new net.minecraft.world.phys.AABB(pos).inflate(128), b -> pos.equals(b.getHome()))) {
+            if (list.size() >= com.bubie.network.StationBubiesPayload.MAX) break;
+            list.add(new com.bubie.network.StationBubiesPayload.Entry(b.getName().getString(), b.getMode() == com.bubie.entity.Mode.WORK
+                    ? b.getJob().ordinal() : -1 - b.getMode().ordinal(), b.getStatus().ordinal(), b.getFace().ordinal(),
+                    Math.round(b.energyFraction() * 100), b.getLook().pack()));
+        }
+        if (list.equals(sent)) return;
+        sent = list;
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(server, new com.bubie.network.StationBubiesPayload(list));
     }
 
     @Override

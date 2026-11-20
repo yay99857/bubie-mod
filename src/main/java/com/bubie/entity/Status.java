@@ -7,7 +7,8 @@ public enum Status {
     NO_AREA(true), AREA_TOO_BIG(true), NO_CHEST(true), INVENTORY_FULL(true), CHEST_FULL(true), NO_TOOL(true), TOOL_LOW(true),
     NO_ENERGY(true), NEED_FILLER(true), NO_SEEDS(true),
     FETCHING(false), NO_BLUEPRINT(true), NO_MATERIAL(true),
-    CARRYING(false), STUCK(true);
+    CARRYING(false), STUCK(true),
+    NEEDS_PROGRAM(true), GUARDING(false), ON_GUARD(false);
 
     /** Problems the player must fix: the Bubie shows a 404 face and a balloon. */
     public final boolean problem;

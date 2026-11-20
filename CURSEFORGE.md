@@ -19,11 +19,20 @@ Bubie is a cream CRT monitor in a black hoodie, as a helper for Minecraft 1.21.1
 - **Miner:** exposed ore veins, or branch tunnels with torches. Uses the `c:ores` tag, so modded ores count.
 - **Collector:** gathers every item lying in the area.
 - **Builder** (with Base Blueprint): hand it a configured blueprint where the base should go and it builds it block by block, taking the blocks from its chest. Out of blocks, it waits and says which block it needs; another Bubie (a Lumberjack or a Quarry) can keep that chest filled while it builds. With Base Blueprint 1.3.0+, **Build with Bubie** in the blueprint menu sends your nearest Bubie to build where you are looking.
+- **Guard:** fights the monsters that walk into its area with the weapon you give it, picks up their drops and keeps watch at night (creepers are left alone).
 - **Courier:** empties the chests, hoppers and furnace outputs in its area into its own chest. Feeding a Builder, it carries only what the blueprint still needs.
 
 Several Bubies in one area split the work: each one claims the block (or, for lumberjacks, the whole tree) it is on.
 
 ![A quarry with its staircase](https://media.forgecdn.net/attachments/2241/438/07-quarry-png.png)
+
+## 🏠 The Station
+Its menu lists the Bubies that live there, with their face, job, status and battery.
+
+## 🧩 Program Chip (optional progression)
+Servers and packs can turn on `advancedJobsNeedChip`: then the Miner, Builder, Courier and Guard need a Program Chip. Off by default.
+
+Languages: English, Português (Brasil), Español.
 
 ## 🎶 Bubie the DJ
 Any Bubie can play music for everyone nearby, whatever job it has. Open its menu, **DJ** tab:
@@ -79,6 +88,7 @@ Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele
 - Marque a área com a **Prancheta do Bubie** (clique em 2 cantos, Shift + clique no baú), clique no Bubie com ela e dê uma ferramenta e um pouco de carvão.
 - A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia.
 - **Editar meu Bubie:** cores do casco, do moletom e da luz da tela, olhos e boca.
+- **Guarda:** enfrenta os monstros da área com a arma que você der, junta o que eles largam e vigia à noite.
 - **Bubie DJ:** na aba **DJ** do menu, ele toca os discos de música do inventário e links de `.mp3`/`.ogg` para todo mundo por perto. A tela vira um equalizador, ele dança e os Bubies em volta dançam junto.
 - Guarda em Sophisticated Storage, Functional Storage, cofres do Create e bins do Mekanism; respeita as áreas do FTB Chunks; amigos do mesmo time do FTB Teams também dão ordens.
 - Se a vida acaba, ele desliga e vira o item, sem perder nada.

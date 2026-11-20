@@ -214,5 +214,15 @@
   "bubie.dj.added": "Link added to the playlist.",
   "bubie.dj.bad_link": "That isn't an http(s) link.",
   "bubie.dj.too_many": "The playlist holds %s links.",
-  "bubie.dj.links_off": "This server only lets the DJ play discs."
+  "bubie.dj.links_off": "This server only lets the DJ play discs.",
+  "item.bubie.chip_program": "Program Chip",
+  "item.bubie.chip_program.desc": "Unlocks the Miner, Builder, Courier and Guard jobs, on servers that require it.",
+  "bubie.job.guard": "Guard",
+  "bubie.job.guard.desc": "Fights the monsters that come into its area (creepers are left alone) with the weapon in its tool slot, and picks up what they drop. It keeps watch at night.",
+  "bubie.status.needs_program": "Needs a Program Chip",
+  "bubie.status.needs_program.help": "On this server the Miner, Builder, Courier and Guard need a Program Chip. Put one in a chip slot.",
+  "bubie.status.guarding": "Fighting a monster!",
+  "bubie.status.on_guard": "On guard. No monsters around.",
+  "bubie.ui.station.bubies": "Bubies living here",
+  "bubie.ui.station.none": "No Bubie lives here yet. Shift + click this Station with the Clipboard, then click a Bubie."
 }
