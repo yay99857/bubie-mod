@@ -42,12 +42,18 @@ Um Bubie novo já vem com a energia de um carvão.
 | Clique no chão com o item Bubie | Liga o Bubie. Ele passa a ser seu |
 | Clique direito no Bubie | Abre o menu: modo, tarefa, área, status e o inventário dele |
 | Shift + clique direito com a mão vazia | Guarda o Bubie no seu inventário, com tudo o que ele tem |
-| Prancheta: clique em 2 blocos | Marca os cantos da área de trabalho (aparece no mundo em âmbar) |
-| Prancheta: Shift + clique num baú | Marca onde ele guarda as coisas (qualquer bloco com inventário: baú, gaveta, Sophisticated Storage, AE2) |
+| Prancheta: Shift + clique num baú | Marca onde ele guarda as coisas (qualquer bloco com inventário: baú, gaveta, Sophisticated Storage, AE2). **Basta isso**: sem área marcada, ele trabalha em volta do baú |
+| Prancheta: clique em 2 blocos | Opcional: marca os cantos de uma área sua (aparece no mundo em âmbar) |
 | Prancheta: Shift + clique numa Estação | Marca a casa dele |
 | Prancheta: clique no Bubie | Entrega área, baú e casa, e ele começa a trabalhar |
 | Prancheta: Shift + clique no ar | Limpa a prancheta |
 | Clique no Bubie com um Chip | Instala o chip |
+
+**Onde ele trabalha:** sem área marcada, em volta do baú (ou da Estação, se não tiver baú), num raio que você ajusta
+com − e + na aba Área do menu (8 por padrão; Chips de alcance aumentam o máximo). O Lenhador procura as árvores em volta,
+o Fazendeiro as plantações, o Minerador os minérios até 24 blocos abaixo, o Guarda os monstros. A Pedreira e o Escavador,
+que tiram tudo, abrem um buraco **na frente** do baú (para onde ele está virado), a partir de 2 blocos, e nunca mexem no
+chão da base.
 
 **Modos:** Seguir (anda atrás de você e pega itens do chão), Ficar (senta e espera) e Trabalhar.
 

@@ -233,14 +233,28 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         y += 10;
         if (marked != null) {
             g.drawString(font, marked.describe(), x, y, BubieUi.AMBER, false);
-        } else if (work != null) {
-            g.drawString(font, Component.translatable("bubie.ui.area_home", work.describe()), x, y, BubieUi.AMBER, false);
+            y += 10;
+            g.drawString(font, Component.translatable("bubie.ui.area_max", maxAreaSide()), x, y, BubieUi.DIM, false);
+            y += 14;
+        } else if (bubie.getWorkCenter() != null) {
+            // no marked area: it works around its chest or station, as far as the radius
+            int r = bubie.getWorkRadius();
+            g.drawString(font, Component.translatable(bubie.getChest() != null ? "bubie.ui.around_chest" : "bubie.ui.around_home"),
+                    x, y, BubieUi.AMBER, false);
+            y += 11;
+            button(g, x, y, 13, 13, Component.literal("-"), false, () -> send(BubieCommandPayload.SET_RADIUS, r - 1));
+            button(g, x + w - 13, y, 13, 13, Component.literal("+"), false, () -> send(BubieCommandPayload.SET_RADIUS, r + 1));
+            Component radius = Component.translatable("bubie.ui.radius", r);
+            g.drawString(font, radius, x + (w - font.width(radius)) / 2, y + 3, BubieUi.AMBER_LIGHT, false);
+            y += 16;
+            if (bubie.getJob() == JobType.QUARRY || bubie.getJob() == JobType.DIGGER) {
+                y = paragraph(g, Component.translatable("bubie.ui.pit_in_front"), x, y, BubieUi.DIM);
+                y += 2;
+            }
         } else {
             g.drawString(font, Component.translatable("bubie.ui.none"), x, y, BubieUi.AMBER_DARK, false);
+            y += 24;
         }
-        y += 10;
-        g.drawString(font, Component.translatable("bubie.ui.area_max", maxAreaSide()), x, y, BubieUi.DIM, false);
-        y += 14;
         label(g, Component.translatable("bubie.ui.chest"), x, y);
         y += 10;
         BlockPos chest = bubie.getChest();

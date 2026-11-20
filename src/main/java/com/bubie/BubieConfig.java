@@ -45,7 +45,8 @@ public final class BubieConfig {
                 .define("stationLoadsChunks", false);
         TELEPORT_WHEN_STUCK = b.comment("A Bubie that cannot walk back to its chest or station (e.g. from the bottom of a sand pit) teleports there.")
                 .define("teleportWhenStuck", true);
-        HOME_RADIUS = b.comment("Without a marked area, a Bubie with a station works this many blocks around it.")
+        HOME_RADIUS = b.comment("Without a marked area, a new Bubie works this many blocks around its chest (or Station).",
+                        "Each Bubie can change it in its menu.")
                 .defineInRange("homeRadius", 8, 2, 64);
         DJ_LINKS = b.comment("The DJ may play audio links (.ogg, .mp3). Every player near the Bubie downloads them from that",
                         "address, which sees their IP. Off: discs only. Players can also turn links off for themselves (client config).")

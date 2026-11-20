@@ -56,7 +56,7 @@
   "bubie.status.done": "Pronto! A área está toda feita.",
   "bubie.status.nothing_to_do": "Nada para fazer agora. Daqui a pouco ele olha de novo.",
   "bubie.status.no_area": "Sem área de trabalho",
-  "bubie.status.no_area.help": "Marque dois cantos com a Prancheta e clique no Bubie com ela.",
+  "bubie.status.no_area.help": "Shift + clique num baú (ou numa Estação) com a Prancheta e clique no Bubie: ele trabalha em volta. Ou marque 2 cantos para uma área sua.",
   "bubie.status.area_too_big": "Área grande demais",
   "bubie.status.area_too_big.help": "Marque uma área menor, ou instale um Chip de alcance.",
   "bubie.status.no_chest": "Sem baú para guardar",
@@ -113,7 +113,7 @@
   "bubie.ui.clear_area": "Esquecer área",
   "bubie.ui.clear_chest": "Esquecer baú",
   "bubie.ui.clear_home": "Esquecer casa",
-  "bubie.ui.area_help": "Prancheta: clique em 2 cantos, Shift + clique no baú, depois clique no Bubie.",
+  "bubie.ui.area_help": "Prancheta: Shift + clique num baú e clique no Bubie, e ele trabalha em volta. Clique antes em 2 cantos para uma área sua.",
   "bubie.ui.tool": "Ferram.",
   "bubie.ui.chips": "Chips",
   "bubie.ui.energy": "Energia",
@@ -224,5 +224,9 @@
   "bubie.status.guarding": "Lutando contra um monstro!",
   "bubie.status.on_guard": "De guarda. Nenhum monstro por perto.",
   "bubie.ui.station.bubies": "Bubies que moram aqui",
-  "bubie.ui.station.none": "Nenhum Bubie mora aqui ainda. Shift + clique nesta Estação com a Prancheta e depois clique num Bubie."
+  "bubie.ui.station.none": "Nenhum Bubie mora aqui ainda. Shift + clique nesta Estação com a Prancheta e depois clique num Bubie.",
+  "bubie.ui.around_chest": "Em volta do baú",
+  "bubie.ui.around_home": "Em volta da Estação",
+  "bubie.ui.radius": "raio %s",
+  "bubie.ui.pit_in_front": "Ele cava um buraco na frente do baú, nunca embaixo da base."
 }

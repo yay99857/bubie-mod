@@ -56,7 +56,7 @@
   "bubie.status.done": "Done! The whole area is finished.",
   "bubie.status.nothing_to_do": "Nothing to do right now. It will look again soon.",
   "bubie.status.no_area": "No work area",
-  "bubie.status.no_area.help": "Mark two corners with the Clipboard and click the Bubie with it.",
+  "bubie.status.no_area.help": "Shift + click a chest (or a Station) with the Clipboard, then click the Bubie: it works around it. Or mark 2 corners for an area of your own.",
   "bubie.status.area_too_big": "Area too big",
   "bubie.status.area_too_big.help": "Mark a smaller area, or install a Range Chip.",
   "bubie.status.no_chest": "No chest to store in",
@@ -113,7 +113,7 @@
   "bubie.ui.clear_area": "Forget area",
   "bubie.ui.clear_chest": "Forget chest",
   "bubie.ui.clear_home": "Forget home",
-  "bubie.ui.area_help": "Clipboard: click 2 corners, Shift + click the chest, then click the Bubie.",
+  "bubie.ui.area_help": "Clipboard: Shift + click a chest and click the Bubie, and it works around it. Click 2 corners first for an area of your own.",
   "bubie.ui.tool": "Tool",
   "bubie.ui.chips": "Chips",
   "bubie.ui.energy": "Energy",
@@ -224,5 +224,9 @@
   "bubie.status.guarding": "Fighting a monster!",
   "bubie.status.on_guard": "On guard. No monsters around.",
   "bubie.ui.station.bubies": "Bubies living here",
-  "bubie.ui.station.none": "No Bubie lives here yet. Shift + click this Station with the Clipboard, then click a Bubie."
+  "bubie.ui.station.none": "No Bubie lives here yet. Shift + click this Station with the Clipboard, then click a Bubie.",
+  "bubie.ui.around_chest": "Around its chest",
+  "bubie.ui.around_home": "Around its Station",
+  "bubie.ui.radius": "radius %s",
+  "bubie.ui.pit_in_front": "It digs a pit in front of the chest, never under the base."
 }

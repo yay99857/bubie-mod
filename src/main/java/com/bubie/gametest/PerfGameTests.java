@@ -38,6 +38,7 @@ public class PerfGameTests {
         for (int i = 0; i < BUBIES; i++) {
             BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(1 + i, 4, 1 + i % 3 * 6));
             bubie.setEnergy(40000);
+            bubie.profiled = true;
             bubie.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.DIAMOND_SHOVEL));
             bubie.setJob(JobType.DIGGER);
             bubie.setArea(area);

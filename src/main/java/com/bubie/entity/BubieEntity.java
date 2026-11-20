@@ -91,6 +91,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private static final EntityDataAccessor<String> DATA_DJ = define(EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Byte> DATA_DJ_VOLUME = define(EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<String> DATA_DJ_LINKS = define(EntityDataSerializers.STRING);
+    /** How far around its chest (or Station) it works when no area is marked. */
+    private static final EntityDataAccessor<Byte> DATA_RADIUS = define(EntityDataSerializers.BYTE);
 
     private static final ResourceLocation SPEED_CHIP_ID = Bubie.id("speed_chip");
 
@@ -159,6 +161,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         builder.define(DATA_DJ, "");
         builder.define(DATA_DJ_VOLUME, (byte) 70);
         builder.define(DATA_DJ_LINKS, "");
+        builder.define(DATA_RADIUS, (byte) 8);
     }
 
     @Override
@@ -405,12 +408,52 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         }
         WorkArea marked = getMarkedArea();
         if (marked != null) return marked;
-        BlockPos home = getHome();
-        JobType job = getJob();
-        if (home != null && (job == JobType.LUMBERJACK || job == JobType.FARMER || job == JobType.COLLECTOR || job == JobType.GUARD)) {
-            return WorkArea.around(home, BubieConfig.HOME_RADIUS.get(), 3, 12);
-        }
-        return null;
+        BlockPos center = getWorkCenter();
+        return center == null ? null : areaAround(center, getWorkRadius(), getJob());
+    }
+
+    /** Where it works without a marked area: its chest, or else its Station. */
+    @Nullable
+    public BlockPos getWorkCenter() {
+        return getChest() != null ? getChest() : getHome();
+    }
+
+    /**
+     * The area a job covers around a centre. Jobs that only take what is theirs (trees, crops, ores, items, monsters,
+     * containers) work all around it; the Quarry and the Digger take everything, so they open a pit in front of the
+     * chest (the way it faces), from 2 blocks away, and never touch the ground the base stands on.
+     */
+    public WorkArea areaAround(BlockPos c, int r, JobType job) {
+        return switch (job) {
+            case LUMBERJACK -> WorkArea.around(c, r, 3, 24);
+            case MINER -> WorkArea.around(c, r, 24, 4);
+            case QUARRY -> pitInFront(c, r, 16, 1);
+            case DIGGER -> pitInFront(c, r, 6, 4);
+            default -> WorkArea.around(c, r, 3, 5);
+        };
+    }
+
+    private WorkArea pitInFront(BlockPos c, int r, int down, int up) {
+        net.minecraft.core.Direction front = level().getBlockState(c)
+                .getOptionalValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)
+                .orElse(net.minecraft.core.Direction.NORTH);
+        net.minecraft.core.Direction side = front.getClockWise();
+        BlockPos near = c.relative(front, 2).relative(side, -r), far = c.relative(front, 1 + 2 * r).relative(side, r);
+        return WorkArea.of(near.below(down), far.above(up));
+    }
+
+    public int getWorkRadius() {
+        return Math.min(entityData.get(DATA_RADIUS), maxWorkRadius());
+    }
+
+    public void setWorkRadius(int r) {
+        entityData.set(DATA_RADIUS, (byte) Math.max(2, Math.min(maxWorkRadius(), r)));
+        runner.reset();
+    }
+
+    /** The widest radius whose area still fits the size limit (Range Chips raise it). */
+    public int maxWorkRadius() {
+        return Math.max(2, Math.min(60, (maxAreaSide() - 1) / 2));
     }
 
     /** Whether this job is locked until a Program Chip is installed (server config). */
@@ -615,8 +658,10 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     // ---------------------------------------------------------------- ticking
 
-    /** Server time spent ticking Bubies (AI, pathfinding, work), for the performance GameTest. */
+    /** Server CPU time spent ticking Bubies (AI, pathfinding, work), for the performance GameTest. */
     public static long profileNanos, profileTicks;
+    /** Only the performance test's own Bubies are timed. */
+    public boolean profiled;
 
     @Override
     public void tick() {
@@ -624,9 +669,15 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             super.tick();
             return;
         }
-        long start = System.nanoTime();
+        if (!profiled) {
+            super.tick();
+            return;
+        }
+        // CPU time of this thread, not wall time: other processes and GC pauses don't count against the Bubie
+        var threads = java.lang.management.ManagementFactory.getThreadMXBean();
+        long start = threads.getCurrentThreadCpuTime();
         super.tick();
-        profileNanos += System.nanoTime() - start;
+        profileNanos += threads.getCurrentThreadCpuTime() - start;
         profileTicks++;
     }
 
@@ -834,6 +885,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         tag.putByte("Job", (byte) getJob().ordinal());
         tag.putByte("MineMode", (byte) getMineMode().ordinal());
         tag.putByte("DigFilter", (byte) getDigFilter());
+        tag.putByte("Radius", entityData.get(DATA_RADIUS));
         tag.putInt("Energy", getEnergy());
         tag.put("Look", getSavedLook().save());
         WorkArea area = getMarkedArea();
@@ -860,6 +912,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         entityData.set(DATA_JOB, tag.getByte("Job"));
         entityData.set(DATA_MINE_MODE, tag.getByte("MineMode"));
         entityData.set(DATA_FILTER, tag.contains("DigFilter") ? tag.getByte("DigFilter") : (byte) DigFilter.ALL);
+        entityData.set(DATA_RADIUS, tag.contains("Radius") ? tag.getByte("Radius")
+                : (byte) (BubieConfig.SPEC.isLoaded() ? BubieConfig.HOME_RADIUS.get() : 8));
         entityData.set(DATA_ENERGY, tag.getInt("Energy"));
         setLook(tag.contains("Look") ? Look.load(tag.getCompound("Look")) : Look.DEFAULT);
         entityData.set(DATA_MAX_ENERGY, BubieConfig.SPEC.isLoaded() ? BubieConfig.MAX_ENERGY.get() : 48000);

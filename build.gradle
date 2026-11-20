@@ -69,6 +69,7 @@ neoForge {
         gameTestServer {
             type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            if (project.hasProperty('jfr')) jvmArgument '-XX:StartFlightRecording=filename=' + project.property('jfr') + ',settings=profile'
         }
     }
 

@@ -56,7 +56,7 @@
   "bubie.status.done": "¡Listo! Toda el área está terminada.",
   "bubie.status.nothing_to_do": "Nada que hacer ahora. Volverá a mirar en un rato.",
   "bubie.status.no_area": "Sin área de trabajo",
-  "bubie.status.no_area.help": "Marca dos esquinas con el Portapapeles y haz clic en el Bubie con él.",
+  "bubie.status.no_area.help": "Shift + clic en un cofre (o una Estación) con el Portapapeles y luego clic en el Bubie: trabaja a su alrededor. O marca 2 esquinas para un área propia.",
   "bubie.status.area_too_big": "Área demasiado grande",
   "bubie.status.area_too_big.help": "Marca un área más pequeña o instala un Chip de alcance.",
   "bubie.status.no_chest": "No tiene cofre donde guardar",
@@ -113,7 +113,7 @@
   "bubie.ui.clear_area": "Olvidar área",
   "bubie.ui.clear_chest": "Olvidar cofre",
   "bubie.ui.clear_home": "Olvidar casa",
-  "bubie.ui.area_help": "Portapapeles: clic en 2 esquinas, Shift + clic en el cofre y luego clic en el Bubie.",
+  "bubie.ui.area_help": "Portapapeles: Shift + clic en un cofre y clic en el Bubie, y trabaja a su alrededor. Haz clic antes en 2 esquinas para un área propia.",
   "bubie.ui.tool": "Herramienta",
   "bubie.ui.chips": "Chips",
   "bubie.ui.energy": "Energía",
@@ -224,5 +224,9 @@
   "bubie.status.guarding": "¡Luchando contra un monstruo!",
   "bubie.status.on_guard": "De guardia. No hay monstruos cerca.",
   "bubie.ui.station.bubies": "Bubies que viven aquí",
-  "bubie.ui.station.none": "Aún no vive ningún Bubie aquí. Shift + clic en esta Estación con el Portapapeles y luego clic en un Bubie."
+  "bubie.ui.station.none": "Aún no vive ningún Bubie aquí. Shift + clic en esta Estación con el Portapapeles y luego clic en un Bubie.",
+  "bubie.ui.around_chest": "Alrededor de su cofre",
+  "bubie.ui.around_home": "Alrededor de su Estación",
+  "bubie.ui.radius": "radio %s",
+  "bubie.ui.pit_in_front": "Cava un hoyo delante del cofre, nunca debajo de la base."
 }

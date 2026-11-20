@@ -44,8 +44,8 @@ Any Bubie can play music for everyone nearby, whatever job it has. Open its menu
 Links are downloaded by each player who hears them. Servers can allow discs only (`djLinks`), and each player can turn links off for themselves (`djPlayLinks` in the client config).
 
 ## 📋 How to use it
-1. Craft the **Bubie Clipboard**, click two blocks to mark the area, Shift + click a chest.
-2. Click your Bubie with the clipboard. It starts working and brings everything back to the chest.
+1. Craft the **Bubie Clipboard** and Shift + click a chest.
+2. Click your Bubie with the clipboard. It works **around that chest** (radius 8, set with − / + in its menu): the Lumberjack finds the trees nearby, the Farmer the fields. The Quarry and the Digger open a pit in front of the chest, never under your base. Want an exact area? Click its two corners with the clipboard first.
 3. Give it a tool (it uses your axe, shovel or pickaxe, and stops before it breaks) and some coal.
 
 | | |
@@ -85,7 +85,7 @@ colhe e replanta plantações, minera veios ou túneis e junta itens do chão, g
 Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele levanta a base bloco por bloco, com o material do baú
 (que outro Bubie pode ir enchendo).
 
-- Marque a área com a **Prancheta do Bubie** (clique em 2 cantos, Shift + clique no baú), clique no Bubie com ela e dê uma ferramenta e um pouco de carvão.
+- Shift + clique num baú com a **Prancheta do Bubie** e clique no Bubie: ele trabalha em volta do baú (o raio se ajusta no menu). Dê uma ferramenta e um pouco de carvão. Para uma área exata, marque 2 cantos antes.
 - A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia.
 - **Editar meu Bubie:** cores do casco, do moletom e da luz da tela, olhos e boca.
 - **Guarda:** enfrenta os monstros da área com a arma que você der, junta o que eles largam e vigia à noite.

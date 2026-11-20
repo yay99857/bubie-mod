@@ -13,6 +13,9 @@ mkdir -p "$dst/mods"
 for dir in config defaultconfigs kubejs; do
   [ -d "$src/$dir" ] && cp -r "$src/$dir" "$dst/"
 done
+# The pack's Bubie server config turns on advancedJobsNeedChip; the job tests expect the mod's defaults (the chip gate
+# has a test of its own).
+rm -f "$dst/defaultconfigs/bubie-server.toml"
 for jar in "$src"/mods/*.jar; do
   case "$(basename "$jar")" in
     Jade-*|bubie-*|baseblueprint-*|integrated*) ;;

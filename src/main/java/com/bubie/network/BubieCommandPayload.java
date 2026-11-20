@@ -17,7 +17,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
 public record BubieCommandPayload(int entityId, int command, int value) implements CustomPacketPayload {
     public static final int SET_MODE = 0, SET_JOB = 1, TOGGLE_FILTER = 2, SET_MINE_MODE = 3,
             CLEAR_AREA = 4, CLEAR_CHEST = 5, CLEAR_HOME = 6, SET_LOOK = 7,
-            DJ_TOGGLE = 8, DJ_NEXT = 9, DJ_PREVIOUS = 10, DJ_VOLUME = 11, DJ_REMOVE_LINK = 12, DJ_TRACK_DONE = 13;
+            DJ_TOGGLE = 8, DJ_NEXT = 9, DJ_PREVIOUS = 10, DJ_VOLUME = 11, DJ_REMOVE_LINK = 12, DJ_TRACK_DONE = 13, SET_RADIUS = 14;
 
     public static final Type<BubieCommandPayload> TYPE = new Type<>(Bubie.id("command"));
     public static final StreamCodec<ByteBuf, BubieCommandPayload> STREAM_CODEC = StreamCodec.composite(
@@ -64,6 +64,7 @@ public record BubieCommandPayload(int entityId, int command, int value) implemen
                     bubie.showMood(com.bubie.entity.Face.HAPPY, 60);
                     bubie.playSound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_CHIME.value(), 0.8F, 1.6F);
                 }
+                case SET_RADIUS -> bubie.setWorkRadius(v);
                 case DJ_TOGGLE -> bubie.dj().toggle();
                 case DJ_NEXT -> bubie.dj().next();
                 case DJ_PREVIOUS -> bubie.dj().previous();
