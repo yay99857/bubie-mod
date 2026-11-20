@@ -12,6 +12,7 @@ Mod para **Minecraft 1.21.1 (NeoForge 21.1.265)**, feito para o Bubie Pack. O Bu
 | ![Três Bubies](docs/screenshots/portrait.png) | ![À noite o rosto brilha](docs/screenshots/night.png) |
 | ![Lenhador](docs/screenshots/lumberjack.png) | ![Pedreira com escada](docs/screenshots/quarry.png) |
 | ![Menu: tarefa](docs/screenshots/menu_job.png) | ![Menu: status](docs/screenshots/menu_status.png) |
+| ![Construtor levantando uma base da Planta de Base](docs/screenshots/builder.png) | |
 
 ## Editar meu Bubie
 Na aba **Status** do menu, **✎ Editar meu Bubie** abre o editor do My Bubie do bubie.gg dentro do jogo: cor do casco,
@@ -59,6 +60,7 @@ Um Bubie novo já vem com a energia de um carvão.
 | **Fazendeiro** | Colhe plantações maduras e replanta com as próprias sementes. Também cana, cacto, bambu, abóbora, melancia, cacau, fungo do Nether e frutas silvestres (sem quebrar o arbusto) |
 | **Minerador** | Veio: minérios expostos na área (um veio inteiro, bloco a bloco). Túnel: galeria 1×2 no fundo da área com ramificações a cada 4 blocos, pegando todo minério que aparece e pondo tochas. Minérios pela tag `c:ores` (inclui All the Ores) |
 | **Coletor** | Junta todos os itens do chão na área |
+| **Construtor** (com o mod Base Blueprint) | Configure uma Planta de Base (forma, tamanho, material) e clique no Bubie com ela, onde a base deve ficar: ele constrói bloco por bloco, de baixo para cima, pegando os blocos no baú dele. A porta fica virada para você. Sem material, mostra "Esperando material" e continua quando o baú recebe mais, então outro Bubie (um Lenhador ou uma Pedreira) pode abastecer o mesmo baú enquanto ele constrói |
 
 Sem área marcada, o Lenhador, o Fazendeiro e o Coletor trabalham em volta da Estação (raio 8).
 

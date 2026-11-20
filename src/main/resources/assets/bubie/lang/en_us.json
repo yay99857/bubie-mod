@@ -182,5 +182,14 @@
   "bubie.look.mouth.smirk": "Smirk",
   "bubie.look.mouth.cat": "Cat",
   "bubie.look.mouth.dot": "Dot",
-  "bubie.look.mouth.wavy": "Wavy"
+  "bubie.look.mouth.wavy": "Wavy",
+  "bubie.job.builder": "Builder",
+  "bubie.job.builder.desc": "Builds a Base Blueprint base block by block, taking the blocks from its chest. Set up the blueprint and click the Bubie with it where the base should go.",
+  "bubie.status.fetching": "Fetching blocks from the chest.",
+  "bubie.status.no_blueprint": "No blueprint",
+  "bubie.status.no_blueprint.help": "Set up a Base Blueprint (Base Blueprint mod) and click the Bubie with it, where the base goes.",
+  "bubie.status.no_material": "Waiting for blocks",
+  "bubie.status.no_material.help": "Its chest has none of the blueprint block. Put more in, or let another Bubie (Lumberjack, Quarry) fill it.",
+  "bubie.builder.accepted": "%s will build here: %s blocks of %s.",
+  "bubie.builder.no_material": "Pick the blueprint material first (Shift + click a block with the blueprint)."
 }

@@ -94,6 +94,11 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private final Map<ChipType, Integer> chips = new EnumMap<>(ChipType.class);
     private final JobRunner runner = new JobRunner(this);
     private double energyDebt;
+    /** Builder: Bubie's own copy of the blueprint, where the base goes and which side gets the door. */
+    private ItemStack buildPlan = ItemStack.EMPTY;
+    @Nullable
+    private BlockPos buildOrigin;
+    private net.minecraft.core.Direction buildDoor = net.minecraft.core.Direction.SOUTH;
     private boolean loading;
     private Face moodFace = Face.IDLE;
     private int moodTicks;
@@ -275,9 +280,40 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         runner.reset();
     }
 
+    public void setBuildPlan(ItemStack plan, BlockPos origin, net.minecraft.core.Direction door) {
+        buildPlan = plan;
+        buildOrigin = origin;
+        buildDoor = door;
+        runner.reset();
+    }
+
+    public ItemStack getBuildPlan() {
+        return buildPlan;
+    }
+
+    @Nullable
+    public BlockPos getBuildOrigin() {
+        return buildOrigin;
+    }
+
+    public net.minecraft.core.Direction getBuildDoor() {
+        return buildDoor;
+    }
+
+    /** How many of an item the Bubie carries. */
+    public int count(net.minecraft.world.item.Item item) {
+        int n = 0;
+        for (int i = 0; i < STORAGE_SLOTS; i++) if (storage.getItem(i).is(item)) n += storage.getItem(i).getCount();
+        return n;
+    }
+
     /** The marked area, or for surface jobs, the ground around the station. */
     @Nullable
     public WorkArea getWorkArea() {
+        if (getJob() == JobType.BUILDER) {
+            // the builder works around its plan; the area only feeds the outline and loose-item checks
+            return buildOrigin == null ? null : WorkArea.around(buildOrigin, 8, 1, 8);
+        }
         WorkArea marked = getMarkedArea();
         if (marked != null) return marked;
         BlockPos home = getHome();
@@ -529,6 +565,10 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             ClipboardItem.applyTo(held, this, player);
             return InteractionResult.CONSUME;
         }
+        if (com.bubie.compat.BlueprintCompat.isBlueprint(held) && com.bubie.compat.BlueprintCompat.loaded()) {
+            com.bubie.compat.BlueprintCompat.handOver(this, player, held);
+            return InteractionResult.CONSUME;
+        }
         if (held.getItem() instanceof ChipItem) {
             for (int i = 1; i <= CHIP_SLOTS; i++) {
                 if (extra.getItem(i).isEmpty()) {
@@ -682,6 +722,13 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         tag.put("Storage", saveContainer(storage));
         tag.put("Extra", saveContainer(extra));
         if (!getTool().isEmpty()) tag.put("Tool", getTool().save(registryAccess()));
+        if (!buildPlan.isEmpty() && buildOrigin != null) {
+            CompoundTag build = new CompoundTag();
+            build.put("Blueprint", buildPlan.save(registryAccess()));
+            build.putLong("Origin", buildOrigin.asLong());
+            build.putByte("Door", (byte) buildDoor.get3DDataValue());
+            tag.put("Build", build);
+        }
     }
 
     public void readBubieData(CompoundTag tag) {
@@ -707,6 +754,15 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         }
         if (tag.contains("Tool")) {
             setItemSlot(EquipmentSlot.MAINHAND, ItemStack.parseOptional(registryAccess(), tag.getCompound("Tool")));
+        }
+        if (tag.contains("Build")) {
+            CompoundTag build = tag.getCompound("Build");
+            buildPlan = ItemStack.parseOptional(registryAccess(), build.getCompound("Blueprint"));
+            buildOrigin = BlockPos.of(build.getLong("Origin"));
+            buildDoor = net.minecraft.core.Direction.from3DDataValue(build.getByte("Door"));
+        } else {
+            buildPlan = ItemStack.EMPTY;
+            buildOrigin = null;
         }
         onChipsChanged();
         runner.reset();

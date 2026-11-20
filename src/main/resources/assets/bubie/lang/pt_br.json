@@ -182,5 +182,14 @@
   "bubie.look.mouth.smirk": "De lado",
   "bubie.look.mouth.cat": "Gatinho",
   "bubie.look.mouth.dot": "Pontinho",
-  "bubie.look.mouth.wavy": "Ondulada"
+  "bubie.look.mouth.wavy": "Ondulada",
+  "bubie.job.builder": "Construtor",
+  "bubie.job.builder.desc": "Constrói uma base da Planta de Base bloco por bloco, pegando o material no baú dele. Configure a planta e clique no Bubie com ela, onde a base deve ficar.",
+  "bubie.status.fetching": "Buscando material no baú.",
+  "bubie.status.no_blueprint": "Sem planta",
+  "bubie.status.no_blueprint.help": "Configure uma Planta de Base (mod Base Blueprint) e clique no Bubie com ela, no lugar da base.",
+  "bubie.status.no_material": "Esperando material",
+  "bubie.status.no_material.help": "O baú dele não tem o bloco da planta. Ponha mais no baú, ou deixe outro Bubie (Lenhador, Pedreira) enchê-lo.",
+  "bubie.builder.accepted": "%s vai construir aqui: %s blocos de %s.",
+  "bubie.builder.no_material": "Escolha o material da planta primeiro (Shift + clique num bloco com a planta)."
 }

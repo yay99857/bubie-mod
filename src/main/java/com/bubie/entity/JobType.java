@@ -2,7 +2,9 @@ package com.bubie.entity;
 
 /** The job a Bubie does in WORK mode. */
 public enum JobType {
-    LUMBERJACK, DIGGER, QUARRY, FARMER, MINER, COLLECTOR;
+    LUMBERJACK, DIGGER, QUARRY, FARMER, MINER, COLLECTOR,
+    /** Builds a Base Blueprint plan block by block (needs the Base Blueprint mod). */
+    BUILDER;
 
     public static JobType byId(int id) {
         JobType[] values = values();

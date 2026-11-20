@@ -39,6 +39,11 @@ public class MinerJob extends Job {
         if (mode == MineMode.TUNNEL) buildPlan();
     }
 
+    @Override
+    public boolean isDone() {
+        return tunnelDone();
+    }
+
     public boolean tunnelDone() {
         return mode == MineMode.TUNNEL && planIndex >= plan.size() && ores.isEmpty();
     }

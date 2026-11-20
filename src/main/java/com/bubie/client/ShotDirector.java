@@ -165,6 +165,20 @@ public final class ShotDirector {
             d.setNoAi(true); // posing for the photo
         }
 
+        // a builder raising a base from its chest (when Base Blueprint is installed)
+        if (com.bubie.compat.BlueprintCompat.loaded()) {
+            BlockPos chestPos = at(-9, 0, -9);
+            level.setBlockAndUpdate(chestPos, Blocks.CHEST.defaultBlockState());
+            if (level.getBlockEntity(chestPos) instanceof net.minecraft.world.level.block.entity.ChestBlockEntity chest) {
+                for (int i = 0; i < 4; i++) chest.setItem(i, new ItemStack(Items.SPRUCE_PLANKS, 64));
+            }
+            BubieEntity builder = spawn(p, -14, -14, 0);
+            builder.setChest(chestPos);
+            ItemStack plan = BuilderShots.blueprint();
+            p.setPos(cx - 14 + 0.5, g, cz - 6 + 0.5);
+            com.bubie.compat.BlueprintCompat.handOver(builder, p, plan);
+        }
+
         // station with a Bubie at home
         level.setBlockAndUpdate(at(4, 0, -6), Bubie.STATION.get().defaultBlockState());
         BubieEntity home = spawn(p, 4, -5, 0);
@@ -234,6 +248,8 @@ public final class ShotDirector {
         add(300, () -> shot("quarry"));
         add(5, () -> server(p -> look(p, cx + 6, g + 2, cz - 3, cx + 4, g + 0.5, cz - 5.5)));
         add(40, () -> shot("station"));
+        add(5, () -> server(p -> look(p, cx - 7, g + 5, cz - 5, cx - 14, g + 1, cz - 14)));
+        add(60, () -> shot("builder"));
         // the menu, one shot per tab
         add(5, () -> mc.options.hideGui = false);
         add(5, () -> server(p -> {

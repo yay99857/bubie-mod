@@ -25,6 +25,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemHandlerHelper;
@@ -47,7 +49,7 @@ public class JobRunner {
     public static final BlockPos NOTHING = new BlockPos(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
     private static final int MAX_CANDIDATES = 64;
 
-    private enum State { SEEK, MOVE, WORK, DEPOSIT, IDLE }
+    private enum State { SEEK, MOVE, WORK, DEPOSIT, FETCH, IDLE }
 
     private final BubieEntity bubie;
     private State state = State.SEEK;
@@ -146,6 +148,7 @@ public class JobRunner {
             case FARMER -> new FarmJob(bubie, area);
             case MINER -> new MinerJob(bubie, area, bubie.getMineMode());
             case COLLECTOR -> new CollectJob(bubie, area);
+            case BUILDER -> new BuilderJob(bubie, area);
         };
     }
 
@@ -154,6 +157,11 @@ public class JobRunner {
     public void tick() {
         if (bubie.level().isClientSide) return;
         tickChestLid();
+        if (bubie.getJob() == JobType.BUILDER
+                && (!com.bubie.compat.BlueprintCompat.loaded() || bubie.getBuildPlan().isEmpty())) {
+            idle(Status.NO_BLUEPRINT);
+            return;
+        }
         WorkArea area = bubie.getWorkArea();
         if (area == null) {
             idle(Status.NO_AREA);
@@ -188,6 +196,7 @@ public class JobRunner {
             case MOVE -> move();
             case WORK -> work();
             case DEPOSIT -> deposit();
+            case FETCH -> fetch();
         }
     }
 
@@ -234,7 +243,7 @@ public class JobRunner {
     // ------------------------------------------------------------------ SEEK
 
     private void seek() {
-        if (!bubie.hasFreeSlot()) {
+        if (!bubie.hasFreeSlot() && depositableItems()) {
             startDeposit(true);
             return;
         }
@@ -258,7 +267,7 @@ public class JobRunner {
                 startDeposit(false);
                 return;
             }
-            if (job.layered() && layersFinished || job instanceof MinerJob miner && miner.tunnelDone()) {
+            if (job.layered() && layersFinished || job.isDone()) {
                 if (!finishedAnnounced) {
                     finishedAnnounced = true;
                     bubie.showMood(Face.HAPPY, 60);
@@ -268,6 +277,12 @@ public class JobRunner {
             } else {
                 rest(Status.NOTHING_TO_DO, 100);
             }
+            return;
+        }
+        // material first: a trip to the chest if the Bubie has none of what this spot takes
+        Item needed = job.requiredItem(next);
+        if (needed != null && bubie.count(needed) == 0) {
+            startFetch(needed);
             return;
         }
         target = next;
@@ -421,6 +436,10 @@ public class JobRunner {
     // ------------------------------------------------------------------ WORK
 
     private void work() {
+        if (job.placesBlocks()) {
+            workPlace();
+            return;
+        }
         ServerLevel level = level();
         BlockState state = level.getBlockState(target);
         if (!job.isTarget(level, target, state)) {
@@ -525,6 +544,125 @@ public class JobRunner {
             level.destroyBlockProgress(bubie.getId(), target, -1);
         }
         lastStage = -1;
+    }
+
+    // ------------------------------------------------------------------ PLACE (builder)
+
+    private void workPlace() {
+        ServerLevel level = level();
+        BlockState state = level.getBlockState(target);
+        if (!job.isTarget(level, target, state)) {
+            target = null;
+            setState(State.SEEK);
+            return;
+        }
+        if (!bubie.canReach(target)) {
+            setState(State.MOVE);
+            return;
+        }
+        AABB spot = new AABB(target);
+        if (bubie.getBoundingBox().intersects(spot)) {
+            // standing where the block goes: step aside first
+            if (stateTicks % 20 == 1) {
+                Vec3 away = LandRandomPos.getPos(bubie, 3, 2);
+                if (away != null) bubie.getNavigation().moveTo(away.x, away.y, away.z, 1.0);
+            }
+            if (stateTicks > 80) fail(target, 200);
+            return;
+        }
+        if (!level.getEntitiesOfClass(LivingEntity.class, spot).isEmpty()) {
+            if (stateTicks > 100) fail(target, 200); // something else stands there: come back to it later
+            return;
+        }
+        bubie.getNavigation().stop();
+        bubie.lookAtBlock(target);
+        bubie.setStatus(Status.WORKING);
+        progress += (float) ((1 + 0.5 * bubie.chipCount(ChipType.SPEED)) / 6.0);
+        bubie.spendEnergy(1.0);
+        if (stateTicks % 6 == 1) bubie.swing(InteractionHand.MAIN_HAND);
+        if (progress < 1.0F) return;
+        BlockPos done = target;
+        progress = 0;
+        target = null;
+        if (!job.perform(level, done, state, ItemStack.EMPTY)) {
+            fail(done, 600);
+            return;
+        }
+        setState(State.SEEK);
+    }
+
+    // ------------------------------------------------------------------ FETCH (builder)
+
+    @Nullable
+    private Item fetchFor;
+
+    private void startFetch(Item item) {
+        depositPos = resolveDeposit();
+        if (depositPos == null) {
+            rest(Status.NO_CHEST, 100);
+            return;
+        }
+        fetchFor = item;
+        bubie.setStatus(Status.FETCHING);
+        setState(State.FETCH);
+    }
+
+    /** Walks next to a container; true once it is there. */
+    private boolean approach(BlockPos pos) {
+        if (bubie.distanceToSqr(Vec3.atCenterOf(pos)) <= 2.8 * 2.8) {
+            bubie.getNavigation().stop();
+            bubie.lookAtBlock(pos);
+            return true;
+        }
+        if (stateTicks % 20 == 1 || bubie.getNavigation().isDone()) {
+            Path path = bubie.getNavigation().createPath(pos, 1);
+            if (path != null) bubie.getNavigation().moveTo(path, 1.1);
+        }
+        if (stateTicks > 300 && BubieConfig.TELEPORT_WHEN_STUCK.get()) {
+            bubie.teleportNear(pos);
+            stateTicks = 0;
+        } else if (stateTicks > 600) {
+            rest(Status.NO_CHEST, 200);
+        }
+        return false;
+    }
+
+    /** Takes what the job still needs from the chest (as much as fits), then back to work. */
+    private void fetch() {
+        bubie.setStatus(Status.FETCHING);
+        if (depositPos == null || fetchFor == null) {
+            setState(State.SEEK);
+            return;
+        }
+        if (!approach(depositPos)) return;
+        IItemHandler source = handler(depositPos);
+        if (source == null) {
+            rest(Status.NO_CHEST, 100);
+            return;
+        }
+        boolean took = false;
+        for (Map.Entry<Item, Integer> want : job.shoppingList().entrySet()) {
+            int need = want.getValue() - bubie.count(want.getKey());
+            for (int slot = 0; slot < source.getSlots() && need > 0; slot++) {
+                if (!source.getStackInSlot(slot).is(want.getKey())) continue;
+                ItemStack got = source.extractItem(slot, Math.min(need, 64), false);
+                if (got.isEmpty()) continue;
+                ItemStack rest = bubie.insert(got);
+                int taken = got.getCount() - rest.getCount();
+                need -= taken;
+                if (taken > 0) took = true;
+                if (!rest.isEmpty()) {
+                    ItemHandlerHelper.insertItemStacked(source, rest, false); // full: put the rest back
+                    need = 0;
+                }
+            }
+        }
+        if (took) openChestLid(depositPos);
+        if (bubie.count(fetchFor) == 0) {
+            rest(Status.NO_MATERIAL, 100); // another Bubie (or the owner) can fill the chest meanwhile
+            return;
+        }
+        setState(State.SEEK);
     }
 
     // ------------------------------------------------------------------ DEPOSIT

@@ -18,6 +18,7 @@ Bubie is the mascot of bubie.gg, a cream CRT monitor in a black hoodie, as a hel
 - **Farmer:** harvests and replants crops; sugar cane, cactus, bamboo, pumpkins, melons, cocoa, nether wart, sweet berries.
 - **Miner:** exposed ore veins, or branch tunnels with torches. Uses the `c:ores` tag, so modded ores count.
 - **Collector:** gathers every item lying in the area.
+- **Builder** (with Base Blueprint): hand it a configured blueprint where the base should go and it builds it block by block, taking the blocks from its chest. Out of blocks, it waits; another Bubie (a Lumberjack or a Quarry) can keep that chest filled while it builds.
 
 ![A quarry with its staircase](https://media.forgecdn.net/attachments/2241/438/07-quarry-png.png)
 
@@ -60,6 +61,8 @@ Settings in `serverconfig/bubie-server.toml`.
 ## 🇧🇷 Português
 O Bubie, mascote do bubie.gg, vira um ajudante: corta árvores inteiras e replanta, escava areia e terra, abre pedreiras com escada,
 colhe e replanta plantações, minera veios ou túneis e junta itens do chão, guardando tudo no seu baú.
+Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele levanta a base bloco por bloco, com o material do baú
+(que outro Bubie pode ir enchendo).
 
 - Marque a área com a **Prancheta do Bubie** (clique em 2 cantos, Shift + clique no baú), clique no Bubie com ela e dê uma ferramenta e um pouco de carvão.
 - A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia.

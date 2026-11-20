@@ -42,6 +42,27 @@ public abstract class Job {
         return 1.0F;
     }
 
+    /** Jobs that place blocks (the builder) instead of breaking them. */
+    public boolean placesBlocks() {
+        return false;
+    }
+
+    /** Finished for good (the area dug out, the tunnel done, the base built). */
+    public boolean isDone() {
+        return false;
+    }
+
+    /** The item needed to work on this target, which the Bubie fetches from its chest if it has none. */
+    @Nullable
+    public net.minecraft.world.item.Item requiredItem(BlockPos pos) {
+        return null;
+    }
+
+    /** Everything the job still needs, by item, for one trip to the chest. */
+    public java.util.Map<net.minecraft.world.item.Item, Integer> shoppingList() {
+        return java.util.Map.of();
+    }
+
     /** Whether to plug water and lava next to a block before breaking it (not for farms and trees). */
     public boolean plugsFluids() {
         return true;

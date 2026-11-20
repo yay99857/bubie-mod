@@ -38,7 +38,14 @@ public record BubieCommandPayload(int entityId, int command, int value) implemen
             int v = payload.value();
             switch (payload.command()) {
                 case SET_MODE -> bubie.setMode(Mode.byId(v));
-                case SET_JOB -> bubie.setJob(JobType.byId(v));
+                case SET_JOB -> {
+                    // without Base Blueprint the Builder is skipped, in whichever direction the player was going
+                    JobType job = JobType.byId(v);
+                    if (job == JobType.BUILDER && !com.bubie.compat.BlueprintCompat.loaded()) {
+                        job = JobType.byId(v + (v > bubie.getJob().ordinal() ? 1 : -1));
+                    }
+                    bubie.setJob(job);
+                }
                 case TOGGLE_FILTER -> {
                     if (v >= 0 && v < DigFilter.values().length) bubie.setDigFilter(bubie.getDigFilter() ^ DigFilter.values()[v].bit());
                 }
