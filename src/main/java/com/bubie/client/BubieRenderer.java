@@ -45,6 +45,14 @@ public class BubieRenderer extends MobRenderer<BubieEntity, BubieModel> {
             Component text = Component.literal("⚠ ").append(bubie.statusText()).withStyle(ChatFormatting.GOLD);
             renderNameTag(bubie, text, pose, buffers, light, partialTick);
             pose.popPose();
+        } else if (entityRenderDispatcher.distanceToSqr(bubie) < 16 * 16) {
+            com.bubie.entity.Dj.Track track = bubie.getDjTrack();
+            if (!track.isNone()) {
+                pose.pushPose();
+                if (shouldShowName(bubie)) pose.translate(0.0, 0.28, 0.0);
+                renderNameTag(bubie, Component.literal("♪ " + track.title()).withStyle(ChatFormatting.AQUA), pose, buffers, light, partialTick);
+                pose.popPose();
+            }
         }
     }
 
@@ -62,7 +70,9 @@ public class BubieRenderer extends MobRenderer<BubieEntity, BubieModel> {
             Face face = editing ? Face.IDLE : bubie.getFace();
             // blink every few seconds
             boolean blink = !editing && face == Face.IDLE && (bubie.tickCount + bubie.getId() * 7) % 90 < 3;
-            ResourceLocation texture = LookTextures.face(bubie.getLook(), face, blink);
+            ResourceLocation texture = face == Face.MUSIC
+                    ? LookTextures.music(bubie.getLook(), (bubie.tickCount + bubie.getId()) / 3)
+                    : LookTextures.face(bubie.getLook(), face, blink);
             getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.eyes(texture)), 0xF00000,
                     OverlayTexture.NO_OVERLAY);
         }

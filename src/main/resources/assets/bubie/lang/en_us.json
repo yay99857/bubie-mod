@@ -199,5 +199,20 @@
   "bubie.status.stuck.help": "It couldn't walk anywhere for a while. Free it (a hole, a door, a fence) or bring it closer to the work.",
   "bubie.status.no_material.item": "Waiting for %s ×%s",
   "bubie.tooltip.build": "Built %s / %s blocks",
-  "bubie.ui.build": "Base: %s / %s blocks"
+  "bubie.ui.build": "Base: %s / %s blocks",
+  "bubie.ui.tab.dj": "DJ",
+  "bubie.ui.dj.now": "Now playing",
+  "bubie.ui.dj.stopped": "Stopped",
+  "bubie.ui.dj.volume": "Volume %s%%",
+  "bubie.ui.dj.discs": "Discs in storage: %s",
+  "bubie.ui.dj.links": "Links: %s/%s",
+  "bubie.ui.dj.add": "+ Add link",
+  "bubie.ui.dj.help": "It plays the music discs in its storage, then the links, for everyone nearby.",
+  "bubie.ui.dj.add_title": "Add a music link",
+  "bubie.ui.dj.add_help": "Paste the address of an .mp3 or .ogg file.",
+  "bubie.ui.dj.add_ok": "Add",
+  "bubie.dj.added": "Link added to the playlist.",
+  "bubie.dj.bad_link": "That isn't an http(s) link.",
+  "bubie.dj.too_many": "The playlist holds %s links.",
+  "bubie.dj.links_off": "This server only lets the DJ play discs."
 }

@@ -199,5 +199,20 @@
   "bubie.status.stuck.help": "Ficou um tempo sem conseguir andar. Solte ele (um buraco, uma porta, uma cerca) ou traga ele mais perto do trabalho.",
   "bubie.status.no_material.item": "Esperando %s ×%s",
   "bubie.tooltip.build": "Construídos %s / %s blocos",
-  "bubie.ui.build": "Base: %s / %s blocos"
+  "bubie.ui.build": "Base: %s / %s blocos",
+  "bubie.ui.tab.dj": "DJ",
+  "bubie.ui.dj.now": "Tocando agora",
+  "bubie.ui.dj.stopped": "Parado",
+  "bubie.ui.dj.volume": "Volume %s%%",
+  "bubie.ui.dj.discs": "Discos no inventário: %s",
+  "bubie.ui.dj.links": "Links: %s/%s",
+  "bubie.ui.dj.add": "+ Adicionar link",
+  "bubie.ui.dj.help": "Toca os discos de música do inventário dele e depois os links, para todo mundo por perto.",
+  "bubie.ui.dj.add_title": "Adicionar link de música",
+  "bubie.ui.dj.add_help": "Cole o endereço de um arquivo .mp3 ou .ogg.",
+  "bubie.ui.dj.add_ok": "Adicionar",
+  "bubie.dj.added": "Link adicionado à playlist.",
+  "bubie.dj.bad_link": "Isso não é um link http(s).",
+  "bubie.dj.too_many": "A playlist cabe %s links.",
+  "bubie.dj.links_off": "Este servidor só deixa o DJ tocar discos."
 }

@@ -108,6 +108,18 @@ public class BubieModel extends HierarchicalModel<BubieEntity> implements ArmedM
         } else if (face == Face.HAPPY) {
             leftArm.zRot = -2.5F + Mth.sin(ageInTicks * 0.6F) * 0.35F; // wave
             leftArm.xRot = 0.0F;
+        } else if (face == Face.MUSIC) {
+            // dancing to the beat (about 120 bpm): head nods and sways, arms pump; walking still moves the legs
+            float beat = ageInTicks * Mth.PI / 5.0F;
+            head.zRot = Mth.sin(beat * 0.5F) * 0.12F;
+            head.y += Math.abs(Mth.sin(beat)) * -0.6F;
+            torso.zRot = Mth.sin(beat * 0.5F) * 0.05F;
+            if (limbSwingAmount < 0.1F && attackTime <= 0.0F) {
+                rightArm.zRot = 0.5F + Mth.sin(beat) * 0.35F;
+                leftArm.zRot = -0.5F - Mth.sin(beat) * 0.35F;
+                rightArm.xRot = -0.4F;
+                leftArm.xRot = -0.4F;
+            }
         }
 
         if (attackTime > 0.0F) {

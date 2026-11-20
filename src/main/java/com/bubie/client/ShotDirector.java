@@ -192,6 +192,7 @@ public final class ShotDirector {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.getSingleplayerServer() == null) return;
         if (index < 0) {
+            mc.options.pauseOnLostFocus = false; // a recording must not stop when another window is in front
             build();
             index = 0;
             timer = 100;
@@ -205,6 +206,60 @@ public final class ShotDirector {
 
     private static void add(int wait, Runnable r) {
         steps.add(new Step(wait, r));
+    }
+
+    /** -PdjShots=<link>: the DJ scene only, playing a disc and then that link. */
+    private static final String DJ_LINK = System.getProperty("bubie.djshots");
+
+    private static void djScene(ServerPlayer p) {
+        BubieEntity dj = spawn(p, 0, 0, 0);
+        dj.setMode(Mode.STAY);
+        dj.insert(new ItemStack(Items.MUSIC_DISC_PIGSTEP));
+        dj.insert(new ItemStack(Items.MUSIC_DISC_CAT));
+        if (DJ_LINK != null && !DJ_LINK.isBlank() && !DJ_LINK.equals("true")) dj.dj().addLink(DJ_LINK);
+        dj.dj().toggle();
+        BubieEntity friend = spawn(p, 2, 1, 150);
+        friend.setLook(new com.bubie.entity.Look(4, 10, 3, 7, 7));
+        friend.setMode(Mode.STAY);
+    }
+
+    private static void djSteps(Minecraft mc) {
+        add(200, () -> server(ShotDirector::flatten));
+        add(40, () -> server(ShotDirector::djScene));
+        add(20, () -> mc.options.hideGui = true);
+        add(20, () -> server(p -> look(p, cx + 1.2, g + 0.4, cz + 3.4, cx + 1.0, g + 0.55, cz + 0.5)));
+        add(40, () -> shot("dj_face"));
+        add(7, () -> shot("dj_face2"));
+        add(5, () -> mc.options.hideGui = false);
+        add(5, () -> server(p -> look(p, cx + 0.5, g + 0.6, cz + 2.4, cx + 0.5, g + 0.5, cz + 0.5)));
+        add(20, () -> shot("dj_title"));
+        add(5, () -> server(p -> {
+            p.getAbilities().flying = false;
+            p.onUpdateAbilities();
+            p.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            BubieEntity b = p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6)).stream().findFirst().orElse(null);
+            if (b != null) b.interact(p, InteractionHand.MAIN_HAND);
+        }));
+        add(20, () -> BubieScreen.selectTab(3));
+        add(20, () -> shot("menu_dj"));
+        add(5, () -> {
+            if (mc.screen instanceof BubieScreen screen && screen.getMenu().bubie() != null) {
+                mc.setScreen(new DjLinkScreen(screen, screen.getMenu().bubie()));
+            }
+        });
+        add(20, () -> shot("dj_add_link"));
+        add(5, () -> mc.setScreen(null));
+        // skip the two discs: the link plays (the log shows whether it streamed and decoded)
+        add(20, () -> server(p -> p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6))
+                .forEach(b -> {
+                    b.dj().next();
+                    b.dj().next();
+                    LOG.info("DJ now plays {}", b.getDjTrack());
+                })));
+        add(400, () -> server(p -> p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6))
+                .forEach(b -> LOG.info("DJ after 20 s plays {}", b.getDjTrack()))));
+        add(20, () -> LOG.info("dj shots done"));
+        add(20, () -> Minecraft.getInstance().stop());
     }
 
     private static void build() {
@@ -231,6 +286,10 @@ public final class ShotDirector {
             cmd(p, "forceload add " + (cx - 48) + " " + (cz - 48) + " " + (cx + 48) + " " + (cz + 48));
             p.teleportTo(p.serverLevel(), cx, 200, cz, 0, 0);
         }));
+        if (DJ_LINK != null) {
+            djSteps(mc);
+            return;
+        }
         add(200, () -> server(ShotDirector::flatten));
         add(40, () -> server(ShotDirector::scenes));
         add(20, () -> mc.options.hideGui = true);

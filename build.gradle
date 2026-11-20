@@ -35,6 +35,8 @@ neoForge {
         shots {
             client()
             systemProperty 'bubie.shots', 'true'
+            // -PdjShots=<audio link>: only the DJ scene (face, menu tab) and a streamed link, checked in the log
+            if (project.hasProperty('djShots')) systemProperty 'bubie.djshots', project.property('djShots').toString()
             jvmArgument '-da'
             programArguments.addAll('--quickPlaySingleplayer', 'Shots', '--width', '1920', '--height', '1080')
         }
@@ -77,6 +79,12 @@ repositories {
 }
 
 dependencies {
+    // The DJ decodes .mp3 links with JLayer (pure Java, LGPL 2.1), shipped inside the jar (Jar-in-Jar).
+    jarJar(implementation('javazoom:jlayer:[1.0.1,2)')) {
+        version { prefer '1.0.1' }
+    }
+    additionalRuntimeClasspath 'javazoom:jlayer:1.0.1'
+
     // Optional integration: compiled against, never required at runtime (see compat/jade).
     compileOnly 'curse.maven:jade-324717:8591319'   // Jade 15.10.6
     runtimeOnly 'curse.maven:jade-324717:8591319'

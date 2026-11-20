@@ -104,6 +104,7 @@ public class Bubie {
 
     public Bubie(IEventBus modBus, ModContainer container) {
         container.registerConfig(ModConfig.Type.SERVER, BubieConfig.SPEC);
+        container.registerConfig(ModConfig.Type.CLIENT, BubieClientConfig.SPEC);
         ITEMS.register(modBus);
         BLOCKS.register(modBus);
         ENTITIES.register(modBus);
@@ -118,7 +119,9 @@ public class Bubie {
             event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, STATION_BE.get(), (be, side) -> be.energy());
         });
         modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
-                .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle));
+                .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle)
+                .playToServer(com.bubie.network.DjLinkPayload.TYPE, com.bubie.network.DjLinkPayload.STREAM_CODEC,
+                        com.bubie.network.DjLinkPayload::handle));
         modBus.addListener(StationChunks::register);
         // Base Blueprint 1.3.0+: its menu's "Build with Bubie" button
         if (com.bubie.compat.BlueprintCompat.loaded() && classExists("com.baseblueprint.api.HelperBuildEvent")) {

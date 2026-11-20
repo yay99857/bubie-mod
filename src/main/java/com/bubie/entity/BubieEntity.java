@@ -52,6 +52,7 @@ import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -86,6 +87,10 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private static final EntityDataAccessor<ItemStack> DATA_NEED = define(EntityDataSerializers.ITEM_STACK);
     /** Builder progress: total blocks of the plan (high 16 bits) and blocks still to place (low 16 bits). */
     private static final EntityDataAccessor<Integer> DATA_BUILD = define(EntityDataSerializers.INT);
+    /** The DJ: the track playing ({@link Dj.Track#encode}), the volume (0-100) and the links, one per line. */
+    private static final EntityDataAccessor<String> DATA_DJ = define(EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<Byte> DATA_DJ_VOLUME = define(EntityDataSerializers.BYTE);
+    private static final EntityDataAccessor<String> DATA_DJ_LINKS = define(EntityDataSerializers.STRING);
 
     private static final ResourceLocation SPEED_CHIP_ID = Bubie.id("speed_chip");
 
@@ -97,6 +102,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private final SimpleContainer extra = new SimpleContainer(1 + CHIP_SLOTS);
     private final Map<ChipType, Integer> chips = new EnumMap<>(ChipType.class);
     private final JobRunner runner = new JobRunner(this);
+    private final Dj dj = new Dj(this);
     private double energyDebt;
     /** Builder: Bubie's own copy of the blueprint, where the base goes and which side gets the door. */
     private ItemStack buildPlan = ItemStack.EMPTY;
@@ -148,6 +154,9 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         builder.define(DATA_LOOK, Look.DEFAULT.pack());
         builder.define(DATA_NEED, ItemStack.EMPTY);
         builder.define(DATA_BUILD, 0);
+        builder.define(DATA_DJ, "");
+        builder.define(DATA_DJ_VOLUME, (byte) 70);
+        builder.define(DATA_DJ_LINKS, "");
     }
 
     @Override
@@ -312,6 +321,38 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         int total = Math.max(getBuildTotal(), l); // older saves had no total: the first count becomes it
         int packed = total << 16 | l;
         if (entityData.get(DATA_BUILD) != packed) entityData.set(DATA_BUILD, packed);
+    }
+
+    // ---------------------------------------------------------------- DJ
+
+    public Dj dj() {
+        return dj;
+    }
+
+    public Dj.Track getDjTrack() {
+        return Dj.Track.decode(entityData.get(DATA_DJ));
+    }
+
+    void setDjTrack(Dj.Track track) {
+        entityData.set(DATA_DJ, track.encode());
+    }
+
+    public int getDjVolume() {
+        return entityData.get(DATA_DJ_VOLUME);
+    }
+
+    public void setDjVolume(int volume) {
+        entityData.set(DATA_DJ_VOLUME, (byte) Math.max(0, Math.min(100, volume)));
+    }
+
+    /** The links, as the client sees them (the menu lists them). */
+    public List<String> getDjLinks() {
+        String s = entityData.get(DATA_DJ_LINKS);
+        return s.isEmpty() ? List.of() : List.of(s.split("\n"));
+    }
+
+    void syncDjLinks() {
+        entityData.set(DATA_DJ_LINKS, String.join("\n", dj.links()));
     }
 
     public ItemStack getNeed() {
@@ -548,6 +589,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private Face pickFace() {
         if (hurtTime > 0) return Face.HURT;
         if (moodTicks > 0) return moodFace;
+        if (!getDjTrack().isNone()) return Face.MUSIC;
         Status status = getStatus();
         if (status == Status.NO_ENERGY || status == Status.CHARGING || status == Status.RESTING) return Face.SLEEP;
         if (status.problem) return Face.ERROR;
@@ -578,6 +620,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         if (level().isClientSide) return;
         setAirSupply(getMaxAirSupply()); // no lungs
         if (moodTicks > 0) moodTicks--;
+        dj.tick();
         entityData.set(DATA_FACE, (byte) pickFace().ordinal());
         if (getMaxEnergy() != BubieConfig.MAX_ENERGY.get()) entityData.set(DATA_MAX_ENERGY, BubieConfig.MAX_ENERGY.get());
         if (tickCount % 20 == 0) {
@@ -783,6 +826,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         tag.put("Storage", saveContainer(storage));
         tag.put("Extra", saveContainer(extra));
         if (!getTool().isEmpty()) tag.put("Tool", getTool().save(registryAccess()));
+        dj.save(tag);
         if (!buildPlan.isEmpty() && buildOrigin != null) {
             CompoundTag build = new CompoundTag();
             build.put("Blueprint", buildPlan.save(registryAccess()));
@@ -827,6 +871,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             buildPlan = ItemStack.EMPTY;
             buildOrigin = null;
         }
+        dj.load(tag);
+        setDjTrack(Dj.Track.NONE);
         onChipsChanged();
         runner.reset();
     }

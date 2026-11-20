@@ -18,6 +18,7 @@ public final class BubieConfig {
     public static final ModConfigSpec.BooleanValue STATION_LOADS_CHUNKS;
     public static final ModConfigSpec.BooleanValue TELEPORT_WHEN_STUCK;
     public static final ModConfigSpec.IntValue HOME_RADIUS;
+    public static final ModConfigSpec.BooleanValue DJ_LINKS;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -45,6 +46,9 @@ public final class BubieConfig {
                 .define("teleportWhenStuck", true);
         HOME_RADIUS = b.comment("Without a marked area, a Bubie with a station works this many blocks around it.")
                 .defineInRange("homeRadius", 8, 2, 64);
+        DJ_LINKS = b.comment("The DJ may play audio links (.ogg, .mp3). Every player near the Bubie downloads them from that",
+                        "address, which sees their IP. Off: discs only. Players can also turn links off for themselves (client config).")
+                .define("djLinks", true);
         SPEC = b.build();
     }
 

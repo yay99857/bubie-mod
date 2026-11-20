@@ -22,11 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The Bubie's menu. Left: a dark "screen" with three tabs (Job, Area, Status). Right: the Bubie's storage, its tool,
+ * The Bubie's menu. Left: a dark "screen" with four tabs (Job, Area, Status, DJ). Right: the Bubie's storage, its tool,
  * fuel and chips, and the player's inventory, on the cream casing.
  */
 public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
-    private enum Tab { JOB, AREA, STATUS }
+    private enum Tab { JOB, AREA, STATUS, DJ }
 
     private static final int PANEL_X = 7, PANEL_Y = 7, PANEL_W = 108, PANEL_H = 214;
     private static Tab tab = Tab.JOB;
@@ -135,6 +135,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             case JOB -> drawJob(g, bubie, cx, cy);
             case AREA -> drawArea(g, bubie, cx, cy);
             case STATUS -> drawStatus(g, bubie, cx, cy);
+            case DJ -> drawDj(g, bubie, cx, cy);
         }
     }
 
@@ -312,6 +313,61 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             y += 10;
         }
         if (!any) g.drawString(font, Component.translatable("bubie.ui.none"), x, y, BubieUi.AMBER_DARK, false);
+    }
+
+    /** Discs in the Bubie's storage: its playlist, before the links. */
+    private int discs() {
+        int n = 0;
+        for (int i = 0; i < BubieEntity.STORAGE_SLOTS; i++) {
+            if (menu.getSlot(i).getItem().has(net.minecraft.core.component.DataComponents.JUKEBOX_PLAYABLE)) n++;
+        }
+        return n;
+    }
+
+    private void drawDj(GuiGraphics g, BubieEntity bubie, int x, int y) {
+        int w = PANEL_W - 8;
+        com.bubie.entity.Dj.Track track = bubie.getDjTrack();
+        label(g, Component.translatable("bubie.ui.dj.now"), x, y);
+        y += 10;
+        y = paragraph(g, track.isNone() ? Component.translatable("bubie.ui.dj.stopped")
+                : Component.literal("♪ " + track.title()), x, y, track.isNone() ? BubieUi.AMBER_DARK : BubieUi.AMBER_LIGHT);
+        y += 4;
+        int bw = (w - 4) / 3;
+        button(g, x, y, bw, 13, Component.literal("◀◀"), false, () -> send(BubieCommandPayload.DJ_PREVIOUS, 0));
+        button(g, x + bw + 2, y, w - 2 * bw - 4, 13, Component.literal(track.isNone() ? "▶" : "■"), !track.isNone(),
+                () -> send(BubieCommandPayload.DJ_TOGGLE, 0));
+        button(g, x + w - bw, y, bw, 13, Component.literal("▶▶"), false, () -> send(BubieCommandPayload.DJ_NEXT, 0));
+        y += 19;
+        int volume = bubie.getDjVolume();
+        label(g, Component.translatable("bubie.ui.dj.volume", volume), x, y);
+        y += 10;
+        button(g, x, y, 13, 11, Component.literal("-"), false, () -> send(BubieCommandPayload.DJ_VOLUME, Math.max(0, volume - 10)));
+        button(g, x + w - 13, y, 13, 11, Component.literal("+"), false, () -> send(BubieCommandPayload.DJ_VOLUME, Math.min(100, volume + 10)));
+        BubieUi.bar(g, x + 16, y + 3, w - 32, 5, volume / 100F, BubieUi.AMBER);
+        y += 17;
+        label(g, Component.translatable("bubie.ui.dj.discs", discs()), x, y);
+        y += 12;
+        java.util.List<String> links = bubie.getDjLinks();
+        label(g, Component.translatable("bubie.ui.dj.links", links.size(), com.bubie.entity.Dj.MAX_LINKS), x, y);
+        y += 10;
+        int shown = Math.min(links.size(), 5);
+        for (int i = 0; i < shown; i++) {
+            int index = i;
+            String title = font.plainSubstrByWidth(com.bubie.entity.Dj.linkTitle(links.get(i)), w - 16);
+            g.drawString(font, title, x, y + 2, BubieUi.AMBER, false);
+            button(g, x + w - 12, y, 12, 11, Component.literal("×"), false, () -> send(BubieCommandPayload.DJ_REMOVE_LINK, index));
+            y += 13;
+        }
+        if (links.size() > shown) {
+            g.drawString(font, "+" + (links.size() - shown), x, y + 2, BubieUi.DIM, false);
+            y += 12;
+        }
+        if (links.size() < com.bubie.entity.Dj.MAX_LINKS) {
+            button(g, x, y, w, 13, Component.translatable("bubie.ui.dj.add"), false,
+                    () -> minecraft.setScreen(new DjLinkScreen(this, bubie)));
+            y += 17;
+        }
+        paragraph(g, Component.translatable("bubie.ui.dj.help"), x, y, BubieUi.DIM);
     }
 
     @Override

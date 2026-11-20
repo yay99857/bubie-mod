@@ -51,6 +51,7 @@ public final class LookTextures {
             case ERROR -> new String[]{"404", "wavy"};
             case SLEEP -> new String[]{"closed", "dot"};
             case HURT -> new String[]{"xx", "open"};
+            case MUSIC -> new String[]{"happy", "smile"}; // the mouth is an equalizer: see music()
         };
     }
 
@@ -90,6 +91,32 @@ public final class LookTextures {
             int[] glow = Look.GLOWS.get(look.glow()).ramp();
             stamp(img, Bubie.id("textures/face_parts/eyes_" + parts[0] + ".png"), glow);
             stamp(img, Bubie.id("textures/face_parts/mouth_" + parts[1] + ".png"), glow);
+            return register(k, img);
+        });
+    }
+
+    /** Equalizer frames: bar heights (0-4) of the 9 bars, on the 4 free rows under the eyes. */
+    public static final int MUSIC_FRAMES = 8;
+    private static final int[][] EQ = {
+            {2, 3, 4, 2, 1, 3, 4, 2, 1}, {3, 4, 2, 1, 2, 4, 3, 1, 2}, {4, 2, 1, 3, 4, 2, 1, 3, 3},
+            {2, 1, 3, 4, 3, 1, 2, 4, 2}, {1, 3, 4, 2, 2, 3, 4, 2, 1}, {3, 4, 2, 1, 4, 2, 1, 3, 4},
+            {4, 2, 1, 3, 3, 4, 2, 1, 3}, {2, 3, 4, 4, 1, 2, 3, 4, 2}};
+
+    /** Happy eyes over a dancing equalizer, in the Bubie's light colour. */
+    public static ResourceLocation music(Look look, int frame) {
+        int f = Math.floorMod(frame, MUSIC_FRAMES);
+        String key = "music_" + f + "_" + look.glow();
+        return CACHE.computeIfAbsent(key, k -> {
+            NativeImage img = new NativeImage(FACE_SIZE, FACE_SIZE, true);
+            int[] glow = Look.GLOWS.get(look.glow()).ramp();
+            stamp(img, Bubie.id("textures/face_parts/eyes_happy.png"), glow);
+            for (int bar = 0; bar < EQ[f].length; bar++) {
+                int x = SCREEN_X + 7 + bar * 2;
+                for (int h = 0; h < EQ[f][bar]; h++) {
+                    int y = SCREEN_Y + 13 - h;
+                    img.setPixelRGBA(x, y, abgr(h == EQ[f][bar] - 1 ? glow[0] : glow[1], 255));
+                }
+            }
             return register(k, img);
         });
     }
