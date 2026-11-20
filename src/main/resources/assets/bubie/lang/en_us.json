@@ -121,7 +121,7 @@
   "bubie.ui.locked": "Storage Chip",
   "bubie.ui.charging": "Charging",
   "bubie.ui.hint.tool": "Tool: the Bubie uses it up. Axe, shovel or pickaxe, depending on the job.",
-  "bubie.ui.hint.fuel": "Fuel: coal, charcoal, wood, coal blocks…",
+  "bubie.ui.hint.fuel": "Fuel: coal, charcoal, wood… or a battery with FE (Voltaic pocket accumulator, Mekanism energy tablet, Powah battery), which charges the Bubie and is not used up.",
   "bubie.ui.hint.chip": "Upgrade chip",
   "bubie.ui.hint.station_fuel": "Fuel (coal or better), if the station has no FE. Pipes and hoppers fill it too.",
   "config.jade.plugin_bubie.bubie": "Bubie",

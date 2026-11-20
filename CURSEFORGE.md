@@ -47,7 +47,7 @@ Casing, hoodie and screen-light colours, 18 eyes and 10 mouths from the bubie.gg
 
 ## 🔌 Works with
 - **Storage:** unloads into any block with an inventory: Sophisticated Storage, Functional Storage, Create vaults, Mekanism bins, chests (AE2: put a Storage Bus on its chest).
-- **Power:** the station takes FE from any cable (Mekanism, Powah, Flux Networks, Ender IO, Pipez...), and the Bubie goes back to charge on its own, so it never runs out. Pipes can feed coal to the station.
+- **Power:** the station takes FE from any cable (Mekanism, Powah, Flux Networks, Ender IO, Pipez...), and the Bubie goes back to charge on its own, so it never runs out. Pipes can feed coal to the station, and any FE battery (Voltaic pocket accumulator, Mekanism energy tablet) in its fuel slot charges it without being used up.
 - **Claims and teams:** breaks blocks as its owner, so FTB Chunks protection applies; FTB Teams teammates can give it orders.
 - **Crops and ores:** Mystical Agriculture, Farmer's Delight and other standard crops; any ore in `c:ores` (All the Ores included); any modded tool.
 - **Safe from automation:** mob capturers can't take it, and machines that attack as fake players don't hurt it.

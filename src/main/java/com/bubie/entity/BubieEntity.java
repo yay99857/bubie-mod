@@ -415,9 +415,31 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         return burn <= 0 ? 0 : (int) (burn * BubieConfig.FUEL_MULTIPLIER.get());
     }
 
+    /** What the fuel slot takes: anything that burns, or any item that stores FE (batteries, pocket accumulators). */
+    public static boolean isFuel(ItemStack stack) {
+        if (stack.getBurnTime(RecipeType.SMELTING) > 0) return true;
+        var energy = stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
+        return energy != null && energy.canExtract();
+    }
+
+    /** Bubie energy per second a battery in the fuel slot can give (as fast as the station). */
+    private static final int BATTERY_RATE = 800;
+
     private void burnFuel() {
         if (!BubieConfig.REQUIRE_ENERGY.get()) return;
         ItemStack fuel = extra.getItem(FUEL_SLOT);
+        var battery = fuel.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
+        if (battery != null && battery.canExtract()) {
+            int need = Math.min(BATTERY_RATE, getMaxEnergy() - getEnergy());
+            int fePer = Math.max(1, BubieConfig.FE_PER_ENERGY.get());
+            if (need <= 0) return;
+            int fe = battery.extractEnergy(need * fePer, false);
+            if (fe >= fePer) {
+                setEnergy(getEnergy() + fe / fePer);
+                extra.setChanged();
+            }
+            return;
+        }
         int value = fuelValue(fuel);
         if (value > 0 && getMaxEnergy() - getEnergy() >= value) {
             ItemStack remainder = fuel.getCraftingRemainingItem();

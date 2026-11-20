@@ -66,7 +66,7 @@ public class BubieMenu extends AbstractContainerMenu {
         addSlot(new Slot(extra, BubieEntity.FUEL_SLOT, GRID_X + 24, EQUIP_Y) {
             @Override
             public boolean mayPlace(ItemStack stack) {
-                return stack.getBurnTime(RecipeType.SMELTING) > 0;
+                return BubieEntity.isFuel(stack);
             }
         });
         for (int i = 0; i < BubieEntity.CHIP_SLOTS; i++) {

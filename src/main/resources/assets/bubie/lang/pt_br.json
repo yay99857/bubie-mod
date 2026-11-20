@@ -121,7 +121,7 @@
   "bubie.ui.locked": "Chip de armazenamento",
   "bubie.ui.charging": "Carregando",
   "bubie.ui.hint.tool": "Ferramenta: o Bubie usa e gasta. Machado, pá ou picareta, conforme a tarefa.",
-  "bubie.ui.hint.fuel": "Combustível: carvão, carvão vegetal, madeira, blocos de carvão…",
+  "bubie.ui.hint.fuel": "Combustível: carvão, carvão vegetal, madeira… ou uma bateria com FE (acumulador de bolso da Voltaic, tablet do Mekanism, bateria do Powah), que recarrega o Bubie sem se gastar.",
   "bubie.ui.hint.chip": "Chip de melhoria",
   "bubie.ui.hint.station_fuel": "Combustível (carvão ou melhor), se a estação não tiver FE. Canos e funis também abastecem aqui.",
   "config.jade.plugin_bubie.bubie": "Bubie",

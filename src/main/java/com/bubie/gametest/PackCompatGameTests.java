@@ -204,4 +204,73 @@ public class PackCompatGameTests {
                 "bubie:bubie is in #c:capturing_not_supported");
         helper.succeed();
     }
+
+    /** A charged battery in the fuel slot charges the Bubie and stays in the slot. */
+    private static void chargesFromBattery(GameTestHelper helper, String mod, String battery) {
+        if (skip(helper, mod)) return;
+        floor(helper, Blocks.STONE);
+        ItemStack stack = new ItemStack(item(battery));
+        IEnergyStorage cell = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+        helper.assertTrue(cell != null, battery + " stores FE");
+        for (int i = 0; i < 200 && cell.getEnergyStored() < cell.getMaxEnergyStored(); i++) cell.receiveEnergy(Integer.MAX_VALUE, false);
+        int full = cell.getEnergyStored();
+        helper.assertTrue(full > 0, battery + " took a charge");
+        BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(7, 1, 7));
+        bubie.setMode(Mode.STAY);
+        bubie.setEnergy(0);
+        bubie.extra().setItem(BubieEntity.FUEL_SLOT, stack);
+        helper.assertTrue(BubieEntity.isFuel(stack), "the fuel slot takes " + battery);
+        helper.succeedWhen(() -> {
+            ItemStack in = bubie.extra().getItem(BubieEntity.FUEL_SLOT);
+            IEnergyStorage now = in.getCapability(Capabilities.EnergyStorage.ITEM);
+            helper.assertTrue(in.is(item(battery)), "the battery stays in the slot");
+            helper.assertTrue(bubie.getEnergy() > 0, "charged from the battery, energy " + bubie.getEnergy());
+            helper.assertTrue(now != null && now.getEnergyStored() < full, "the battery gave FE");
+        });
+    }
+
+    @GameTest(template = FIELD, timeoutTicks = 100)
+    public static void chargesFromVoltaicPocketAccumulator(GameTestHelper helper) {
+        chargesFromBattery(helper, "voltaicdynamics", "voltaicdynamics:pocket_accumulator");
+    }
+
+    @GameTest(template = FIELD, timeoutTicks = 100)
+    public static void chargesFromMekanismEnergyTablet(GameTestHelper helper) {
+        chargesFromBattery(helper, "mekanism", "mekanism:energy_tablet");
+    }
+
+    /** Mark a Voltaic pulverizer as the drop-off and the miner feeds it raw ore directly. */
+    @GameTest(template = FIELD, timeoutTicks = 400)
+    public static void unloadsOreIntoVoltaicPulverizer(GameTestHelper helper) {
+        if (skip(helper, "voltaicdynamics")) return;
+        floor(helper, Blocks.STONE);
+        helper.setBlock(BOX, block("voltaicdynamics:pulverizer"));
+        BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(5, 1, 5));
+        bubie.setEnergy(40000);
+        bubie.setJob(JobType.FARMER);
+        bubie.setArea(WorkArea.of(helper.absolutePos(new BlockPos(6, 1, 6)), helper.absolutePos(new BlockPos(9, 2, 9))));
+        bubie.setChest(helper.absolutePos(BOX));
+        bubie.insert(new ItemStack(Items.RAW_IRON, 8));
+        bubie.setMode(Mode.WORK);
+        helper.succeedWhen(() -> helper.assertTrue(count(helper, BOX, Items.RAW_IRON) == 8,
+                "the pulverizer should hold 8 raw iron, has " + count(helper, BOX, Items.RAW_IRON) + "; status " + bubie.getStatus()));
+    }
+
+    /** The Bubie, Clipboard and Station recipes load (packs may replace them, the Bubie Pack does with Voltaic items). */
+    @GameTest(template = FIELD, timeoutTicks = 20)
+    public static void recipesLoad(GameTestHelper helper) {
+        var recipes = helper.getLevel().getRecipeManager();
+        for (String id : new String[]{"bubie", "bubie_clipboard", "bubie_station"}) {
+            var holder = recipes.byKey(Bubie.id(id));
+            helper.assertTrue(holder.isPresent(), "recipe bubie:" + id + " is loaded");
+            StringBuilder items = new StringBuilder();
+            for (var ingredient : holder.get().value().getIngredients()) {
+                ItemStack[] options = ingredient.getItems();
+                if (options.length > 0) items.append(BuiltInRegistries.ITEM.getKey(options[0].getItem())).append(' ');
+            }
+            com.mojang.logging.LogUtils.getLogger().info("Bubie recipe bubie:{} uses {}", id, items.toString().trim());
+            helper.assertTrue(!items.isEmpty(), "recipe bubie:" + id + " has ingredients");
+        }
+        helper.succeed();
+    }
 }

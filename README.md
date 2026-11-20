@@ -91,6 +91,8 @@ Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./
 |---|---|
 | **Sophisticated Storage, Functional Storage, cofre do Create, bin do Mekanism, qualquer baú** | O Bubie guarda em qualquer bloco com inventário. Marque com Shift + clique da Prancheta. Ele usa a face voltada para ele (o Mekanism exige isso) |
 | **AE2 e Integrated Dynamics** | Guarde num baú e ponha um Storage Bus nele (ou um Import Bus); o Bubie não fala com a rede direto |
+| **Baterias (acumulador de bolso da Voltaic, tablet do Mekanism, baterias do Powah)** | No slot de combustível, recarregam o Bubie sem se gastar |
+| **Máquinas da Voltaic (e outras)** | Marque a máquina como "baú" com a Prancheta: o Minerador entrega o minério bruto direto no pulverizador |
 | **Mekanism, Powah, Flux Networks, Ender IO, Pipez, Voltaic** | A Estação recebe FE de qualquer cabo (até 4.000 FE/t, 4 FE por unidade de energia). Ligada na energia, o Bubie volta sozinho para carregar quando a bateria baixa: fica sempre ligado |
 | **Canos, funis, esteiras** | Colocam carvão (ou melhor) direto no slot de combustível da Estação e tiram o que está guardado nela. Troncos e tábuas nunca são queimados |
 | **FTB Chunks** | O Bubie quebra blocos como o dono, então só trabalha onde o dono pode mexer (opção "Allow Fake Players by Player ID", ligada no pack). Para ele trabalhar com você longe, carregue o chunk pelo FTB Chunks (ou ligue `stationLoadsChunks`) |
