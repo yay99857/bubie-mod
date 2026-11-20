@@ -2,7 +2,7 @@
 
 # Bubie
 
-Mod para **Minecraft 1.21.1 (NeoForge 21.1.265)**, feito para o Bubie Pack. O Bubie é o robozinho do bubie.gg
+Mod para **Minecraft 1.21.1 (NeoForge 21.1.265)**, feito para o Bubie Pack. O Bubie é um robozinho
 (tela CRT creme, olhos âmbar, moletom preto) como ajudante: segue você, carrega itens e, com uma tarefa e uma
 área, coleta recursos sozinho e guarda tudo num baú.
 
@@ -15,7 +15,7 @@ Mod para **Minecraft 1.21.1 (NeoForge 21.1.265)**, feito para o Bubie Pack. O Bu
 | ![Construtor levantando uma base da Planta de Base](docs/screenshots/builder.png) | |
 
 ## Editar meu Bubie
-Na aba **Status** do menu, **✎ Editar meu Bubie** abre o editor do My Bubie do bubie.gg dentro do jogo: cor do casco,
+Na aba **Status** do menu, **✎ Editar meu Bubie** abre o editor de visual dentro do jogo: cor do casco,
 do moletom e da luz da tela, olhos e boca, com prévia girando (arraste para virar), **Aleatório** e **Padrão**.
 As paletas e as peças de rosto são as do site (`features/my-bubie/manifest.ts`, `public/my-bubie/v1`), menos as cores do Plus.
 A aparência fica salva no Bubie (e no item, quando ele é guardado ou desliga) e todos no servidor veem igual.

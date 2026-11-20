@@ -6,7 +6,7 @@
 
 ![Seven Bubies, each dressed up in the editor](https://media.forgecdn.net/attachments/2241/432/01-lineup-png.png)
 
-Bubie is the mascot of bubie.gg, a cream CRT monitor in a black hoodie, as a helper for Minecraft 1.21.1 (NeoForge). Craft one, click the ground to switch it on, and give it a job.
+Bubie is a cream CRT monitor in a black hoodie, as a helper for Minecraft 1.21.1 (NeoForge). Craft one, click the ground to switch it on, and give it a job.
 
 ![The default Bubie up close](https://media.forgecdn.net/attachments/2241/433/02-portrait-png.png)
 
@@ -41,7 +41,7 @@ Several Bubies in one area split the work: each one claims the block (or, for lu
 - A balloon over its head says what's wrong when it stops.
 
 ## 🎨 Edit my Bubie
-Casing, hoodie and screen-light colours, 18 eyes and 10 mouths from the bubie.gg My Bubie editor, with a turning preview. Everyone on the server sees your look.
+Casing, hoodie and screen-light colours, 18 eyes and 10 mouths, with a turning preview. Everyone on the server sees your look.
 
 | | |
 |---|---|
@@ -62,14 +62,14 @@ Settings in `serverconfig/bubie-server.toml`.
 ---
 
 ## 🇧🇷 Português
-O Bubie, mascote do bubie.gg, vira um ajudante: corta árvores inteiras e replanta, escava areia e terra, abre pedreiras com escada,
+O Bubie, um robozinho de tela CRT e moletom preto, é um ajudante: corta árvores inteiras e replanta, escava areia e terra, abre pedreiras com escada,
 colhe e replanta plantações, minera veios ou túneis e junta itens do chão, guardando tudo no seu baú.
 Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele levanta a base bloco por bloco, com o material do baú
 (que outro Bubie pode ir enchendo).
 
 - Marque a área com a **Prancheta do Bubie** (clique em 2 cantos, Shift + clique no baú), clique no Bubie com ela e dê uma ferramenta e um pouco de carvão.
 - A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia.
-- **Editar meu Bubie:** cores do casco, do moletom e da luz da tela, olhos e boca, como no My Bubie do bubie.gg.
+- **Editar meu Bubie:** cores do casco, do moletom e da luz da tela, olhos e boca.
 - Guarda em Sophisticated Storage, Functional Storage, cofres do Create e bins do Mekanism; respeita as áreas do FTB Chunks; amigos do mesmo time do FTB Teams também dão ordens.
 - Se a vida acaba, ele desliga e vira o item, sem perder nada.
 
