@@ -74,6 +74,8 @@ final class BuilderScenarios {
                     + " to place; status " + bubie.getStatus());
             helper.assertTrue(placed(helper, bubie, Blocks.COBBLESTONE) == total, "every block of the plan is cobblestone");
             helper.assertTrue(bubie.getStatus() == Status.DONE, "reports done, is " + bubie.getStatus());
+            helper.assertTrue(bubie.getBuildTotal() == total && bubie.getBuildLeft() == 0,
+                    "progress " + bubie.getBuildLeft() + " left of " + bubie.getBuildTotal());
         });
     }
 
@@ -84,6 +86,8 @@ final class BuilderScenarios {
         boolean[] refilled = {false};
         helper.onEachTick(() -> {
             if (!refilled[0] && bubie.getStatus() == Status.NO_MATERIAL) {
+                helper.assertTrue(bubie.getNeed().is(Items.COBBLESTONE) && bubie.getNeed().getCount() == 5,
+                        "says it misses 5 cobblestone, says " + bubie.getNeed());
                 // the owner (or another Bubie) brings more
                 ChestBlockEntity chest = helper.getBlockEntity(CHEST);
                 chest.setItem(5, new ItemStack(Items.COBBLESTONE, 16));
@@ -93,6 +97,34 @@ final class BuilderScenarios {
         helper.succeedWhen(() -> {
             helper.assertTrue(refilled[0], "it waited for blocks");
             helper.assertTrue(BlueprintCompat.plan(bubie).isEmpty(), "the 3x3 floor is done");
+        });
+    }
+
+    /** A courier brings the builder only what the plan needs, from a store chest with other things in it. */
+    static void courierFeedsTheBuilder(GameTestHelper helper) {
+        BubieGameTests.floor(helper, Blocks.STONE);
+        BlockPos store = new BlockPos(13, 1, 13);
+        helper.setBlock(store, Blocks.CHEST);
+        ChestBlockEntity stock = helper.getBlockEntity(store);
+        stock.setItem(0, new ItemStack(Items.COBBLESTONE, 64));
+        stock.setItem(1, new ItemStack(Items.DIRT, 20));
+        BubieEntity builder = builder(helper, new BlockPos(6, 1, 6), blueprint(3, 0, true, Blocks.COBBLESTONE), ItemStack.EMPTY);
+        BubieEntity courier = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(10, 1, 10));
+        courier.setEnergy(40000);
+        courier.setJob(JobType.COURIER);
+        courier.setArea(WorkArea.of(helper.absolutePos(new BlockPos(11, 1, 11)), helper.absolutePos(new BlockPos(15, 2, 15))));
+        courier.setChest(helper.absolutePos(CHEST));
+        courier.setMode(Mode.WORK);
+        helper.succeedWhen(() -> {
+            helper.assertTrue(BlueprintCompat.plan(builder).isEmpty(), "the floor is done; builder " + builder.getStatus()
+                    + ", courier " + courier.getStatus());
+            int dirt = 0, cobble = 0;
+            for (int i = 0; i < stock.getContainerSize(); i++) {
+                if (stock.getItem(i).is(Items.DIRT)) dirt += stock.getItem(i).getCount();
+                if (stock.getItem(i).is(Items.COBBLESTONE)) cobble += stock.getItem(i).getCount();
+            }
+            helper.assertTrue(dirt == 20, "the dirt stayed in the store");
+            helper.assertTrue(cobble >= 64 - 9 - 2, "took about the 9 cobblestone needed, store has " + cobble);
         });
     }
 

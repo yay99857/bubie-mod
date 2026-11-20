@@ -280,8 +280,16 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         button(g, x, y, w, 13, Component.translatable("bubie.ui.edit_look"), false, () -> minecraft.setScreen(new LookScreen(this, bubie)));
         y += 19;
         Status status = bubie.getStatus();
-        y = paragraph(g, Component.translatable(status.key()), x, y, status.problem ? BubieUi.RED : BubieUi.AMBER_LIGHT);
+        y = paragraph(g, bubie.statusText(), x, y, status.problem ? BubieUi.RED : BubieUi.AMBER_LIGHT);
         if (status.problem) y = paragraph(g, Component.translatable(status.key() + ".help"), x, y, BubieUi.DIM);
+        if (bubie.getJob() == JobType.BUILDER && bubie.getBuildTotal() > 0) {
+            int total = bubie.getBuildTotal(), placed = total - bubie.getBuildLeft();
+            y += 6;
+            label(g, Component.translatable("bubie.ui.build", placed, total), x, y);
+            y += 10;
+            BubieUi.bar(g, x + 1, y, w - 2, 5, placed / (float) total, BubieUi.AMBER);
+            y += 7;
+        }
         y += 6;
         label(g, Component.translatable("bubie.ui.energy"), x, y);
         y += 10;

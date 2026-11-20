@@ -41,6 +41,12 @@ public class LumberJob extends Job {
         return false;
     }
 
+    /** A tree is one target: two lumberjacks never work on the same trunk. */
+    @Override
+    public int claimRadius() {
+        return 2;
+    }
+
     @Override
     public boolean isTarget(ServerLevel level, BlockPos pos, BlockState state) {
         if (!state.is(BlockTags.LOGS)) return false;

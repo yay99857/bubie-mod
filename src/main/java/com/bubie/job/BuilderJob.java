@@ -43,6 +43,11 @@ public class BuilderJob extends Job {
         steps = map;
     }
 
+    /** Blocks still to place, as of the last look at the plan. */
+    public int remaining() {
+        return steps.size();
+    }
+
     @Override
     public boolean placesBlocks() {
         return true;

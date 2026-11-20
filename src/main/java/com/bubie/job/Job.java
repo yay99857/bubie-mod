@@ -47,6 +47,16 @@ public abstract class Job {
         return false;
     }
 
+    /** Jobs that move items between containers (the courier): no breaking, the work is done on arrival. */
+    public boolean instant() {
+        return false;
+    }
+
+    /** Blocks around a claimed target that other Bubies leave alone (a whole tree for the lumberjack). */
+    public int claimRadius() {
+        return 0;
+    }
+
     /** Finished for good (the area dug out, the tunnel done, the base built). */
     public boolean isDone() {
         return false;

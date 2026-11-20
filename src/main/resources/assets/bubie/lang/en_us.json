@@ -191,5 +191,13 @@
   "bubie.status.no_material": "Waiting for blocks",
   "bubie.status.no_material.help": "Its chest has none of the blueprint block. Put more in, or let another Bubie (Lumberjack, Quarry) fill it.",
   "bubie.builder.accepted": "%s will build here: %s blocks of %s.",
-  "bubie.builder.no_material": "Pick the blueprint material first (Shift + click a block with the blueprint)."
+  "bubie.builder.no_material": "Pick the blueprint material first (Shift + click a block with the blueprint).",
+  "bubie.job.courier": "Courier",
+  "bubie.job.courier.desc": "Empties the chests, hoppers and furnace outputs in its area into its own chest. If that chest is a Builder's, it brings only what the blueprint still needs.",
+  "bubie.status.carrying": "Picking up items to carry.",
+  "bubie.status.stuck": "Stuck",
+  "bubie.status.stuck.help": "It couldn't walk anywhere for a while. Free it (a hole, a door, a fence) or bring it closer to the work.",
+  "bubie.status.no_material.item": "Waiting for %s ×%s",
+  "bubie.tooltip.build": "Built %s / %s blocks",
+  "bubie.ui.build": "Base: %s / %s blocks"
 }

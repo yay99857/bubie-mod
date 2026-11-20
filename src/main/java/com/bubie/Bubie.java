@@ -120,6 +120,19 @@ public class Bubie {
         modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
                 .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle));
         modBus.addListener(StationChunks::register);
+        // Base Blueprint 1.3.0+: its menu's "Build with Bubie" button
+        if (com.bubie.compat.BlueprintCompat.loaded() && classExists("com.baseblueprint.api.HelperBuildEvent")) {
+            com.bubie.compat.BlueprintHelper.register();
+        }
+    }
+
+    private static boolean classExists(String name) {
+        try {
+            Class.forName(name, false, Bubie.class.getClassLoader());
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     public static ResourceLocation id(String path) {

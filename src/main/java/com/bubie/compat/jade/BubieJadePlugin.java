@@ -38,7 +38,12 @@ public class BubieJadePlugin implements IWailaPlugin {
                     : Component.translatable(mode.key());
             tooltip.add(doing.copy().withStyle(ChatFormatting.GOLD));
             Status status = bubie.getStatus();
-            tooltip.add(Component.translatable(status.key()).withStyle(status.problem ? ChatFormatting.RED : ChatFormatting.GRAY));
+            tooltip.add(bubie.statusText().copy().withStyle(status.problem ? ChatFormatting.RED : ChatFormatting.GRAY));
+            if (bubie.getJob() == com.bubie.entity.JobType.BUILDER && bubie.getBuildTotal() > 0) {
+                int total = bubie.getBuildTotal();
+                tooltip.add(Component.translatable("bubie.tooltip.build", total - bubie.getBuildLeft(), total)
+                        .withStyle(ChatFormatting.GRAY));
+            }
             tooltip.add(Component.translatable("bubie.tooltip.energy", Math.round(bubie.energyFraction() * 100))
                     .withStyle(ChatFormatting.GRAY));
             if (bubie.getOwnerUUID() != null) {

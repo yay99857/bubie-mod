@@ -42,7 +42,7 @@ public class BubieRenderer extends MobRenderer<BubieEntity, BubieModel> {
             // a balloon with the problem, so you know why it stopped without opening the menu
             pose.pushPose();
             if (shouldShowName(bubie)) pose.translate(0.0, 0.28, 0.0);
-            Component text = Component.literal("⚠ ").append(Component.translatable(status.key())).withStyle(ChatFormatting.GOLD);
+            Component text = Component.literal("⚠ ").append(bubie.statusText()).withStyle(ChatFormatting.GOLD);
             renderNameTag(bubie, text, pose, buffers, light, partialTick);
             pose.popPose();
         }

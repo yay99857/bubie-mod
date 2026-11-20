@@ -60,9 +60,17 @@ Um Bubie novo já vem com a energia de um carvão.
 | **Fazendeiro** | Colhe plantações maduras e replanta com as próprias sementes. Também cana, cacto, bambu, abóbora, melancia, cacau, fungo do Nether e frutas silvestres (sem quebrar o arbusto) |
 | **Minerador** | Veio: minérios expostos na área (um veio inteiro, bloco a bloco). Túnel: galeria 1×2 no fundo da área com ramificações a cada 4 blocos, pegando todo minério que aparece e pondo tochas. Minérios pela tag `c:ores` (inclui All the Ores) |
 | **Coletor** | Junta todos os itens do chão na área |
-| **Construtor** (com o mod Base Blueprint) | Configure uma Planta de Base (forma, tamanho, material) e clique no Bubie com ela, onde a base deve ficar: ele constrói bloco por bloco, de baixo para cima, pegando os blocos no baú dele. A porta fica virada para você. Sem material, mostra "Esperando material" e continua quando o baú recebe mais, então outro Bubie (um Lenhador ou uma Pedreira) pode abastecer o mesmo baú enquanto ele constrói |
+| **Construtor** (com o mod Base Blueprint) | Configure uma Planta de Base (forma, tamanho, material) e clique no Bubie com ela, onde a base deve ficar: ele constrói bloco por bloco, de baixo para cima, pegando os blocos no baú dele. A porta fica virada para você. Sem material, mostra "Esperando material" (com o bloco e quantos faltam) e continua quando o baú recebe mais, então outro Bubie (um Lenhador ou uma Pedreira) pode abastecer o mesmo baú enquanto ele constrói. O menu e o Jade mostram o progresso (blocos feitos / total). Com a Base Blueprint 1.3.0+, o botão **Construir com Bubie** no menu da planta entrega a planta ao seu Bubie mais próximo, para construir onde você está olhando |
+| **Entregador** | Esvazia os baús, funis e saídas de fornalha da área no baú dele (a fornalha fica com o combustível). Se o baú dele é o de um Construtor, leva só o que a planta ainda precisa |
 
 Sem área marcada, o Lenhador, o Fazendeiro e o Coletor trabalham em volta da Estação (raio 8).
+
+Vários Bubies na mesma área dividem o trabalho: cada um reserva o bloco (ou, no Lenhador, a árvore inteira) em que está
+trabalhando, e os outros vão para outro. Um Bubie que fica 15 s sem conseguir andar (num buraco, atrás de uma porta)
+se teleporta para perto do destino, se a config permitir, ou para e mostra **Preso**.
+
+Desempenho: 12 Bubies escavando ao mesmo tempo custam cerca de 2 ms por tick do servidor (de 50 ms), medido pelo
+GameTest `twelvebubiesstaycheap`.
 
 ## Regras
 - Ele quebra blocos em nome do dono (um jogador falso com o seu UUID), então as proteções de terreno (FTB Chunks) valem para ele como para você.

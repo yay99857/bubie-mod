@@ -18,7 +18,10 @@ Bubie is the mascot of bubie.gg, a cream CRT monitor in a black hoodie, as a hel
 - **Farmer:** harvests and replants crops; sugar cane, cactus, bamboo, pumpkins, melons, cocoa, nether wart, sweet berries.
 - **Miner:** exposed ore veins, or branch tunnels with torches. Uses the `c:ores` tag, so modded ores count.
 - **Collector:** gathers every item lying in the area.
-- **Builder** (with Base Blueprint): hand it a configured blueprint where the base should go and it builds it block by block, taking the blocks from its chest. Out of blocks, it waits; another Bubie (a Lumberjack or a Quarry) can keep that chest filled while it builds.
+- **Builder** (with Base Blueprint): hand it a configured blueprint where the base should go and it builds it block by block, taking the blocks from its chest. Out of blocks, it waits and says which block it needs; another Bubie (a Lumberjack or a Quarry) can keep that chest filled while it builds. With Base Blueprint 1.3.0+, **Build with Bubie** in the blueprint menu sends your nearest Bubie to build where you are looking.
+- **Courier:** empties the chests, hoppers and furnace outputs in its area into its own chest. Feeding a Builder, it carries only what the blueprint still needs.
+
+Several Bubies in one area split the work: each one claims the block (or, for lumberjacks, the whole tree) it is on.
 
 ![A quarry with its staircase](https://media.forgecdn.net/attachments/2241/438/07-quarry-png.png)
 

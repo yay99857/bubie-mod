@@ -4,7 +4,9 @@ package com.bubie.entity;
 public enum JobType {
     LUMBERJACK, DIGGER, QUARRY, FARMER, MINER, COLLECTOR,
     /** Builds a Base Blueprint plan block by block (needs the Base Blueprint mod). */
-    BUILDER;
+    BUILDER,
+    /** Carries what is in the containers of its area to its chest (feeds a builder only what its plan needs). */
+    COURIER;
 
     public static JobType byId(int id) {
         JobType[] values = values();

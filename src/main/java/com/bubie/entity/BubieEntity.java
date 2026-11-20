@@ -82,6 +82,10 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private static final EntityDataAccessor<Optional<BlockPos>> DATA_CHEST = define(EntityDataSerializers.OPTIONAL_BLOCK_POS);
     private static final EntityDataAccessor<Optional<BlockPos>> DATA_HOME = define(EntityDataSerializers.OPTIONAL_BLOCK_POS);
     private static final EntityDataAccessor<Integer> DATA_LOOK = define(EntityDataSerializers.INT);
+    /** What a waiting Builder is missing (item and how many), for the balloon, the menu and Jade. */
+    private static final EntityDataAccessor<ItemStack> DATA_NEED = define(EntityDataSerializers.ITEM_STACK);
+    /** Builder progress: total blocks of the plan (high 16 bits) and blocks still to place (low 16 bits). */
+    private static final EntityDataAccessor<Integer> DATA_BUILD = define(EntityDataSerializers.INT);
 
     private static final ResourceLocation SPEED_CHIP_ID = Bubie.id("speed_chip");
 
@@ -142,6 +146,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         builder.define(DATA_CHEST, Optional.empty());
         builder.define(DATA_HOME, Optional.empty());
         builder.define(DATA_LOOK, Look.DEFAULT.pack());
+        builder.define(DATA_NEED, ItemStack.EMPTY);
+        builder.define(DATA_BUILD, 0);
     }
 
     @Override
@@ -285,6 +291,46 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         buildOrigin = origin;
         buildDoor = door;
         runner.reset();
+    }
+
+    /** A new plan of this many blocks: progress starts at zero. */
+    public void setBuildTotal(int total) {
+        int t = Math.min(0xFFFF, Math.max(0, total));
+        entityData.set(DATA_BUILD, t << 16 | t);
+    }
+
+    public int getBuildTotal() {
+        return entityData.get(DATA_BUILD) >>> 16;
+    }
+
+    public int getBuildLeft() {
+        return entityData.get(DATA_BUILD) & 0xFFFF;
+    }
+
+    public void setBuildLeft(int left) {
+        int l = Math.min(0xFFFF, Math.max(0, left));
+        int total = Math.max(getBuildTotal(), l); // older saves had no total: the first count becomes it
+        int packed = total << 16 | l;
+        if (entityData.get(DATA_BUILD) != packed) entityData.set(DATA_BUILD, packed);
+    }
+
+    public ItemStack getNeed() {
+        return entityData.get(DATA_NEED);
+    }
+
+    public void setNeed(ItemStack need) {
+        ItemStack now = entityData.get(DATA_NEED);
+        if (!ItemStack.matches(now, need)) entityData.set(DATA_NEED, need.copy());
+    }
+
+    /** The status line, with what a waiting Builder is missing. */
+    public net.minecraft.network.chat.Component statusText() {
+        Status status = getStatus();
+        ItemStack need = getNeed();
+        if (status == Status.NO_MATERIAL && !need.isEmpty()) {
+            return net.minecraft.network.chat.Component.translatable("bubie.status.no_material.item", need.getHoverName(), need.getCount());
+        }
+        return net.minecraft.network.chat.Component.translatable(status.key());
     }
 
     public ItemStack getBuildPlan() {
@@ -511,6 +557,21 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     // ---------------------------------------------------------------- ticking
 
+    /** Server time spent ticking Bubies (AI, pathfinding, work), for the performance GameTest. */
+    public static long profileNanos, profileTicks;
+
+    @Override
+    public void tick() {
+        if (level().isClientSide) {
+            super.tick();
+            return;
+        }
+        long start = System.nanoTime();
+        super.tick();
+        profileNanos += System.nanoTime() - start;
+        profileTicks++;
+    }
+
     @Override
     public void aiStep() {
         super.aiStep();
@@ -727,6 +788,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             build.put("Blueprint", buildPlan.save(registryAccess()));
             build.putLong("Origin", buildOrigin.asLong());
             build.putByte("Door", (byte) buildDoor.get3DDataValue());
+            build.putInt("Progress", entityData.get(DATA_BUILD));
             tag.put("Build", build);
         }
     }
@@ -760,6 +822,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             buildPlan = ItemStack.parseOptional(registryAccess(), build.getCompound("Blueprint"));
             buildOrigin = BlockPos.of(build.getLong("Origin"));
             buildDoor = net.minecraft.core.Direction.from3DDataValue(build.getByte("Door"));
+            entityData.set(DATA_BUILD, build.getInt("Progress"));
         } else {
             buildPlan = ItemStack.EMPTY;
             buildOrigin = null;

@@ -271,6 +271,14 @@ public class PackCompatGameTests {
             com.mojang.logging.LogUtils.getLogger().info("Bubie recipe bubie:{} uses {}", id, items.toString().trim());
             helper.assertTrue(!items.isEmpty(), "recipe bubie:" + id + " has ingredients");
         }
+        // the chips: crafted, or in the Bubie Pack alloyed in Voltaic's Alloy Smelter
+        for (com.bubie.item.ChipType chip : com.bubie.item.ChipType.values()) {
+            String id = "chip_" + chip.name().toLowerCase();
+            var holder = recipes.byKey(Bubie.id(id));
+            helper.assertTrue(holder.isPresent(), "recipe bubie:" + id + " is loaded");
+            com.mojang.logging.LogUtils.getLogger().info("Bubie recipe bubie:{} is {}", id,
+                    BuiltInRegistries.RECIPE_TYPE.getKey(holder.get().value().getType()));
+        }
         helper.succeed();
     }
 }

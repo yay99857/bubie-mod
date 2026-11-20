@@ -191,5 +191,13 @@
   "bubie.status.no_material": "Esperando material",
   "bubie.status.no_material.help": "O baú dele não tem o bloco da planta. Ponha mais no baú, ou deixe outro Bubie (Lenhador, Pedreira) enchê-lo.",
   "bubie.builder.accepted": "%s vai construir aqui: %s blocos de %s.",
-  "bubie.builder.no_material": "Escolha o material da planta primeiro (Shift + clique num bloco com a planta)."
+  "bubie.builder.no_material": "Escolha o material da planta primeiro (Shift + clique num bloco com a planta).",
+  "bubie.job.courier": "Entregador",
+  "bubie.job.courier.desc": "Esvazia os baús, funis e saídas de fornalha da área dele no baú dele. Se esse baú é de um Construtor, leva só o que a planta ainda precisa.",
+  "bubie.status.carrying": "Pegando itens para levar.",
+  "bubie.status.stuck": "Preso",
+  "bubie.status.stuck.help": "Ficou um tempo sem conseguir andar. Solte ele (um buraco, uma porta, uma cerca) ou traga ele mais perto do trabalho.",
+  "bubie.status.no_material.item": "Esperando %s ×%s",
+  "bubie.tooltip.build": "Construídos %s / %s blocos",
+  "bubie.ui.build": "Base: %s / %s blocos"
 }

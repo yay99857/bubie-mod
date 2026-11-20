@@ -94,6 +94,10 @@ public class JobRunner {
 
     public void reset() {
         clearCrack();
+        unclaim();
+        stuckChecks = 0;
+        moveFails = 0;
+        bubie.setNeed(ItemStack.EMPTY);
         job = null;
         jobArea = null;
         state = State.SEEK;
@@ -121,6 +125,17 @@ public class JobRunner {
 
     public void release() {
         clearCrack();
+        unclaim();
+    }
+
+    /** The job being done, or null before the first tick (a courier reads its builder's shopping list). */
+    @Nullable
+    public Job job() {
+        return job;
+    }
+
+    private void unclaim() {
+        if (bubie.level() instanceof ServerLevel level) Claims.release(level, bubie.getId());
     }
 
     @Nullable
@@ -149,6 +164,7 @@ public class JobRunner {
             case MINER -> new MinerJob(bubie, area, bubie.getMineMode());
             case COLLECTOR -> new CollectJob(bubie, area);
             case BUILDER -> new BuilderJob(bubie, area);
+            case COURIER -> new CourierJob(bubie, area);
         };
     }
 
@@ -188,6 +204,8 @@ public class JobRunner {
             return;
         }
         stateTicks++;
+        if (target != null && (state == State.MOVE || state == State.WORK)) Claims.claim(level(), target, bubie.getId());
+        watchStuck();
         switch (state) {
             case IDLE -> {
                 if (now() >= idleUntil) setState(State.SEEK);
@@ -216,6 +234,39 @@ public class JobRunner {
         bubie.getNavigation().stop();
         idleUntil = now() + ticks;
         setState(State.IDLE);
+    }
+
+    // ------------------------------------------------------------------ stuck watchdog
+
+    private static final int STUCK_CHECK = 100;
+    private int stuckChecks, moveFails;
+    @Nullable
+    private Vec3 lastCheckPos;
+
+    /**
+     * Walking somewhere but not getting anywhere for 15 s (in a hole, behind a door): teleport next to where it is
+     * going when the config allows it, else stop and show STUCK so the owner can come and help.
+     */
+    private void watchStuck() {
+        boolean walking = state == State.MOVE || state == State.DEPOSIT || state == State.FETCH;
+        if (!walking) {
+            stuckChecks = 0;
+            lastCheckPos = null;
+            return;
+        }
+        if (bubie.tickCount % STUCK_CHECK != 0) return;
+        Vec3 at = bubie.position();
+        boolean still = lastCheckPos != null && at.distanceToSqr(lastCheckPos) < 0.5 * 0.5;
+        lastCheckPos = at;
+        stuckChecks = still ? stuckChecks + 1 : 0;
+        if (stuckChecks < 3) return;
+        stuckChecks = 0;
+        BlockPos goal = state == State.MOVE ? target : depositPos;
+        if (goal != null && BubieConfig.TELEPORT_WHEN_STUCK.get() && bubie.teleportNear(goal)) return;
+        if (state == State.MOVE && target != null) blacklist.put(target.immutable(), now() + 1200);
+        target = null;
+        itemTarget = null;
+        rest(Status.STUCK, 200);
     }
 
     private void fail(BlockPos pos, int ticks) {
@@ -258,6 +309,7 @@ public class JobRunner {
             }
         }
         BlockPos next = job.next(this);
+        if (job instanceof BuilderJob builder) bubie.setBuildLeft(builder.remaining());
         if (next == null) {
             bubie.setStatus(Status.WORKING);
             return; // still scanning
@@ -285,6 +337,11 @@ public class JobRunner {
             startFetch(needed);
             return;
         }
+        if (Claims.takenByOther(level(), next, bubie.getId(), job.claimRadius())) {
+            blacklist.put(next.immutable(), now() + 100); // another Bubie is on it: pick something else
+            return;
+        }
+        Claims.claim(level(), next, bubie.getId());
         target = next;
         itemTarget = null;
         progress = 0;
@@ -322,7 +379,7 @@ public class JobRunner {
                 it.remove();
                 continue;
             }
-            if (blacklisted(pos)) continue;
+            if (blacklisted(pos) || Claims.takenByOther(level, pos, bubie.getId(), job.claimRadius())) continue;
             double d = bubie.distanceToSqr(Vec3.atCenterOf(pos));
             if (job.layered()) d -= pos.getY() * 4096.0; // finish the higher blocks of a layer first
             if (d < bestDist) {
@@ -375,7 +432,7 @@ public class JobRunner {
             BlockState state = level.getBlockState(pos);
             if (state.isAir()) continue;
             if (job.isProtected(pos) || !job.isTarget(level, pos, state)) continue;
-            if (supportsBlockEntity(level, pos)) continue;
+            if (!job.instant() && !job.placesBlocks() && supportsBlockEntity(level, pos)) continue;
             foundThisPass = true;
             if (blacklisted(pos)) continue;
             candidates.add(pos.immutable());
@@ -420,9 +477,17 @@ public class JobRunner {
         if (stateTicks == 1 || (stateTicks % 20 == 0 && bubie.getNavigation().isDone())) {
             Path path = bubie.getNavigation().createPath(target, 2);
             if (path == null || !path.canReach() && !endsNear(path, target)) {
+                // nowhere it can walk to, many times in a row: it is boxed in
+                if (++moveFails >= 12) {
+                    moveFails = 0;
+                    fail(target, 1200);
+                    rest(Status.STUCK, 200);
+                    return;
+                }
                 fail(target, 1200);
                 return;
             }
+            moveFails = 0;
             bubie.getNavigation().moveTo(path, 1.0);
         }
         if (stateTicks > 400) fail(target, 1200);
@@ -436,6 +501,10 @@ public class JobRunner {
     // ------------------------------------------------------------------ WORK
 
     private void work() {
+        if (job.instant()) {
+            workInstant();
+            return;
+        }
         if (job.placesBlocks()) {
             workPlace();
             return;
@@ -591,6 +660,35 @@ public class JobRunner {
         setState(State.SEEK);
     }
 
+    // ------------------------------------------------------------------ TAKE (courier)
+
+    private void workInstant() {
+        ServerLevel level = level();
+        BlockState state = level.getBlockState(target);
+        if (!job.isTarget(level, target, state)) {
+            target = null;
+            setState(State.SEEK);
+            return;
+        }
+        if (!bubie.canReach(target)) {
+            setState(State.MOVE);
+            return;
+        }
+        bubie.getNavigation().stop();
+        bubie.lookAtBlock(target);
+        bubie.setStatus(Status.CARRYING);
+        if (stateTicks < 8) return; // a moment at the container, so it reads as work
+        BlockPos done = target;
+        target = null;
+        bubie.swing(InteractionHand.MAIN_HAND);
+        if (!job.perform(level, done, state, ItemStack.EMPTY)) {
+            fail(done, 200);
+            return;
+        }
+        openChestLid(done);
+        setState(State.SEEK);
+    }
+
     // ------------------------------------------------------------------ FETCH (builder)
 
     @Nullable
@@ -659,9 +757,13 @@ public class JobRunner {
         }
         if (took) openChestLid(depositPos);
         if (bubie.count(fetchFor) == 0) {
-            rest(Status.NO_MATERIAL, 100); // another Bubie (or the owner) can fill the chest meanwhile
+            // another Bubie (or the owner) can fill the chest meanwhile; the balloon says what is missing
+            int missing = job.shoppingList().getOrDefault(fetchFor, 1);
+            bubie.setNeed(new ItemStack(fetchFor, Math.max(1, missing)));
+            rest(Status.NO_MATERIAL, 100);
             return;
         }
+        bubie.setNeed(ItemStack.EMPTY);
         setState(State.SEEK);
     }
 

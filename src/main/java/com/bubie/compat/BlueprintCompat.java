@@ -47,13 +47,16 @@ public final class BlueprintCompat {
 
     /** The player hands a blueprint to the Bubie: it will build that base around where it stands. */
     public static void handOver(BubieEntity bubie, Player player, ItemStack stack) {
+        player.displayClientMessage(handOver(bubie, player, stack, bubie.blockPosition()), true);
+    }
+
+    /** Hands the blueprint over to build at `origin`; returns the message for the player. */
+    public static Component handOver(BubieEntity bubie, Player player, ItemStack stack, BlockPos origin) {
         BlueprintSettings settings = BaseBuilder.settings(stack).clamped();
         BaseBuilder.Materials materials = BaseBuilder.materials(player, stack);
         if (materials.floor() == null) {
-            player.displayClientMessage(Component.translatable("bubie.builder.no_material").withStyle(ChatFormatting.YELLOW), true);
-            return;
+            return Component.translatable("bubie.builder.no_material").withStyle(ChatFormatting.YELLOW);
         }
-        BlockPos origin = bubie.blockPosition();
         Direction door = BaseBuilder.doorSide(settings, origin, player);
         ItemStack plan = stack.copyWithCount(1);
         // the materials in force now (an off-hand block wins in Base Blueprint) are written into Bubie's copy
@@ -63,10 +66,11 @@ public final class BlueprintCompat {
         bubie.setJob(JobType.BUILDER);
         bubie.setMode(Mode.WORK);
         int blocks = plan(bubie).size();
+        bubie.setBuildTotal(blocks);
         bubie.showMood(Face.HAPPY, 60);
         bubie.playSound(SoundEvents.BOOK_PAGE_TURN, 0.8F, 1.2F);
-        player.displayClientMessage(Component.translatable("bubie.builder.accepted", bubie.getDisplayName(), blocks,
-                materials.floor().getName()).withStyle(ChatFormatting.GREEN), true);
+        return Component.translatable("bubie.builder.accepted", bubie.getDisplayName(), blocks,
+                materials.floor().getName()).withStyle(ChatFormatting.GREEN);
     }
 
     /** What is still left to place, as Base Blueprint plans it, from the Bubie's copy of the blueprint. */
