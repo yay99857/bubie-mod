@@ -1,0 +1,98 @@
+plugins {
+    id 'java-library'
+    id 'idea'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+version = project.mod_version
+group = project.mod_group_id
+
+base {
+    archivesName = project.mod_id
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = project.neo_version
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            // Jade asserts every plugin's config translations under -ea; players never run with assertions.
+            jvmArgument '-da'
+            if (project.hasProperty('quickPlay')) {
+                programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlay').toString()
+            }
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+        // ./gradlew runShots : DEV ONLY, builds scenes with Bubies at work and saves screenshots (client/ShotDirector)
+        shots {
+            client()
+            systemProperty 'bubie.shots', 'true'
+            jvmArgument '-da'
+            programArguments.addAll('--quickPlaySingleplayer', 'Shots')
+        }
+        // ./gradlew runPackGameTest : the same tests with the Bubie Pack's mods loaded (tools/prepare-pack-test.sh first)
+        packGameTest {
+            type = "gameTestServer"
+            gameDirectory = project.file('runs/pack-test')
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            jvmArgument '-Xmx4G'
+        }
+        // ./gradlew runGameTestServer : runs every @GameTest and exits (non-zero on failure)
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
+    }
+
+    mods {
+        "${project.mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    // Jade at the exact version shipped in Bubie Pack (CurseForge file id).
+    maven {
+        url = 'https://cursemaven.com'
+        content { includeGroup 'curse.maven' }
+    }
+}
+
+dependencies {
+    // Optional integration: compiled against, never required at runtime (see compat/jade).
+    compileOnly 'curse.maven:jade-324717:8591319'   // Jade 15.10.6
+    runtimeOnly 'curse.maven:jade-324717:8591319'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+var modMetadata = [
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_version            : mod_version,
+        mod_license            : mod_license,
+        mod_authors            : mod_authors,
+        mod_description        : mod_description,
+        minecraft_version_range: minecraft_version_range,
+        neo_version_range      : neo_version_range,
+        loader_version_range   : loader_version_range,
+]
+processResources {
+    inputs.properties modMetadata
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand modMetadata
+    }
+}

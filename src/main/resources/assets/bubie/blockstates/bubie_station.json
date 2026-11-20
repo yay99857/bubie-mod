@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "bubie:block/bubie_station"
+    },
+    "facing=east": {
+      "model": "bubie:block/bubie_station",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "bubie:block/bubie_station",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "bubie:block/bubie_station",
+      "y": 270
+    }
+  }
+}

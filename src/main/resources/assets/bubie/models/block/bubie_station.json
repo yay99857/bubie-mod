@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/orientable_with_bottom",
+  "textures": {
+    "top": "bubie:block/bubie_station_top",
+    "front": "bubie:block/bubie_station_front",
+    "side": "bubie:block/bubie_station_side",
+    "bottom": "bubie:block/bubie_station_bottom"
+  }
+}
