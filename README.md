@@ -72,6 +72,16 @@ se teleporta para perto do destino, se a config permitir, ou para e mostra **Pre
 Desempenho: 12 Bubies escavando ao mesmo tempo custam cerca de 2 ms por tick do servidor (de 50 ms), medido pelo
 GameTest `twelvebubiesstaycheap`.
 
+## DJ
+Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja qual for a tarefa dele:
+- Toca os **discos de música** do inventário (de qualquer mod) e depois até 16 **links** de arquivos `.mp3` ou `.ogg`.
+- Tocar/parar, anterior/próxima, volume; o nome da música aparece acima da cabeça.
+- A tela vira um **equalizador**, ele dança e solta notas; os Bubies a até 10 blocos dançam junto.
+- O som acompanha o Bubie (como uma jukebox com pernas) e chega a 32 blocos no volume máximo.
+- Os links são baixados por cada jogador que os ouve (por isso o endereço vê o IP de quem ouve): `djLinks` no servidor deixa
+  só discos, e `djPlayLinks` no `config/bubie-client.toml` desliga os links para aquele jogador. O `.mp3` é decodificado pelo
+  JLayer (LGPL 2.1), que vai dentro do jar.
+
 ## Regras
 - Ele quebra blocos em nome do dono (um jogador falso com o seu UUID), então as proteções de terreno (FTB Chunks) valem para ele como para você.
 - Usa a ferramenta do slot dele e gasta durabilidade. Fortuna e Toque Suave funcionam. Para quando a ferramenta está a 2 usos de quebrar.
@@ -92,7 +102,8 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 
 ## Configuração (`serverconfig/bubie-server.toml`)
 `maxPerPlayer` (3), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
-`areaSize` (32), `scanPerTick`, `restAtNight`, `stationLoadsChunks` (false), `teleportWhenStuck` (true), `homeRadius`.
+`areaSize` (32), `scanPerTick`, `restAtNight`, `stationLoadsChunks` (false), `teleportWhenStuck` (true), `homeRadius`,
+`djLinks` (true). No cliente (`config/bubie-client.toml`): `djPlayLinks` (true).
 
 ## Compatibilidade
 Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./gradlew runPackGameTest`, 21 testes).

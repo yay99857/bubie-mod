@@ -25,6 +25,15 @@ Several Bubies in one area split the work: each one claims the block (or, for lu
 
 ![A quarry with its staircase](https://media.forgecdn.net/attachments/2241/438/07-quarry-png.png)
 
+## 🎶 Bubie the DJ
+Any Bubie can play music for everyone nearby, whatever job it has. Open its menu, **DJ** tab:
+- It plays the **music discs** in its storage (from any mod), then up to 16 **links** to `.mp3` or `.ogg` files.
+- Play / stop, previous / next and volume; the song title floats over its head.
+- Its screen turns into an **equalizer**, it dances and sends out notes, and every Bubie within 10 blocks dances along.
+- The sound follows the Bubie as it walks, like a jukebox on legs.
+
+Links are downloaded by each player who hears them. Servers can allow discs only (`djLinks`), and each player can turn links off for themselves (`djPlayLinks` in the client config).
+
 ## 📋 How to use it
 1. Craft the **Bubie Clipboard**, click two blocks to mark the area, Shift + click a chest.
 2. Click your Bubie with the clipboard. It starts working and brings everything back to the chest.
@@ -70,6 +79,7 @@ Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele
 - Marque a área com a **Prancheta do Bubie** (clique em 2 cantos, Shift + clique no baú), clique no Bubie com ela e dê uma ferramenta e um pouco de carvão.
 - A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia.
 - **Editar meu Bubie:** cores do casco, do moletom e da luz da tela, olhos e boca.
+- **Bubie DJ:** na aba **DJ** do menu, ele toca os discos de música do inventário e links de `.mp3`/`.ogg` para todo mundo por perto. A tela vira um equalizador, ele dança e os Bubies em volta dançam junto.
 - Guarda em Sophisticated Storage, Functional Storage, cofres do Create e bins do Mekanism; respeita as áreas do FTB Chunks; amigos do mesmo time do FTB Teams também dão ordens.
 - Se a vida acaba, ele desliga e vira o item, sem perder nada.
 
