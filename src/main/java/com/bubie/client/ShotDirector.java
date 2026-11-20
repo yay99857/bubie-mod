@@ -347,6 +347,16 @@ public final class ShotDirector {
         });
         add(5, () -> BubieScreen.selectTab(0));
         add(5, () -> mc.setScreen(null));
+        // the station's menu, with the Bubie that lives there
+        add(5, () -> server(p -> {
+            BlockPos st = at(4, 0, -6);
+            look(p, cx + 4.5, g, cz - 3.5, cx + 4.5, g + 0.5, cz - 5.5);
+            if (p.serverLevel().getBlockEntity(st) instanceof net.minecraft.world.MenuProvider provider) {
+                p.openMenu(provider, buf -> buf.writeBlockPos(st));
+            }
+        }));
+        add(40, () -> shot("menu_station"));
+        add(5, () -> mc.setScreen(null));
         // the line-up
         add(10, () -> {
             mc.options.hideGui = true;
