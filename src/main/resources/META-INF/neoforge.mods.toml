@@ -24,3 +24,10 @@ logoBlur=false
     versionRange="${minecraft_version_range}"
     ordering="NONE"
     side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="baseblueprint"
+    type="optional"
+    versionRange="[1.2.1,)"
+    ordering="AFTER"
+    side="BOTH"
