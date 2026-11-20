@@ -36,7 +36,8 @@ import java.util.function.Consumer;
 @EventBusSubscriber(modid = Bubie.MOD_ID, value = Dist.CLIENT)
 public final class ShotDirector {
     private static final org.slf4j.Logger LOG = com.mojang.logging.LogUtils.getLogger();
-    private static final boolean ON = Boolean.getBoolean("bubie.shots");
+    private static final boolean LOGOS = Boolean.getBoolean("bubie.logos");
+    private static final boolean ON = Boolean.getBoolean("bubie.shots") || LOGOS;
     private static int cx = 3000, cz = 3000, g;
 
     private record Step(int delay, Runnable action) {
@@ -194,6 +195,15 @@ public final class ShotDirector {
 
     private static void build() {
         Minecraft mc = Minecraft.getInstance();
+        if (LOGOS) {
+            add(20, () -> mc.options.hideGui = true);
+            add(10, () -> mc.setScreen(new LogoScreen(LogoScreen.Kind.MOD)));
+            add(30, () -> shot("logo_mod"));
+            add(10, () -> mc.setScreen(new LogoScreen(LogoScreen.Kind.PACK)));
+            add(30, () -> shot("logo_pack"));
+            add(20, () -> Minecraft.getInstance().stop());
+            return;
+        }
         add(1, () -> server(p -> {
             for (String c : List.of("gamerule doDaylightCycle false", "gamerule doWeatherCycle false", "gamerule doMobSpawning false",
                     "time set 6000", "weather clear", "gamemode creative", "kill @e[type=bubie:bubie]"))

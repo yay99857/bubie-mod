@@ -211,6 +211,11 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         runner.reset();
     }
 
+    /** Client-side display copies (logo renders) set their face directly. */
+    public void setDisplayFace(Face face) {
+        entityData.set(DATA_FACE, (byte) face.ordinal());
+    }
+
     public Face getFace() {
         return Face.byId(entityData.get(DATA_FACE));
     }

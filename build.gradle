@@ -45,6 +45,13 @@ neoForge {
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
             jvmArgument '-Xmx4G'
         }
+        // ./gradlew runLogos : DEV ONLY, renders the 3D logo squares (client/LogoScreen); then python tools/crop_logos.py
+        logos {
+            client()
+            systemProperty 'bubie.logos', 'true'
+            jvmArgument '-da'
+            programArguments.addAll('--quickPlaySingleplayer', 'Shots', '--width', '1920', '--height', '1080')
+        }
         // ./gradlew runGameTestServer : runs every @GameTest and exits (non-zero on failure)
         gameTestServer {
             type = "gameTestServer"
