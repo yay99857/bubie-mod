@@ -1,0 +1,10 @@
+{
+  "values": [
+    "bubie:chip_speed",
+    "bubie:chip_storage",
+    "bubie:chip_range",
+    "bubie:chip_magnet",
+    "bubie:chip_smelting",
+    "bubie:chip_efficiency"
+  ]
+}
