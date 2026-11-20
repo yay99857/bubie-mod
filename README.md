@@ -152,5 +152,25 @@ Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./
 
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
+## Changelog
+### 1.4.0
+- Works around its chest (or Station) without marking corners: set the radius with − / + in the menu. The Quarry and the Digger dig a pit in front of the chest, never under the base.
+- New **Guard** job: fights the monsters in its area with the weapon in its tool slot and keeps watch at night (creepers are left alone).
+- **Program Chip** and the `advancedJobsNeedChip` server option (off by default) to pace the Miner, Builder, Courier and Guard.
+- The Station's menu lists the Bubies living there.
+- Spanish translation.
+
+### 1.3.0
+- **Bubie the DJ**: plays the music discs in its storage and .mp3/.ogg links for everyone nearby; equalizer face, dance, notes, and Bubies nearby dance along.
+
+### 1.2.0
+- **Courier** job; Bubies share the work (claimed targets); a stuck Bubie teleports or says so; Builder progress in the menu and Jade.
+
+### 1.1.0
+- **Builder** job with Base Blueprint; FE batteries in the fuel slot.
+
+### 1.0.0
+- First release: Lumberjack, Digger, Quarry, Farmer, Miner and Collector; Clipboard, Station, chips and Edit my Bubie.
+
 ## Licença
 [MIT](LICENSE).
