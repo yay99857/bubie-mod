@@ -191,6 +191,12 @@ public final class Dj {
 
     void tick() {
         if (!playing) return;
+        // a note now and then, in a colour that walks the scale
+        if (bubie.tickCount % 12 == 0 && bubie.level() instanceof net.minecraft.server.level.ServerLevel level) {
+            double colour = (bubie.tickCount / 12 % 24) / 24.0;
+            level.sendParticles(net.minecraft.core.particles.ParticleTypes.NOTE, bubie.getX(), bubie.getY() + 1.3, bubie.getZ(),
+                    0, colour, 0, 0, 1);
+        }
         if (bubie.level().getGameTime() >= endsAt) start(index + 1);
     }
 

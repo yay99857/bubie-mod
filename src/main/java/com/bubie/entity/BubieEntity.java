@@ -586,10 +586,19 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         moodTicks = ticks;
     }
 
+    /** A DJ plays within 10 blocks: this Bubie dances along (checked once a second). */
+    private boolean hearsMusic;
+
+    private void listenForMusic() {
+        if (tickCount % 20 != 0) return;
+        hearsMusic = getStatus() != Status.NO_ENERGY && !level().getEntitiesOfClass(BubieEntity.class,
+                getBoundingBox().inflate(10), b -> b != this && !b.getDjTrack().isNone()).isEmpty();
+    }
+
     private Face pickFace() {
         if (hurtTime > 0) return Face.HURT;
         if (moodTicks > 0) return moodFace;
-        if (!getDjTrack().isNone()) return Face.MUSIC;
+        if (!getDjTrack().isNone() || hearsMusic) return Face.MUSIC;
         Status status = getStatus();
         if (status == Status.NO_ENERGY || status == Status.CHARGING || status == Status.RESTING) return Face.SLEEP;
         if (status.problem) return Face.ERROR;
@@ -621,6 +630,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         setAirSupply(getMaxAirSupply()); // no lungs
         if (moodTicks > 0) moodTicks--;
         dj.tick();
+        listenForMusic();
         entityData.set(DATA_FACE, (byte) pickFace().ordinal());
         if (getMaxEnergy() != BubieConfig.MAX_ENERGY.get()) entityData.set(DATA_MAX_ENERGY, BubieConfig.MAX_ENERGY.get());
         if (tickCount % 20 == 0) {
