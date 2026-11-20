@@ -36,7 +36,7 @@ neoForge {
             client()
             systemProperty 'bubie.shots', 'true'
             jvmArgument '-da'
-            programArguments.addAll('--quickPlaySingleplayer', 'Shots')
+            programArguments.addAll('--quickPlaySingleplayer', 'Shots', '--width', '1920', '--height', '1080')
         }
         // ./gradlew runPackGameTest : the same tests with the Bubie Pack's mods loaded (tools/prepare-pack-test.sh first)
         packGameTest {
