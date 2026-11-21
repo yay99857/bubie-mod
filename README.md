@@ -81,7 +81,7 @@ GameTest `twelvebubiesstaycheap`.
 
 ## DJ
 Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja qual for a tarefa dele:
-- Toca os **discos de música** do inventário (de qualquer mod) e depois até 16 **links** de arquivos `.mp3` ou `.ogg`.
+- Toca o **disco de música** do slot da aba DJ (de qualquer mod) e depois até 16 **links**: arquivos `.mp3` ou `.ogg`, ou links de compartilhamento do Dropbox, Google Drive, GitHub e Audius. YouTube, Spotify e parecidos não deixam outros apps tocarem suas músicas.
 - Tocar/parar, anterior/próxima, volume; o nome da música aparece acima da cabeça.
 - A tela vira um **equalizador**, ele dança e solta notas; os Bubies a até 10 blocos dançam junto.
 - O som acompanha o Bubie (como uma jukebox com pernas) e chega a 32 blocos no volume máximo.
@@ -153,6 +153,14 @@ Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Changelog
+### 1.5.0
+- **Runs on redstone or FE, not coal** (it is a robot): a redstone dust gives 5 minutes of work, a block 45 (`redstoneEnergy` in the server config). The Station takes redstone too, and the redstone a Bubie digs up tops up its fuel slot. Coal left in a fuel slot just stays there.
+- **DJ disc slot** in the DJ tab: the disc no longer takes a storage slot or goes to the chest with the cargo, and taking it out while it plays stops it. An older Bubie moves its first disc there.
+- **DJ links**: Dropbox, Google Drive, GitHub and Audius share links play as they are. YouTube, Spotify, SoundCloud and the like are refused with the reason, and a file from your computer explains how to share it.
+- Says **"Its tool is out of energy"** when an electric tool (Atomic Disassembler, any FE tool) is empty, instead of working and skipping every block.
+- **Inventory sorting mods** (Inventory Tweaks) no longer pull the tool, fuel, chips and disc into the storage.
+- Menu: tooltips on the buttons, the reason it has nothing to do ("no trees within 8 blocks of its chest"), and the area shows in the world when you change the radius.
+
 ### 1.4.0
 - Works around its chest (or Station) without marking corners: set the radius with − / + in the menu. The Quarry and the Digger dig a pit in front of the chest, never under the base.
 - New **Guard** job: fights the monsters in its area with the weapon in its tool slot and keeps watch at night (creepers are left alone).

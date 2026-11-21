@@ -119,6 +119,8 @@ public final class Dj {
         if (!BubieConfig.DJ_LINKS.get()) return Component.translatable("bubie.dj.links_off");
         if (links.size() >= MAX_LINKS) return Component.translatable("bubie.dj.too_many", MAX_LINKS);
         if (!isValidLink(url)) return Component.translatable("bubie.dj.bad_link");
+        String site = unsupportedSite(url);
+        if (site != null) return Component.translatable("bubie.dj.unsupported_site", site);
         links.add(url);
         bubie.syncDjLinks();
         return null;
@@ -142,11 +144,43 @@ public final class Dj {
         }
     }
 
-    /** The file name of a link, without the extension: "Song%20Name.mp3" → "Song Name". */
+    /**
+     * Streaming services that only hand their music to their own players (DRM, private APIs or 30-second previews), so
+     * a link to them can't play: the name to tell the player, or null for any other link.
+     */
+    @Nullable
+    public static String unsupportedSite(String url) {
+        String host = host(url);
+        if (host.equals("youtu.be") || host.equals("youtube.com") || host.endsWith(".youtube.com")) return "YouTube";
+        if (host.equals("soundcloud.com") || host.endsWith(".soundcloud.com")) return "SoundCloud";
+        if (host.equals("spotify.com") || host.endsWith(".spotify.com") || host.equals("spotify.link")) return "Spotify";
+        if (host.equals("deezer.com") || host.endsWith(".deezer.com") || host.equals("deezer.page.link")) return "Deezer";
+        if (host.equals("music.apple.com")) return "Apple Music";
+        if (host.equals("tidal.com") || host.endsWith(".tidal.com")) return "Tidal";
+        if (host.equals("music.amazon.com") || host.startsWith("music.amazon.")) return "Amazon Music";
+        return null;
+    }
+
+    private static String host(String url) {
+        try {
+            String host = URI.create(url).getHost();
+            return host == null ? "" : host.toLowerCase(java.util.Locale.ROOT);
+        } catch (IllegalArgumentException e) {
+            return "";
+        }
+    }
+
+    /**
+     * The file name of a link, without the extension: "Song%20Name.mp3" → "Song Name"; an Audius track page
+     * "audius.co/artist/my-song" → "my song"; a Google Drive file, which has no name in its link → "Google Drive".
+     */
     public static String linkTitle(String url) {
+        String host = host(url);
+        if (host.equals("drive.google.com") || host.equals("drive.usercontent.google.com")) return "Google Drive";
         String path = url;
         int q = path.indexOf('?');
         if (q >= 0) path = path.substring(0, q);
+        while (path.endsWith("/")) path = path.substring(0, path.length() - 1);
         path = path.substring(path.lastIndexOf('/') + 1);
         int dot = path.lastIndexOf('.');
         if (dot > 0) path = path.substring(0, dot);
@@ -155,7 +189,9 @@ public final class Dj {
         } catch (IllegalArgumentException ignored) {
             // keep it encoded
         }
-        path = path.replace('_', ' ').trim();
+        path = path.replace('_', ' ');
+        if (host.equals("audius.co") || host.equals("www.audius.co")) path = path.replace('-', ' ');
+        path = path.trim();
         return path.isEmpty() ? URI.create(url).getHost() : path;
     }
 

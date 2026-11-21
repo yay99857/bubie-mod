@@ -1,6 +1,7 @@
 package com.bubie.gametest;
 
 import com.bubie.Bubie;
+import com.bubie.client.dj.LinkResolver;
 import com.bubie.entity.BubieEntity;
 import com.bubie.entity.Dj;
 import com.bubie.entity.Face;
@@ -88,6 +89,34 @@ public class DjGameTests {
 
         bubie.dj().toggle();
         helper.assertTrue(bubie.getDjTrack().isNone() && !bubie.dj().isPlaying(), "nothing to play: stays stopped");
+        helper.succeed();
+    }
+
+    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 20)
+    public static void djTakesShareLinksAndRefusesStreamingServices(GameTestHelper helper) {
+        BubieEntity bubie = dj(helper);
+        for (String url : new String[]{"https://www.youtube.com/watch?v=abc", "https://youtu.be/abc", "https://music.youtube.com/watch?v=abc",
+                "https://soundcloud.com/artist/song", "https://open.spotify.com/track/abc", "https://www.deezer.com/track/123"}) {
+            helper.assertTrue(bubie.dj().addLink(url) != null, "a streaming service is refused with a reason: " + url);
+        }
+        helper.assertTrue(Dj.unsupportedSite("https://notyoutube.com/a.mp3") == null, "only those sites, not look-alikes");
+        helper.assertTrue(bubie.dj().addLink("https://audius.co/Xsetra/xsetra-fragments") == null, "Audius is taken");
+        helper.assertTrue(Dj.linkTitle("https://audius.co/Xsetra/xsetra-fragments").equals("xsetra fragments"), "Audius title from the page");
+        helper.assertTrue(Dj.linkTitle("https://drive.google.com/file/d/1AbC/view?usp=sharing").equals("Google Drive"), "Drive title");
+        helper.assertTrue(Dj.linkTitle("https://www.dropbox.com/scl/fi/x1/Party_Mix.mp3?rlkey=k&dl=0").equals("Party Mix"), "Dropbox title");
+
+        String dropbox = LinkResolver.rewrite("https://www.dropbox.com/scl/fi/x1/Party_Mix.mp3?rlkey=k&dl=0");
+        helper.assertTrue(dropbox.equals("https://www.dropbox.com/scl/fi/x1/Party_Mix.mp3?rlkey=k&dl=1"), "Dropbox downloads: " + dropbox);
+        String bare = LinkResolver.rewrite("https://dropbox.com/s/x1/song.ogg");
+        helper.assertTrue(bare.equals("https://www.dropbox.com/s/x1/song.ogg?dl=1"), "Dropbox without a query: " + bare);
+        String drive = LinkResolver.rewrite("https://drive.google.com/file/d/1AbC-d_E/view?usp=sharing");
+        helper.assertTrue(drive.equals("https://drive.usercontent.google.com/download?id=1AbC-d_E&export=download&confirm=t"), "Drive: " + drive);
+        String open = LinkResolver.rewrite("https://drive.google.com/open?id=1AbC");
+        helper.assertTrue(open.startsWith("https://drive.usercontent.google.com/download?id=1AbC&"), "Drive open link: " + open);
+        String github = LinkResolver.rewrite("https://github.com/me/music/blob/main/songs/a.ogg");
+        helper.assertTrue(github.equals("https://github.com/me/music/raw/main/songs/a.ogg"), "GitHub file page: " + github);
+        String plain = "https://example.com/music/My_Song.mp3";
+        helper.assertTrue(LinkResolver.rewrite(plain).equals(plain), "a plain file link is left alone");
         helper.succeed();
     }
 }

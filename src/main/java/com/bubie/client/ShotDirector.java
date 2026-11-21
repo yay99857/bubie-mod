@@ -247,6 +247,14 @@ public final class ShotDirector {
             }
         });
         add(20, () -> shot("dj_add_link"));
+        add(5, () -> {
+            if (mc.screen instanceof DjLinkScreen link) link.type("C:\\Users\\me\\Downloads\\song.mp3");
+        });
+        add(10, () -> shot("dj_add_local"));
+        add(5, () -> {
+            if (mc.screen instanceof DjLinkScreen link) link.type("https://www.youtube.com/watch?v=abc");
+        });
+        add(10, () -> shot("dj_add_youtube"));
         add(5, () -> mc.setScreen(null));
         // skip the disc: the link plays (the log shows whether it streamed and decoded)
         add(20, () -> server(p -> p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6))

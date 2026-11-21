@@ -208,12 +208,13 @@
   "bubie.ui.dj.add": "+ Añadir enlace",
   "bubie.ui.dj.help": "Reproduce el disco de la ranura de arriba y luego los enlaces, para todos los que estén cerca.",
   "bubie.ui.dj.add_title": "Añadir un enlace de música",
-  "bubie.ui.dj.add_help": "Pega la dirección de un archivo .mp3 u .ogg.",
+  "bubie.ui.dj.add_help": "Enlace .mp3/.ogg, Dropbox, Drive o Audius.",
   "bubie.ui.dj.add_ok": "Añadir",
   "bubie.dj.added": "Enlace añadido a la lista.",
   "bubie.dj.bad_link": "Eso no es un enlace http(s).",
   "bubie.dj.too_many": "La lista admite %s enlaces.",
   "bubie.dj.links_off": "Este servidor solo deja al DJ poner discos.",
+  "bubie.dj.unsupported_site": "%s no deja que otras apps pongan su música: usa un enlace .mp3/.ogg, Dropbox, Drive o Audius.",
   "item.bubie.chip_program": "Chip de programa",
   "item.bubie.chip_program.desc": "Desbloquea las tareas de Minero, Constructor, Repartidor y Guardia, en los servidores que lo exigen.",
   "bubie.job.guard": "Guardia",
@@ -257,5 +258,6 @@
   "bubie.status.tool_no_energy": "Su herramienta no tiene energía",
   "bubie.status.tool_no_energy.help": "La herramienta eléctrica de su ranura de herramienta tiene la batería vacía. Cárgala o dale al Bubie un pico, una pala o un hacha normal.",
   "bubie.ui.dj.disc": "Disco",
-  "bubie.ui.hint.disc": "Un disco de música para el DJ. Se queda aquí: nunca va al cofre con la carga."
+  "bubie.ui.hint.disc": "Un disco de música para el DJ. Se queda aquí: nunca va al cofre con la carga.",
+  "bubie.ui.dj.local_file": "Eso es un archivo de tu ordenador: el servidor y los demás no lo alcanzan. Súbelo a Dropbox o Google Drive y pega el enlace para compartir."
 }

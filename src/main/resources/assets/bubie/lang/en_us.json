@@ -208,12 +208,13 @@
   "bubie.ui.dj.add": "+ Add link",
   "bubie.ui.dj.help": "It plays the disc in the slot above, then the links, for everyone nearby.",
   "bubie.ui.dj.add_title": "Add a music link",
-  "bubie.ui.dj.add_help": "Paste the address of an .mp3 or .ogg file.",
+  "bubie.ui.dj.add_help": "An .mp3/.ogg link, Dropbox, Drive or Audius.",
   "bubie.ui.dj.add_ok": "Add",
   "bubie.dj.added": "Link added to the playlist.",
   "bubie.dj.bad_link": "That isn't an http(s) link.",
   "bubie.dj.too_many": "The playlist holds %s links.",
   "bubie.dj.links_off": "This server only lets the DJ play discs.",
+  "bubie.dj.unsupported_site": "%s doesn't let other apps play its music: use an .mp3/.ogg link, Dropbox, Drive or Audius.",
   "item.bubie.chip_program": "Program Chip",
   "item.bubie.chip_program.desc": "Unlocks the Miner, Builder, Courier and Guard jobs, on servers that require it.",
   "bubie.job.guard": "Guard",
@@ -257,5 +258,6 @@
   "bubie.status.tool_no_energy": "Its tool is out of energy",
   "bubie.status.tool_no_energy.help": "The electric tool in its tool slot has an empty battery. Charge it, or give the Bubie an ordinary pickaxe, shovel or axe.",
   "bubie.ui.dj.disc": "Disc",
-  "bubie.ui.hint.disc": "A music disc for the DJ. It stays here: it never goes to the chest with the cargo."
+  "bubie.ui.hint.disc": "A music disc for the DJ. It stays here: it never goes to the chest with the cargo.",
+  "bubie.ui.dj.local_file": "That's a file on your computer: the server and the others can't reach it. Upload it to Dropbox or Google Drive and paste the share link."
 }

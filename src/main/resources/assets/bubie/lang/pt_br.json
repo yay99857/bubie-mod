@@ -208,12 +208,13 @@
   "bubie.ui.dj.add": "+ Adicionar link",
   "bubie.ui.dj.help": "Toca o disco do slot acima e depois os links, para todo mundo por perto.",
   "bubie.ui.dj.add_title": "Adicionar link de música",
-  "bubie.ui.dj.add_help": "Cole o endereço de um arquivo .mp3 ou .ogg.",
+  "bubie.ui.dj.add_help": "Link .mp3/.ogg, Dropbox, Drive ou Audius.",
   "bubie.ui.dj.add_ok": "Adicionar",
   "bubie.dj.added": "Link adicionado à playlist.",
   "bubie.dj.bad_link": "Isso não é um link http(s).",
   "bubie.dj.too_many": "A playlist cabe %s links.",
   "bubie.dj.links_off": "Este servidor só deixa o DJ tocar discos.",
+  "bubie.dj.unsupported_site": "O %s não deixa outros apps tocarem suas músicas: use um link .mp3/.ogg, Dropbox, Drive ou Audius.",
   "item.bubie.chip_program": "Chip de programa",
   "item.bubie.chip_program.desc": "Libera as tarefas de Minerador, Construtor, Entregador e Guarda, nos servidores que exigem.",
   "bubie.job.guard": "Guarda",
@@ -257,5 +258,6 @@
   "bubie.status.tool_no_energy": "A ferramenta está sem energia",
   "bubie.status.tool_no_energy.help": "A ferramenta elétrica no slot de ferramenta está com a bateria vazia. Carregue-a ou dê ao Bubie uma picareta, pá ou machado comum.",
   "bubie.ui.dj.disc": "Disco",
-  "bubie.ui.hint.disc": "Um disco de música para o DJ. Ele fica aqui: nunca vai para o baú junto com a carga."
+  "bubie.ui.hint.disc": "Um disco de música para o DJ. Ele fica aqui: nunca vai para o baú junto com a carga.",
+  "bubie.ui.dj.local_file": "Isso é um arquivo do seu computador: o servidor e os outros não alcançam. Envie para o Dropbox ou Google Drive e cole o link de compartilhamento."
 }

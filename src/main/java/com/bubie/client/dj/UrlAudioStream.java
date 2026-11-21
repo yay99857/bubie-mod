@@ -29,7 +29,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An audio link (.ogg or .mp3) streamed from the internet. A thread of its own downloads and decodes it into a queue
+ * An audio link (.ogg or .mp3, or a share link {@link LinkResolver} turns into one) streamed from the internet. A
+ * thread of its own downloads and decodes it into a queue
  * of PCM chunks, so a slow connection never blocks the sound engine: while the queue is empty the engine gets a
  * moment of silence instead of an end. The stream is ready once about a second is buffered.
  */
@@ -59,7 +60,7 @@ public final class UrlAudioStream implements AudioStream {
     public static CompletableFuture<AudioStream> open(String url) {
         return CompletableFuture.supplyAsync(() -> {
             try {
-                UrlAudioStream stream = new UrlAudioStream(url);
+                UrlAudioStream stream = new UrlAudioStream(LinkResolver.resolve(url));
                 stream.prebuffer();
                 return stream;
             } catch (IOException e) {
@@ -99,6 +100,11 @@ public final class UrlAudioStream implements AudioStream {
                 continue;
             }
             if (code != 200) throw new IOException("HTTP " + code + " for " + uri);
+            String type = c.getContentType();
+            if (type != null && type.toLowerCase(java.util.Locale.ROOT).startsWith("text/html")) {
+                c.disconnect();
+                throw new IOException("a web page, not an audio file: " + uri);
+            }
             return c.getInputStream();
         }
         throw new IOException("too many redirects: " + url);
