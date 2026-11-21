@@ -57,20 +57,20 @@ public class BubieMenu extends AbstractContainerMenu {
                 }
             });
         }
-        addSlot(new Slot(tool, 0, GRID_X, EQUIP_Y) {
+        addSlot(new FixedSlot(tool, 0, GRID_X, EQUIP_Y) {
             @Override
             public int getMaxStackSize() {
                 return 1;
             }
         });
-        addSlot(new Slot(extra, BubieEntity.FUEL_SLOT, GRID_X + 24, EQUIP_Y) {
+        addSlot(new FixedSlot(extra, BubieEntity.FUEL_SLOT, GRID_X + 24, EQUIP_Y) {
             @Override
             public boolean mayPlace(ItemStack stack) {
                 return BubieEntity.isFuel(stack);
             }
         });
         for (int i = 0; i < BubieEntity.CHIP_SLOTS; i++) {
-            addSlot(new Slot(extra, 1 + i, GRID_X + 72 + i * 18, EQUIP_Y) {
+            addSlot(new FixedSlot(extra, 1 + i, GRID_X + 72 + i * 18, EQUIP_Y) {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
                     return stack.getItem() instanceof ChipItem;

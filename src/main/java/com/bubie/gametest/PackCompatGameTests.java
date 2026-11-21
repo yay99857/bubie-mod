@@ -62,6 +62,42 @@ public class PackCompatGameTests {
         return n;
     }
 
+    /**
+     * Inventory Tweaks sorts the open menu's slots that are not the player's (middle click): the Bubie's storage, never
+     * its tool, fuel and chips. Runs the mod's own sort on a Bubie menu.
+     */
+    @GameTest(template = FIELD)
+    public static void inventoryTweaksLeavesTheEquipmentAlone(GameTestHelper helper) throws Exception {
+        if (skip(helper, "invtweaks")) return;
+        BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(5, 1, 5));
+        ItemStack chip = new ItemStack(Bubie.CHIPS.get(com.bubie.item.ChipType.SPEED).get());
+        bubie.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
+        bubie.extra().setItem(com.bubie.entity.BubieEntity.FUEL_SLOT, new ItemStack(Items.COAL, 4));
+        bubie.extra().setItem(1, chip.copy());
+        // storage out of order, with a gap, so a sort has work to do
+        bubie.storage().setItem(3, new ItemStack(Items.DIRT, 10));
+        bubie.storage().setItem(5, new ItemStack(Items.COBBLESTONE, 7));
+        var player = net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(helper.getLevel());
+        var menu = new com.bubie.menu.BubieMenu(1, player.getInventory(), bubie);
+        player.containerMenu = menu;
+        try {
+            Class.forName("invtweaks.util.Sorting")
+                    .getMethod("executeSort", net.minecraft.world.entity.player.Player.class, boolean.class, String.class)
+                    .invoke(null, player, false, "com.bubie.client.BubieScreen");
+        } finally {
+            player.containerMenu = player.inventoryMenu;
+        }
+        helper.assertTrue(bubie.getMainHandItem().is(Items.IRON_PICKAXE), "the tool stayed, found " + bubie.getMainHandItem());
+        helper.assertTrue(bubie.extra().getItem(com.bubie.entity.BubieEntity.FUEL_SLOT).is(Items.COAL), "the fuel stayed");
+        helper.assertTrue(bubie.extra().getItem(1).is(chip.getItem()), "the chip stayed");
+        helper.assertTrue(!bubie.storage().getItem(0).isEmpty(), "the storage was sorted to the front");
+        for (int i = 0; i < bubie.storage().getContainerSize(); i++) {
+            ItemStack s = bubie.storage().getItem(i);
+            helper.assertTrue(!s.is(Items.IRON_PICKAXE) && !s.is(Items.COAL) && !s.is(chip.getItem()), "equipment moved into storage slot " + i);
+        }
+        helper.succeed();
+    }
+
     /** A Quarry holding an Atomic Disassembler with an empty battery says so, instead of "working" and skipping blocks. */
     @GameTest(template = FIELD, timeoutTicks = 200)
     public static void emptyAtomicDisassemblerIsReported(GameTestHelper helper) {

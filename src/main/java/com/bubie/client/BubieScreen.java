@@ -189,6 +189,11 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         return y;
     }
 
+    /** A how-to at the bottom of a tab, left out when it would run past the panel. */
+    private void helpIfFits(GuiGraphics g, Component help, int x, int y) {
+        if (y + font.split(help, PANEL_W - 8).size() * 10 <= PANEL_Y + PANEL_H - 2) paragraph(g, help, x, y, BubieUi.DIM);
+    }
+
     private void drawTabs(GuiGraphics g) {
         // tabs as wide as their labels, sharing what is left
         Tab[] tabs = Tab.values();
@@ -317,7 +322,8 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             y += 15;
         }
         y += 4;
-        paragraph(g, Component.translatable("bubie.ui.area_help"), x, y, BubieUi.DIM);
+        // the how-to, when it fits under the buttons (with an area, a chest and a home set, the player knows it already)
+        helpIfFits(g, Component.translatable("bubie.ui.area_help"), x, y);
     }
 
     private void drawStatus(GuiGraphics g, BubieEntity bubie, int x, int y) {
@@ -428,7 +434,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
                     () -> minecraft.setScreen(new DjLinkScreen(this, bubie)));
             y += 17;
         }
-        paragraph(g, Component.translatable("bubie.ui.dj.help"), x, y, BubieUi.DIM);
+        helpIfFits(g, Component.translatable("bubie.ui.dj.help"), x, y);
     }
 
     @Override

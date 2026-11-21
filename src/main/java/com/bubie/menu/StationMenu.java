@@ -46,7 +46,7 @@ public class StationMenu extends AbstractContainerMenu {
         this.pos = pos;
         this.player = inventory.player;
         for (int i = 0; i < STORAGE; i++) addSlot(new SlotItemHandler(items, i, 8 + (i % 9) * 18, 18 + (i / 9) * 18));
-        addSlot(new SlotItemHandler(items, FUEL, FUEL_X, FUEL_Y));
+        addSlot(new FixedSlot(items, FUEL, FUEL_X, FUEL_Y));
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) addSlot(new Slot(inventory, col + row * 9 + 9, 8 + col * 18, INV_Y + row * 18));
         }
