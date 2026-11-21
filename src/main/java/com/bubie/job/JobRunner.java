@@ -908,8 +908,8 @@ public class JobRunner {
         for (int i = 0; i < BubieEntity.STORAGE_SLOTS; i++) {
             ItemStack stack = bubie.storage().getItem(i);
             if (stack.isEmpty()) continue;
-            // coal it found tops up its own fuel slot (up to 16); logs and the rest go to the chest
-            if (BubieConfig.REQUIRE_ENERGY.get() && stack.is(ItemTags.COALS)) {
+            // redstone it found tops up its own fuel slot (up to 16); the rest goes to the chest
+            if (BubieConfig.REQUIRE_ENERGY.get() && stack.is(net.neoforged.neoforge.common.Tags.Items.DUSTS_REDSTONE)) {
                 ItemStack fuel = bubie.extra().getItem(BubieEntity.FUEL_SLOT);
                 if (fuel.isEmpty()) {
                     bubie.extra().setItem(BubieEntity.FUEL_SLOT, stack.split(Math.min(16, stack.getCount())));

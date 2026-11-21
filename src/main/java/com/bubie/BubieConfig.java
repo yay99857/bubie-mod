@@ -9,7 +9,7 @@ public final class BubieConfig {
     public static final ModConfigSpec.IntValue MAX_PER_PLAYER;
     public static final ModConfigSpec.BooleanValue REQUIRE_ENERGY;
     public static final ModConfigSpec.IntValue MAX_ENERGY;
-    public static final ModConfigSpec.DoubleValue FUEL_MULTIPLIER;
+    public static final ModConfigSpec.IntValue REDSTONE_ENERGY;
     public static final ModConfigSpec.IntValue FE_PER_ENERGY;
     public static final ModConfigSpec.DoubleValue BREAK_SPEED;
     public static final ModConfigSpec.IntValue AREA_SIZE;
@@ -29,8 +29,9 @@ public final class BubieConfig {
                 .define("requireEnergy", true);
         MAX_ENERGY = b.comment("Battery size, in ticks of work (20 ticks = 1 second).")
                 .defineInRange("maxEnergy", 48000, 1000, 10_000_000);
-        FUEL_MULTIPLIER = b.comment("Energy from one fuel item = its furnace burn time x this. Coal (1600) x 7.5 = 12000 = 10 minutes.")
-                .defineInRange("fuelMultiplier", 7.5, 0.1, 100.0);
+        REDSTONE_ENERGY = b.comment("Bubies run on redstone or FE, not on coal. Energy from one redstone dust in the fuel slot",
+                        "(a block of redstone gives 9 times this). 6000 = 5 minutes of work.")
+                .defineInRange("redstoneEnergy", 6000, 1, 1_000_000);
         FE_PER_ENERGY = b.comment("FE the Bubie Station spends per unit of Bubie energy.")
                 .defineInRange("fePerEnergy", 4, 0, 10_000);
         BREAK_SPEED = b.comment("Mining speed compared with a player using the same tool (1.0 = same speed).")

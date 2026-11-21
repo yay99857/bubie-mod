@@ -320,7 +320,7 @@ public final class ShotDirector {
             if (b != null) {
                 b.insert(new ItemStack(Items.OAK_LOG, 37));
                 b.insert(new ItemStack(Items.WHEAT_SEEDS, 12));
-                b.extra().setItem(0, new ItemStack(Items.COAL, 9));
+                b.extra().setItem(0, new ItemStack(Items.REDSTONE, 9));
                 b.extra().setItem(1, new ItemStack(Bubie.CHIPS.get(com.bubie.item.ChipType.SPEED).get()));
                 b.interact(p, InteractionHand.MAIN_HAND);
             }

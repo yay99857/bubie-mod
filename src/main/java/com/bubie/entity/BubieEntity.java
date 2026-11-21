@@ -588,14 +588,17 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         return ItemStack.EMPTY;
     }
 
-    public int fuelValue(ItemStack stack) {
-        int burn = stack.getBurnTime(RecipeType.SMELTING);
-        return burn <= 0 ? 0 : (int) (burn * BubieConfig.FUEL_MULTIPLIER.get());
+    /** Bubie energy from one item of fuel: redstone dust, or a block of redstone (nine dusts). Coal is not fuel. */
+    public static int fuelValue(ItemStack stack) {
+        int dust = BubieConfig.REDSTONE_ENERGY.get();
+        if (stack.is(net.neoforged.neoforge.common.Tags.Items.DUSTS_REDSTONE)) return dust;
+        if (stack.is(net.neoforged.neoforge.common.Tags.Items.STORAGE_BLOCKS_REDSTONE)) return dust * 9;
+        return 0;
     }
 
     /** What the fuel slot takes: anything that burns, or any item that stores FE (batteries, pocket accumulators). */
     public static boolean isFuel(ItemStack stack) {
-        if (stack.getBurnTime(RecipeType.SMELTING) > 0) return true;
+        if (fuelValue(stack) > 0) return true;
         var energy = stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
         return energy != null && energy.canExtract();
     }
@@ -619,7 +622,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             return;
         }
         int value = fuelValue(fuel);
-        if (value > 0 && getMaxEnergy() - getEnergy() >= value) {
+        // a block of redstone holds more than a full battery: it goes in once half of it fits
+        if (value > 0 && getMaxEnergy() - getEnergy() >= Math.min(value, getMaxEnergy() / 2)) {
             ItemStack remainder = fuel.getCraftingRemainingItem();
             fuel.shrink(1);
             if (fuel.isEmpty() && !remainder.isEmpty()) extra.setItem(FUEL_SLOT, remainder);

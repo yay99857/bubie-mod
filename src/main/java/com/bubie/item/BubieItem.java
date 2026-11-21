@@ -79,7 +79,7 @@ public class BubieItem extends Item {
         if (data != null) {
             bubie.readBubieData(data);
         } else {
-            bubie.setEnergy(12000); // a new Bubie comes with one coal's worth
+            bubie.setEnergy(12000); // a new Bubie comes with two redstone's worth
         }
         bubie.setOwnerUUID(player.getUUID());
         bubie.setHealth(bubie.getMaxHealth());

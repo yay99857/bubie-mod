@@ -34,7 +34,7 @@ As expressões automáticas (feliz, trabalhando, erro, dormindo, machucado) apar
 | **Estação do Bubie** | cobre, vidro, cobre / redstone, baú, redstone / ferro, ferro, ferro |
 | **Chips** | pepita de ouro e redstone em volta de: açúcar (velocidade), baú (armazenamento), bússola (alcance), funil (ímã), alto-forno (fundição), bloco de cobre (eficiência) |
 
-Um Bubie novo já vem com a energia de um carvão.
+Um Bubie novo já vem com a energia de dois pós de redstone.
 
 ## Como usar
 | Ação | O que faz |
@@ -94,12 +94,12 @@ Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja
 - Usa a ferramenta do slot dele e gasta durabilidade. Fortuna e Toque Suave funcionam. Para quando a ferramenta está a 2 usos de quebrar.
 - A picareta decide o que ele minera: com picareta de madeira ele não pega ferro (mostra "Precisa de ferramenta").
 - Nunca cava o bloco embaixo de um baú, da estação ou de outro bloco com inventário.
-- Quando enche, leva tudo ao baú (ou à Estação) e volta. Guarda para si sementes, mudas, pedregulho e tochas que ele usa. O carvão que encontra vai para o slot de combustível dele (até 16).
+- Quando enche, leva tudo ao baú (ou à Estação) e volta. Guarda para si sementes, mudas, pedregulho e tochas que ele usa. A redstone que encontra vai para o slot de combustível dele (até 16).
 - Foge de monstros. Não morre: com a vida a zero ele **desliga** e vira o item, com inventário, ferramenta, chips e configurações. Não cai de altura e não se afoga.
 - Problemas aparecem num balão sobre a cabeça (⚠ Sem baú, Precisa de ferramenta...) e com o rosto de erro.
 
 ## Energia e Estação
-- Trabalhar gasta energia: um carvão dá 10 minutos. Coloque combustível no slot dele.
+- Trabalhar gasta energia: um pó de redstone dá 5 minutos (um bloco, 45). Ele é um robô: carvão não serve. Coloque redstone ou uma bateria com FE no slot dele.
 - A **Estação** é a casa: carrega o Bubie com FE (de qualquer mod) ou com combustível no slot dela, e guarda 27 pilhas. Com uma casa, ele volta para carregar quando a bateria baixa e para descansar à noite.
 - Opcional (configuração do servidor): a Estação mantém os chunks em volta carregados.
 
@@ -129,7 +129,7 @@ Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./
 | **Baterias (acumulador de bolso da Voltaic, tablet do Mekanism, baterias do Powah)** | No slot de combustível, recarregam o Bubie sem se gastar |
 | **Máquinas da Voltaic (e outras)** | Marque a máquina como "baú" com a Prancheta: o Minerador entrega o minério bruto direto no pulverizador |
 | **Mekanism, Powah, Flux Networks, Ender IO, Pipez, Voltaic** | A Estação recebe FE de qualquer cabo (até 4.000 FE/t, 4 FE por unidade de energia). Ligada na energia, o Bubie volta sozinho para carregar quando a bateria baixa: fica sempre ligado |
-| **Canos, funis, esteiras** | Colocam carvão (ou melhor) direto no slot de combustível da Estação e tiram o que está guardado nela. Troncos e tábuas nunca são queimados |
+| **Canos, funis, esteiras** | Colocam redstone direto no slot de combustível da Estação e tiram o que está guardado nela |
 | **FTB Chunks** | O Bubie quebra blocos como o dono, então só trabalha onde o dono pode mexer (opção "Allow Fake Players by Player ID", ligada no pack). Para ele trabalhar com você longe, carregue o chunk pelo FTB Chunks (ou ligue `stationLoadsChunks`) |
 | **FTB Teams** | Quem é do time do dono também pode dar ordens, abrir o menu e editar o visual |
 | **Mystical Agriculture, Farmer's Delight** | O Fazendeiro colhe e replanta plantas de mods que usam o bloco de plantação padrão; as que se colhem com clique direito (tomates do Farmer's Delight) são colhidas sem quebrar |

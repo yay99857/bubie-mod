@@ -130,9 +130,9 @@ public class StationBlockEntity extends BlockEntity implements MenuProvider {
         }
     };
 
-    /** Coal or better (coal, charcoal, coal blocks, blaze rods, lava): logs and planks stay in storage. */
+    /** Redstone dust or blocks, like the Bubie itself (coal is not fuel). */
     public static boolean isStationFuel(ItemStack stack) {
-        return stack.getBurnTime(RecipeType.SMELTING) >= 1600;
+        return com.bubie.entity.BubieEntity.fuelValue(stack) > 0;
     }
 
     public StationBlockEntity(BlockPos pos, BlockState state) {
@@ -191,12 +191,12 @@ public class StationBlockEntity extends BlockEntity implements MenuProvider {
         }
         if (given < need) {
             ItemStack fuel = items.getStackInSlot(FUEL);
-            int burn = fuel.getBurnTime(RecipeType.SMELTING);
+            int burn = com.bubie.entity.BubieEntity.fuelValue(fuel);
             if (burn > 0) {
                 ItemStack remainder = fuel.getCraftingRemainingItem();
                 items.extractItem(FUEL, 1, false);
                 if (items.getStackInSlot(FUEL).isEmpty() && !remainder.isEmpty()) items.setStackInSlot(FUEL, remainder);
-                fuelBuffer += (int) (burn * BubieConfig.FUEL_MULTIPLIER.get());
+                fuelBuffer += burn;
                 int more = Math.min(need - given, fuelBuffer);
                 fuelBuffer -= more;
                 given += more;

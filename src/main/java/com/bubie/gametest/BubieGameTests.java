@@ -210,6 +210,18 @@ public class BubieGameTests {
         });
     }
 
+    /** Coal is not fuel any more: the fuel slot refuses it and only redstone (or FE) charges the Bubie. */
+    @GameTest(template = FIELD)
+    public static void runsOnRedstoneNotCoal(GameTestHelper helper) {
+        helper.assertTrue(!BubieEntity.isFuel(new ItemStack(Items.COAL)), "coal is not fuel");
+        helper.assertTrue(!BubieEntity.isFuel(new ItemStack(Items.OAK_LOG)), "wood is not fuel");
+        helper.assertTrue(BubieEntity.isFuel(new ItemStack(Items.REDSTONE)), "redstone is");
+        helper.assertTrue(BubieEntity.fuelValue(new ItemStack(Items.REDSTONE_BLOCK)) == 9 * BubieEntity.fuelValue(new ItemStack(Items.REDSTONE)),
+                "a block is nine dusts");
+        helper.assertTrue(!com.bubie.block.StationBlockEntity.isStationFuel(new ItemStack(Items.COAL)), "nor for the station");
+        helper.succeed();
+    }
+
     @GameTest(template = FIELD, timeoutTicks = 200)
     public static void burnsFuelWhenTheBatteryIsEmpty(GameTestHelper helper) {
         floor(helper, Blocks.GRASS_BLOCK);
@@ -218,11 +230,11 @@ public class BubieGameTests {
         bubie.setEnergy(0);
         helper.runAfterDelay(30, () -> {
             helper.assertTrue(bubie.getStatus() == Status.NO_ENERGY, "no energy, is " + bubie.getStatus());
-            bubie.extra().setItem(BubieEntity.FUEL_SLOT, new ItemStack(Items.COAL, 2));
+            bubie.extra().setItem(BubieEntity.FUEL_SLOT, new ItemStack(Items.REDSTONE, 2));
         });
         helper.succeedWhen(() -> {
-            helper.assertTrue(bubie.getEnergy() >= 12000, "one coal burnt, energy " + bubie.getEnergy());
-            helper.assertTrue(bubie.extra().getItem(BubieEntity.FUEL_SLOT).getCount() == 1, "one coal left");
+            helper.assertTrue(bubie.getEnergy() >= 6000, "one redstone burnt, energy " + bubie.getEnergy());
+            helper.assertTrue(bubie.extra().getItem(BubieEntity.FUEL_SLOT).getCount() == 1, "one redstone left");
         });
     }
 }

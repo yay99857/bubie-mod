@@ -46,14 +46,14 @@ Links are downloaded by each player who hears them. Servers can allow discs only
 ## 📋 How to use it
 1. Craft the **Bubie Clipboard** and Shift + click a chest.
 2. Click your Bubie with the clipboard. It works **around that chest** (radius 8, set with − / + in its menu): the Lumberjack finds the trees nearby, the Farmer the fields. The Quarry and the Digger open a pit in front of the chest, never under your base. Want an exact area? Click its two corners with the clipboard first.
-3. Give it a tool (it uses your axe, shovel or pickaxe, and stops before it breaks) and some coal.
+3. Give it a tool (it uses your axe, shovel or pickaxe, and stops before it breaks) and some redstone.
 
 | | |
 |---|---|
 | ![The Job tab](https://media.forgecdn.net/attachments/2241/436/05-menu_job-png.png) | ![The Status tab](https://media.forgecdn.net/attachments/2241/437/06-menu_status-png.png) |
 
 ## ⚡ Energy, home and chips
-- Coal gives 10 minutes of work. The **Bubie Station** charges it with FE or fuel, stores what it brings back, and is where it rests at night.
+- It is a robot: it runs on redstone (one dust = 5 minutes of work, a block = 45) or FE, not coal. The **Bubie Station** charges it with FE or redstone, stores what it brings back, and is where it rests at night.
 - Four chip slots: Speed, Storage, Range, Magnet, Smelting and Efficiency.
 - At 0 health it **shuts down** into its item, keeping everything. It runs from monsters and never dies.
 - A balloon over its head says what's wrong when it stops.
@@ -69,7 +69,7 @@ Casing, hoodie and screen-light colours, 18 eyes and 10 mouths, with a turning p
 
 ## 🔌 Works with
 - **Storage:** unloads into any block with an inventory: Sophisticated Storage, Functional Storage, Create vaults, Mekanism bins, chests (AE2: put a Storage Bus on its chest).
-- **Power:** the station takes FE from any cable (Mekanism, Powah, Flux Networks, Ender IO, Pipez...), and the Bubie goes back to charge on its own, so it never runs out. Pipes can feed coal to the station, and any FE battery (Voltaic pocket accumulator, Mekanism energy tablet) in its fuel slot charges it without being used up.
+- **Power:** the station takes FE from any cable (Mekanism, Powah, Flux Networks, Ender IO, Pipez...), and the Bubie goes back to charge on its own, so it never runs out. Pipes can feed redstone to the station, and any FE battery (Voltaic pocket accumulator, Mekanism energy tablet) in its fuel slot charges it without being used up.
 - **Claims and teams:** breaks blocks as its owner, so FTB Chunks protection applies; FTB Teams teammates can give it orders.
 - **Crops and ores:** Mystical Agriculture, Farmer's Delight and other standard crops; any ore in `c:ores` (All the Ores included); any modded tool.
 - **Safe from automation:** mob capturers can't take it, and machines that attack as fake players don't hurt it.
@@ -85,7 +85,7 @@ colhe e replanta plantações, minera veios ou túneis e junta itens do chão, g
 Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele levanta a base bloco por bloco, com o material do baú
 (que outro Bubie pode ir enchendo).
 
-- Shift + clique num baú com a **Prancheta do Bubie** e clique no Bubie: ele trabalha em volta do baú (o raio se ajusta no menu). Dê uma ferramenta e um pouco de carvão. Para uma área exata, marque 2 cantos antes.
+- Shift + clique num baú com a **Prancheta do Bubie** e clique no Bubie: ele trabalha em volta do baú (o raio se ajusta no menu). Dê uma ferramenta e um pouco de redstone. Para uma área exata, marque 2 cantos antes.
 - A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia.
 - **Editar meu Bubie:** cores do casco, do moletom e da luz da tela, olhos e boca.
 - **Guarda:** enfrenta os monstros da área com a arma que você der, junta o que eles largam e vigia à noite.

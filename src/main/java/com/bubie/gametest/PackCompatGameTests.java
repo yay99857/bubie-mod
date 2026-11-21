@@ -72,7 +72,7 @@ public class PackCompatGameTests {
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(5, 1, 5));
         ItemStack chip = new ItemStack(Bubie.CHIPS.get(com.bubie.item.ChipType.SPEED).get());
         bubie.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_PICKAXE));
-        bubie.extra().setItem(com.bubie.entity.BubieEntity.FUEL_SLOT, new ItemStack(Items.COAL, 4));
+        bubie.extra().setItem(com.bubie.entity.BubieEntity.FUEL_SLOT, new ItemStack(Items.REDSTONE, 4));
         bubie.extra().setItem(1, chip.copy());
         // storage out of order, with a gap, so a sort has work to do
         bubie.storage().setItem(3, new ItemStack(Items.DIRT, 10));
@@ -88,12 +88,12 @@ public class PackCompatGameTests {
             player.containerMenu = player.inventoryMenu;
         }
         helper.assertTrue(bubie.getMainHandItem().is(Items.IRON_PICKAXE), "the tool stayed, found " + bubie.getMainHandItem());
-        helper.assertTrue(bubie.extra().getItem(com.bubie.entity.BubieEntity.FUEL_SLOT).is(Items.COAL), "the fuel stayed");
+        helper.assertTrue(bubie.extra().getItem(com.bubie.entity.BubieEntity.FUEL_SLOT).is(Items.REDSTONE), "the fuel stayed");
         helper.assertTrue(bubie.extra().getItem(1).is(chip.getItem()), "the chip stayed");
         helper.assertTrue(!bubie.storage().getItem(0).isEmpty(), "the storage was sorted to the front");
         for (int i = 0; i < bubie.storage().getContainerSize(); i++) {
             ItemStack s = bubie.storage().getItem(i);
-            helper.assertTrue(!s.is(Items.IRON_PICKAXE) && !s.is(Items.COAL) && !s.is(chip.getItem()), "equipment moved into storage slot " + i);
+            helper.assertTrue(!s.is(Items.IRON_PICKAXE) && !s.is(Items.REDSTONE) && !s.is(chip.getItem()), "equipment moved into storage slot " + i);
         }
         helper.succeed();
     }
@@ -232,7 +232,7 @@ public class PackCompatGameTests {
         });
     }
 
-    /** Pipes and hoppers: coal goes to the fuel slot first; logs never do. */
+    /** Pipes and hoppers: redstone goes to the fuel slot first; coal and logs never do. */
     @GameTest(template = FIELD, timeoutTicks = 40)
     public static void stationTakesFuelFromPipes(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
@@ -240,10 +240,10 @@ public class PackCompatGameTests {
         helper.setBlock(pos, Bubie.STATION.get());
         IItemHandler handler = helper.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, helper.absolutePos(pos), Direction.UP);
         helper.assertTrue(handler != null, "the station has an item handler");
-        net.neoforged.neoforge.items.ItemHandlerHelper.insertItemStacked(handler, new ItemStack(Items.COAL, 10), false);
+        net.neoforged.neoforge.items.ItemHandlerHelper.insertItemStacked(handler, new ItemStack(Items.REDSTONE, 10), false);
         net.neoforged.neoforge.items.ItemHandlerHelper.insertItemStacked(handler, new ItemStack(Items.OAK_LOG, 10), false);
         StationBlockEntity station = helper.getBlockEntity(pos);
-        helper.assertTrue(station.items().getStackInSlot(StationBlockEntity.FUEL).is(Items.COAL), "coal in the fuel slot");
+        helper.assertTrue(station.items().getStackInSlot(StationBlockEntity.FUEL).is(Items.REDSTONE), "redstone in the fuel slot");
         helper.assertTrue(handler.extractItem(0, 1, true).isEmpty(), "fuel can't be pulled out by pipes");
         int logs = 0;
         for (int i = 0; i < StationBlockEntity.STORAGE; i++) if (station.items().getStackInSlot(i).is(Items.OAK_LOG)) logs += station.items().getStackInSlot(i).getCount();
