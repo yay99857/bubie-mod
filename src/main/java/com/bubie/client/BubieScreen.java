@@ -36,7 +36,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         tab = Tab.values()[index];
     }
 
-    private record Hit(int x, int y, int w, int h, Runnable action) {
+    private record Hit(int x, int y, int w, int h, Runnable action, Component tip) {
         boolean contains(double mx, double my) {
             return mx >= x && mx < x + w && my >= y && my < y + h;
         }
@@ -64,6 +64,14 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         this.mouseY = mouseY;
         super.render(g, mouseX, mouseY, partialTick);
         renderTooltip(g, mouseX, mouseY);
+        // what a panel button does
+        double rx = mouseX - leftPos, ry = mouseY - topPos;
+        for (Hit hit : hits) {
+            if (hit.tip() != null && hit.contains(rx, ry)) {
+                g.renderTooltip(font, font.split(hit.tip(), 170), mouseX, mouseY);
+                break;
+            }
+        }
         // what goes in an empty equipment slot
         if (hoveredSlot != null && !hoveredSlot.hasItem() && menu.getCarried().isEmpty()) {
             int index = hoveredSlot.index;
@@ -147,8 +155,26 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
     }
 
     private void button(GuiGraphics g, int x, int y, int w, int h, Component text, boolean active, Runnable action) {
+        button(g, x, y, w, h, text, active, action, null);
+    }
+
+    private void button(GuiGraphics g, int x, int y, int w, int h, Component text, boolean active, Runnable action, Component tip) {
         BubieUi.button(g, font, x, y, w, h, text, active, hover(x, y, w, h));
-        hits.add(new Hit(x, y, w, h, action));
+        hits.add(new Hit(x, y, w, h, action, tip));
+    }
+
+    private static Component tip(String key, Object... args) {
+        return Component.translatable("bubie.ui.tip." + key, args);
+    }
+
+    /** A tooltip over a spot of the panel that is not a button. */
+    private void tipArea(int x, int y, int w, int h, Component tip) {
+        hits.add(new Hit(x, y, w, h, null, tip));
+    }
+
+    /** Shows the work area in the world for ten seconds. */
+    private static void preview(BubieEntity bubie) {
+        bubie.previewUntil = bubie.level().getGameTime() + 200;
     }
 
     private void label(GuiGraphics g, Component text, int x, int y) {
@@ -189,15 +215,15 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         y += 10;
         for (Mode mode : Mode.values()) {
             button(g, x, y, w, 13, Component.translatable(mode.key()), bubie.getMode() == mode,
-                    () -> send(BubieCommandPayload.SET_MODE, mode.ordinal()));
+                    () -> send(BubieCommandPayload.SET_MODE, mode.ordinal()), tip("mode." + mode.name().toLowerCase()));
             y += 15;
         }
         y += 4;
         label(g, Component.translatable("bubie.ui.job"), x, y);
         y += 10;
         JobType job = bubie.getJob();
-        button(g, x, y, 14, 13, Component.literal("◀"), false, () -> send(BubieCommandPayload.SET_JOB, job.ordinal() - 1));
-        button(g, x + w - 14, y, 14, 13, Component.literal("▶"), false, () -> send(BubieCommandPayload.SET_JOB, job.ordinal() + 1));
+        button(g, x, y, 14, 13, Component.literal("◀"), false, () -> send(BubieCommandPayload.SET_JOB, job.ordinal() - 1), tip("job"));
+        button(g, x + w - 14, y, 14, 13, Component.literal("▶"), false, () -> send(BubieCommandPayload.SET_JOB, job.ordinal() + 1), tip("job"));
         BubieUi.button(g, font, x + 15, y, w - 30, 13, Component.translatable(job.key()), true, false);
         y += 17;
         y = paragraph(g, Component.translatable(job.descriptionKey()), x, y, BubieUi.AMBER_LIGHT);
@@ -242,8 +268,17 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             g.drawString(font, Component.translatable(bubie.getChest() != null ? "bubie.ui.around_chest" : "bubie.ui.around_home"),
                     x, y, BubieUi.AMBER, false);
             y += 11;
-            button(g, x, y, 13, 13, Component.literal("-"), false, () -> send(BubieCommandPayload.SET_RADIUS, r - 1));
-            button(g, x + w - 13, y, 13, 13, Component.literal("+"), false, () -> send(BubieCommandPayload.SET_RADIUS, r + 1));
+            // changing it shows the new area in the world right away
+            Component radiusTip = tip("radius", Math.max(2, Math.min(60, (maxAreaSide() - 1) / 2)));
+            button(g, x, y, 13, 13, Component.literal("-"), false, () -> {
+                send(BubieCommandPayload.SET_RADIUS, r - 1);
+                preview(bubie);
+            }, radiusTip);
+            button(g, x + w - 13, y, 13, 13, Component.literal("+"), false, () -> {
+                send(BubieCommandPayload.SET_RADIUS, r + 1);
+                preview(bubie);
+            }, radiusTip);
+            tipArea(x + 14, y, w - 28, 13, radiusTip);
             Component radius = Component.translatable("bubie.ui.radius", r);
             g.drawString(font, radius, x + (w - font.width(radius)) / 2, y + 3, BubieUi.AMBER_LIGHT, false);
             y += 16;
@@ -267,19 +302,18 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         g.drawString(font, home == null ? Component.translatable("bubie.ui.none") : pos(home), x, y,
                 home == null ? BubieUi.AMBER_DARK : BubieUi.AMBER, false);
         y += 16;
-        button(g, x, y, w, 13, Component.translatable("bubie.ui.show"), false,
-                () -> bubie.previewUntil = bubie.level().getGameTime() + 200);
+        button(g, x, y, w, 13, Component.translatable("bubie.ui.show"), false, () -> preview(bubie), tip("show"));
         y += 15;
         if (marked != null) {
-            button(g, x, y, w, 13, Component.translatable("bubie.ui.clear_area"), false, () -> send(BubieCommandPayload.CLEAR_AREA, 0));
+            button(g, x, y, w, 13, Component.translatable("bubie.ui.clear_area"), false, () -> send(BubieCommandPayload.CLEAR_AREA, 0), tip("clear_area"));
             y += 15;
         }
         if (chest != null) {
-            button(g, x, y, w, 13, Component.translatable("bubie.ui.clear_chest"), false, () -> send(BubieCommandPayload.CLEAR_CHEST, 0));
+            button(g, x, y, w, 13, Component.translatable("bubie.ui.clear_chest"), false, () -> send(BubieCommandPayload.CLEAR_CHEST, 0), tip("clear_chest"));
             y += 15;
         }
         if (home != null) {
-            button(g, x, y, w, 13, Component.translatable("bubie.ui.clear_home"), false, () -> send(BubieCommandPayload.CLEAR_HOME, 0));
+            button(g, x, y, w, 13, Component.translatable("bubie.ui.clear_home"), false, () -> send(BubieCommandPayload.CLEAR_HOME, 0), tip("clear_home"));
             y += 15;
         }
         y += 4;
@@ -295,7 +329,9 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         button(g, x, y, w, 13, Component.translatable("bubie.ui.edit_look"), false, () -> minecraft.setScreen(new LookScreen(this, bubie)));
         y += 19;
         Status status = bubie.getStatus();
-        y = paragraph(g, bubie.statusText(), x, y, status.problem ? BubieUi.RED : BubieUi.AMBER_LIGHT);
+        // with nothing to do, say what its job is looking for and where, instead of the plain "nothing to do"
+        Component text = status == Status.NOTHING_TO_DO ? idleReason(bubie) : bubie.statusText();
+        y = paragraph(g, text, x, y, status.problem ? BubieUi.RED : BubieUi.AMBER_LIGHT);
         if (status.problem) y = paragraph(g, Component.translatable(status.key() + ".help"), x, y, BubieUi.DIM);
         if (bubie.getJob() == JobType.BUILDER && bubie.getBuildTotal() > 0) {
             int total = bubie.getBuildTotal(), placed = total - bubie.getBuildLeft();
@@ -323,10 +359,21 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             int n = chips(chip);
             if (n == 0) continue;
             any = true;
-            g.drawString(font, Component.translatable("item.bubie." + chip.id()).append(n > 1 ? " ×" + n : ""), x, y, BubieUi.AMBER, false);
+            Component name = Component.translatable("item.bubie." + chip.id()).append(n > 1 ? " ×" + n : "");
+            g.drawString(font, name, x, y, BubieUi.AMBER, false);
+            tipArea(x, y - 1, font.width(name), 10, Component.translatable("item.bubie." + chip.id() + ".desc"));
             y += 10;
         }
         if (!any) g.drawString(font, Component.translatable("bubie.ui.none"), x, y, BubieUi.AMBER_DARK, false);
+    }
+
+    /** Why a Bubie with nothing to do is waiting: what its job looks for, and where. */
+    private static Component idleReason(BubieEntity bubie) {
+        Component where;
+        if (bubie.getMarkedArea() != null) where = Component.translatable("bubie.status.where.area");
+        else if (bubie.getChest() != null) where = Component.translatable("bubie.status.where.chest", bubie.getWorkRadius());
+        else where = Component.translatable("bubie.status.where.home", bubie.getWorkRadius());
+        return Component.translatable("bubie.status.nothing_to_do." + bubie.getJob().name().toLowerCase(), where);
     }
 
     /** Discs in the Bubie's storage: its playlist, before the links. */
@@ -347,10 +394,10 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
                 : Component.literal("♪ " + track.title()), x, y, track.isNone() ? BubieUi.AMBER_DARK : BubieUi.AMBER_LIGHT);
         y += 4;
         int bw = (w - 4) / 3;
-        button(g, x, y, bw, 13, Component.literal("◀◀"), false, () -> send(BubieCommandPayload.DJ_PREVIOUS, 0));
+        button(g, x, y, bw, 13, Component.literal("◀◀"), false, () -> send(BubieCommandPayload.DJ_PREVIOUS, 0), tip("dj.previous"));
         button(g, x + bw + 2, y, w - 2 * bw - 4, 13, Component.literal(track.isNone() ? "▶" : "■"), !track.isNone(),
-                () -> send(BubieCommandPayload.DJ_TOGGLE, 0));
-        button(g, x + w - bw, y, bw, 13, Component.literal("▶▶"), false, () -> send(BubieCommandPayload.DJ_NEXT, 0));
+                () -> send(BubieCommandPayload.DJ_TOGGLE, 0), tip(track.isNone() ? "dj.play" : "dj.stop"));
+        button(g, x + w - bw, y, bw, 13, Component.literal("▶▶"), false, () -> send(BubieCommandPayload.DJ_NEXT, 0), tip("dj.next"));
         y += 19;
         int volume = bubie.getDjVolume();
         label(g, Component.translatable("bubie.ui.dj.volume", volume), x, y);
@@ -369,7 +416,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             int index = i;
             String title = font.plainSubstrByWidth(com.bubie.entity.Dj.linkTitle(links.get(i)), w - 16);
             g.drawString(font, title, x, y + 2, BubieUi.AMBER, false);
-            button(g, x + w - 12, y, 12, 11, Component.literal("×"), false, () -> send(BubieCommandPayload.DJ_REMOVE_LINK, index));
+            button(g, x + w - 12, y, 12, 11, Component.literal("×"), false, () -> send(BubieCommandPayload.DJ_REMOVE_LINK, index), tip("dj.remove"));
             y += 13;
         }
         if (links.size() > shown) {
@@ -389,7 +436,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         if (button == 0) {
             double rx = mx - leftPos, ry = my - topPos;
             for (Hit hit : List.copyOf(hits)) {
-                if (hit.contains(rx, ry)) {
+                if (hit.action() != null && hit.contains(rx, ry)) {
                     hit.action().run();
                     playClick();
                     return true;
