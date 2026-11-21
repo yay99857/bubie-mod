@@ -79,12 +79,8 @@ public final class Dj {
 
     private List<Entry> playlist() {
         List<Entry> list = new ArrayList<>();
-        for (int i = 0; i < BubieEntity.STORAGE_SLOTS; i++) {
-            ItemStack stack = bubie.storage().getItem(i);
-            if (stack.isEmpty()) continue;
-            Optional<Holder<JukeboxSong>> song = JukeboxSong.fromStack(bubie.registryAccess(), stack);
-            song.ifPresent(s -> list.add(new Entry(s, null)));
-        }
+        // the disc in the DJ tab's slot (discs in its storage are just cargo)
+        discSong().ifPresent(s -> list.add(new Entry(s, null)));
         if (BubieConfig.DJ_LINKS.get()) for (String link : links) list.add(new Entry(null, link));
         return list;
     }
@@ -197,7 +193,19 @@ public final class Dj {
             level.sendParticles(net.minecraft.core.particles.ParticleTypes.NOTE, bubie.getX(), bubie.getY() + 1.3, bubie.getZ(),
                     0, colour, 0, 0, 1);
         }
+        // the disc it is playing was taken out (or swapped): move on to what is there now
+        Track track = bubie.getDjTrack();
+        if (bubie.tickCount % 5 == 0 && !track.isNone() && !track.isLink()
+                && !discSong().map(s -> s.value().soundEvent().value().getLocation().toString().equals(track.ref())).orElse(false)) {
+            start(index);
+            return;
+        }
         if (bubie.level().getGameTime() >= endsAt) start(index + 1);
+    }
+
+    private Optional<Holder<JukeboxSong>> discSong() {
+        ItemStack stack = bubie.disc().getItem(0);
+        return stack.isEmpty() ? Optional.empty() : JukeboxSong.fromStack(bubie.registryAccess(), stack);
     }
 
     // ------------------------------------------------------------------ saving

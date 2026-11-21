@@ -102,6 +102,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     private final SimpleContainer storage = new SimpleContainer(STORAGE_SLOTS);
     private final SimpleContainer extra = new SimpleContainer(1 + CHIP_SLOTS);
+    /** The DJ's music disc, in a slot of its own: never stored away in a chest, never taking a storage slot. */
+    private final SimpleContainer disc = new SimpleContainer(1);
     private final Map<ChipType, Integer> chips = new EnumMap<>(ChipType.class);
     private final JobRunner runner = new JobRunner(this);
     private final Dj dj = new Dj(this);
@@ -506,6 +508,14 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         return extra;
     }
 
+    public SimpleContainer disc() {
+        return disc;
+    }
+
+    public static boolean isDisc(ItemStack stack) {
+        return stack.has(net.minecraft.core.component.DataComponents.JUKEBOX_PLAYABLE);
+    }
+
     public JobRunner runner() {
         return runner;
     }
@@ -898,6 +908,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         if (getHome() != null) tag.putLong("Home", getHome().asLong());
         tag.put("Storage", saveContainer(storage));
         tag.put("Extra", saveContainer(extra));
+        tag.put("Disc", saveContainer(disc));
         if (!getTool().isEmpty()) tag.put("Tool", getTool().save(registryAccess()));
         dj.save(tag);
         if (!buildPlan.isEmpty() && buildOrigin != null) {
@@ -930,6 +941,13 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         try {
             loadContainer(storage, tag.getList("Storage", 10));
             loadContainer(extra, tag.getList("Extra", 10));
+            loadContainer(disc, tag.getList("Disc", 10));
+            if (!tag.contains("Disc")) {
+                // a Bubie from before the disc slot: its first disc in storage moves there
+                for (int i = 0; i < storage.getContainerSize() && disc.isEmpty(); i++) {
+                    if (isDisc(storage.getItem(i))) disc.setItem(0, storage.removeItem(i, 1));
+                }
+            }
         } finally {
             loading = false;
         }

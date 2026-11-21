@@ -214,8 +214,7 @@ public final class ShotDirector {
     private static void djScene(ServerPlayer p) {
         BubieEntity dj = spawn(p, 0, 0, 0);
         dj.setMode(Mode.STAY);
-        dj.insert(new ItemStack(Items.MUSIC_DISC_PIGSTEP));
-        dj.insert(new ItemStack(Items.MUSIC_DISC_CAT));
+        dj.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_PIGSTEP));
         if (DJ_LINK != null && !DJ_LINK.isBlank() && !DJ_LINK.equals("true")) dj.dj().addLink(DJ_LINK);
         dj.dj().toggle();
         BubieEntity friend = spawn(p, 2, 1, 150);
@@ -249,10 +248,9 @@ public final class ShotDirector {
         });
         add(20, () -> shot("dj_add_link"));
         add(5, () -> mc.setScreen(null));
-        // skip the two discs: the link plays (the log shows whether it streamed and decoded)
+        // skip the disc: the link plays (the log shows whether it streamed and decoded)
         add(20, () -> server(p -> p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6))
                 .forEach(b -> {
-                    b.dj().next();
                     b.dj().next();
                     LOG.info("DJ now plays {}", b.getDjTrack());
                 })));

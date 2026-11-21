@@ -60,6 +60,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        BubieMenu.djTabOpen = tab == Tab.DJ;
         this.mouseX = mouseX;
         this.mouseY = mouseY;
         super.render(g, mouseX, mouseY, partialTick);
@@ -76,14 +77,15 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         if (hoveredSlot != null && !hoveredSlot.hasItem() && menu.getCarried().isEmpty()) {
             int index = hoveredSlot.index;
             String key = index == BubieMenu.TOOL ? "bubie.ui.hint.tool" : index == BubieMenu.FUEL ? "bubie.ui.hint.fuel"
-                    : index >= BubieMenu.CHIPS && index < BubieMenu.PLAYER ? "bubie.ui.hint.chip" : null;
+                    : index >= BubieMenu.CHIPS && index < BubieMenu.DISC ? "bubie.ui.hint.chip"
+                    : index == BubieMenu.DISC ? "bubie.ui.hint.disc" : null;
             if (key != null) g.renderTooltip(font, font.split(Component.translatable(key), 160), mouseX, mouseY);
         }
     }
 
     private int chips(ChipType type) {
         int n = 0;
-        for (int i = BubieMenu.CHIPS; i < BubieMenu.PLAYER; i++) {
+        for (int i = BubieMenu.CHIPS; i < BubieMenu.DISC; i++) {
             if (menu.getSlot(i).getItem().getItem() instanceof com.bubie.item.ChipItem chip && chip.type() == type) n++;
         }
         return n;
@@ -104,6 +106,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             if (i < open) BubieUi.slot(g, sx, sy);
             else BubieUi.lockedSlot(g, sx, sy);
         }
+        if (tab == Tab.DJ) BubieUi.slot(g, x + BubieMenu.DISC_X, y + BubieMenu.DISC_Y);
         BubieUi.slot(g, x + BubieMenu.GRID_X, y + BubieMenu.EQUIP_Y);
         BubieUi.slot(g, x + BubieMenu.GRID_X + 24, y + BubieMenu.EQUIP_Y);
         for (int i = 0; i < BubieEntity.CHIP_SLOTS; i++) BubieUi.slot(g, x + BubieMenu.GRID_X + 72 + i * 18, y + BubieMenu.EQUIP_Y);
@@ -382,23 +385,20 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         return Component.translatable("bubie.status.nothing_to_do." + bubie.getJob().name().toLowerCase(), where);
     }
 
-    /** Discs in the Bubie's storage: its playlist, before the links. */
-    private int discs() {
-        int n = 0;
-        for (int i = 0; i < BubieEntity.STORAGE_SLOTS; i++) {
-            if (menu.getSlot(i).getItem().has(net.minecraft.core.component.DataComponents.JUKEBOX_PLAYABLE)) n++;
-        }
-        return n;
-    }
-
     private void drawDj(GuiGraphics g, BubieEntity bubie, int x, int y) {
         int w = PANEL_W - 8;
         com.bubie.entity.Dj.Track track = bubie.getDjTrack();
         label(g, Component.translatable("bubie.ui.dj.now"), x, y);
         y += 10;
-        y = paragraph(g, track.isNone() ? Component.translatable("bubie.ui.dj.stopped")
-                : Component.literal("♪ " + track.title()), x, y, track.isNone() ? BubieUi.AMBER_DARK : BubieUi.AMBER_LIGHT);
-        y += 4;
+        // one line, so the disc slot below stays put
+        if (track.isNone()) {
+            g.drawString(font, Component.translatable("bubie.ui.dj.stopped"), x, y, BubieUi.AMBER_DARK, false);
+        } else {
+            String title = "♪ " + track.title();
+            if (font.width(title) > w) title = font.plainSubstrByWidth(title, w - font.width("…")) + "…";
+            g.drawString(font, title, x, y, BubieUi.AMBER_LIGHT, false);
+        }
+        y += 14;
         int bw = (w - 4) / 3;
         button(g, x, y, bw, 13, Component.literal("◀◀"), false, () -> send(BubieCommandPayload.DJ_PREVIOUS, 0), tip("dj.previous"));
         button(g, x + bw + 2, y, w - 2 * bw - 4, 13, Component.literal(track.isNone() ? "▶" : "■"), !track.isNone(),
@@ -411,13 +411,14 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         button(g, x, y, 13, 11, Component.literal("-"), false, () -> send(BubieCommandPayload.DJ_VOLUME, Math.max(0, volume - 10)));
         button(g, x + w - 13, y, 13, 11, Component.literal("+"), false, () -> send(BubieCommandPayload.DJ_VOLUME, Math.min(100, volume + 10)));
         BubieUi.bar(g, x + 16, y + 3, w - 32, 5, volume / 100F, BubieUi.AMBER);
-        y += 17;
-        label(g, Component.translatable("bubie.ui.dj.discs", discs()), x, y);
-        y += 12;
+        // the disc slot itself is a menu slot at DISC_X, DISC_Y (its frame is drawn in renderBg)
+        y = BubieMenu.DISC_Y;
+        g.drawString(font, Component.translatable("bubie.ui.dj.disc"), BubieMenu.DISC_X + 22, y + 5, BubieUi.DIM, false);
+        y += 22;
         java.util.List<String> links = bubie.getDjLinks();
         label(g, Component.translatable("bubie.ui.dj.links", links.size(), com.bubie.entity.Dj.MAX_LINKS), x, y);
         y += 10;
-        int shown = Math.min(links.size(), 5);
+        int shown = Math.min(links.size(), 4);
         for (int i = 0; i < shown; i++) {
             int index = i;
             String title = font.plainSubstrByWidth(com.bubie.entity.Dj.linkTitle(links.get(i)), w - 16);

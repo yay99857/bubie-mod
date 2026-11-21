@@ -22,7 +22,10 @@ import javax.annotation.Nullable;
  */
 public class BubieMenu extends AbstractContainerMenu {
     public static final int TOOL = BubieEntity.STORAGE_SLOTS, FUEL = TOOL + 1, CHIPS = FUEL + 1;
-    public static final int PLAYER = CHIPS + BubieEntity.CHIP_SLOTS, END = PLAYER + 36;
+    public static final int DISC = CHIPS + BubieEntity.CHIP_SLOTS, PLAYER = DISC + 1, END = PLAYER + 36;
+    /** The disc slot sits in the DJ tab of the panel and only shows (on the client) while that tab is open. */
+    public static final int DISC_X = 12, DISC_Y = 101;
+    public static boolean djTabOpen;
     /** Slot layout, shared with the screen. */
     public static final int RIGHT = 122, GRID_X = RIGHT + 6, GRID_Y = 18, EQUIP_Y = 102, INV_Y = 146;
 
@@ -30,17 +33,18 @@ public class BubieMenu extends AbstractContainerMenu {
     private final BubieEntity bubie;
 
     public BubieMenu(int id, Inventory inventory, BubieEntity bubie) {
-        this(id, inventory, bubie, bubie.storage(), new ToolContainer(bubie), bubie.extra());
+        this(id, inventory, bubie, bubie.storage(), new ToolContainer(bubie), bubie.extra(), bubie.disc());
     }
 
     public static BubieMenu fromNetwork(int id, Inventory inventory, RegistryFriendlyByteBuf buf) {
         int entityId = buf.readVarInt();
         BubieEntity bubie = inventory.player.level().getEntity(entityId) instanceof BubieEntity b ? b : null;
         return new BubieMenu(id, inventory, bubie, new SimpleContainer(BubieEntity.STORAGE_SLOTS),
-                new SimpleContainer(1), new SimpleContainer(1 + BubieEntity.CHIP_SLOTS));
+                new SimpleContainer(1), new SimpleContainer(1 + BubieEntity.CHIP_SLOTS), new SimpleContainer(1));
     }
 
-    private BubieMenu(int id, Inventory inventory, @Nullable BubieEntity bubie, Container storage, Container tool, Container extra) {
+    private BubieMenu(int id, Inventory inventory, @Nullable BubieEntity bubie, Container storage, Container tool, Container extra,
+                      Container disc) {
         super(Bubie.BUBIE_MENU.get(), id);
         this.bubie = bubie;
         for (int i = 0; i < BubieEntity.STORAGE_SLOTS; i++) {
@@ -82,6 +86,23 @@ public class BubieMenu extends AbstractContainerMenu {
                 }
             });
         }
+        boolean client = inventory.player.level().isClientSide();
+        addSlot(new FixedSlot(disc, 0, DISC_X, DISC_Y) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return BubieEntity.isDisc(stack);
+            }
+
+            @Override
+            public int getMaxStackSize() {
+                return 1;
+            }
+
+            @Override
+            public boolean isActive() {
+                return !client || djTabOpen;
+            }
+        });
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
                 addSlot(new Slot(inventory, col + row * 9 + 9, GRID_X + col * 18, INV_Y + row * 18));
@@ -114,7 +135,8 @@ public class BubieMenu extends AbstractContainerMenu {
             if (!moveItemStackTo(stack, PLAYER, END, true)) return ItemStack.EMPTY;
         } else {
             boolean moved = false;
-            if (stack.getItem() instanceof ChipItem) moved = moveItemStackTo(stack, CHIPS, PLAYER, false);
+            if (stack.getItem() instanceof ChipItem) moved = moveItemStackTo(stack, CHIPS, DISC, false);
+            if (!moved && BubieEntity.isDisc(stack)) moved = moveItemStackTo(stack, DISC, PLAYER, false);
             if (!moved && slots.get(FUEL).mayPlace(stack)) moved = moveItemStackTo(stack, FUEL, FUEL + 1, false);
             if (!moved && stack.isDamageableItem() && !slots.get(TOOL).hasItem()) moved = moveItemStackTo(stack, TOOL, TOOL + 1, false);
             if (!moved) moved = moveItemStackTo(stack, 0, openSlots(), false);

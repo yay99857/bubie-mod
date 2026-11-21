@@ -204,10 +204,9 @@
   "bubie.ui.dj.now": "Sonando ahora",
   "bubie.ui.dj.stopped": "Parado",
   "bubie.ui.dj.volume": "Volumen %s%%",
-  "bubie.ui.dj.discs": "Discos en el inventario: %s",
   "bubie.ui.dj.links": "Enlaces: %s/%s",
   "bubie.ui.dj.add": "+ Añadir enlace",
-  "bubie.ui.dj.help": "Pone los discos de música de su inventario y luego los enlaces, para todos los que estén cerca.",
+  "bubie.ui.dj.help": "Reproduce el disco de la ranura de arriba y luego los enlaces, para todos los que estén cerca.",
   "bubie.ui.dj.add_title": "Añadir un enlace de música",
   "bubie.ui.dj.add_help": "Pega la dirección de un archivo .mp3 u .ogg.",
   "bubie.ui.dj.add_ok": "Añadir",
@@ -256,5 +255,7 @@
   "bubie.status.nothing_to_do.courier": "No hay cofres ni tolvas con objetos %s.",
   "bubie.status.nothing_to_do.guard": "No hay monstruos %s. De guardia.",
   "bubie.status.tool_no_energy": "Su herramienta no tiene energía",
-  "bubie.status.tool_no_energy.help": "La herramienta eléctrica de su ranura de herramienta tiene la batería vacía. Cárgala o dale al Bubie un pico, una pala o un hacha normal."
+  "bubie.status.tool_no_energy.help": "La herramienta eléctrica de su ranura de herramienta tiene la batería vacía. Cárgala o dale al Bubie un pico, una pala o un hacha normal.",
+  "bubie.ui.dj.disc": "Disco",
+  "bubie.ui.hint.disc": "Un disco de música para el DJ. Se queda aquí: nunca va al cofre con la carga."
 }

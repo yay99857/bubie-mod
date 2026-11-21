@@ -204,10 +204,9 @@
   "bubie.ui.dj.now": "Tocando agora",
   "bubie.ui.dj.stopped": "Parado",
   "bubie.ui.dj.volume": "Volume %s%%",
-  "bubie.ui.dj.discs": "Discos no inventário: %s",
   "bubie.ui.dj.links": "Links: %s/%s",
   "bubie.ui.dj.add": "+ Adicionar link",
-  "bubie.ui.dj.help": "Toca os discos de música do inventário dele e depois os links, para todo mundo por perto.",
+  "bubie.ui.dj.help": "Toca o disco do slot acima e depois os links, para todo mundo por perto.",
   "bubie.ui.dj.add_title": "Adicionar link de música",
   "bubie.ui.dj.add_help": "Cole o endereço de um arquivo .mp3 ou .ogg.",
   "bubie.ui.dj.add_ok": "Adicionar",
@@ -256,5 +255,7 @@
   "bubie.status.nothing_to_do.courier": "Nenhum baú ou funil com itens %s.",
   "bubie.status.nothing_to_do.guard": "Nenhum monstro %s. De guarda.",
   "bubie.status.tool_no_energy": "A ferramenta está sem energia",
-  "bubie.status.tool_no_energy.help": "A ferramenta elétrica no slot de ferramenta está com a bateria vazia. Carregue-a ou dê ao Bubie uma picareta, pá ou machado comum."
+  "bubie.status.tool_no_energy.help": "A ferramenta elétrica no slot de ferramenta está com a bateria vazia. Carregue-a ou dê ao Bubie uma picareta, pá ou machado comum.",
+  "bubie.ui.dj.disc": "Disco",
+  "bubie.ui.hint.disc": "Um disco de música para o DJ. Ele fica aqui: nunca vai para o baú junto com a carga."
 }

@@ -27,21 +27,19 @@ public class DjGameTests {
     @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 100)
     public static void djPlaysDiscsThenLinksInOrder(GameTestHelper helper) {
         BubieEntity bubie = dj(helper);
-        bubie.insert(new ItemStack(Items.MUSIC_DISC_CAT));
+        bubie.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_CAT)); // the DJ tab's disc slot
         bubie.insert(new ItemStack(Items.COBBLESTONE, 10)); // not music
-        bubie.insert(new ItemStack(Items.MUSIC_DISC_PIGSTEP));
+        bubie.insert(new ItemStack(Items.MUSIC_DISC_PIGSTEP)); // a disc in storage is cargo, not the playlist
         helper.assertTrue(bubie.dj().addLink("https://example.com/music/My_Song.mp3") == null, "a good link is accepted");
 
         bubie.dj().toggle();
         Dj.Track first = bubie.getDjTrack();
         helper.assertTrue(!first.isNone() && first.kind().equals("disc") && first.ref().endsWith("music_disc.cat"),
-                "starts with the first disc, plays " + first);
-        bubie.dj().next();
-        Dj.Track second = bubie.getDjTrack();
-        helper.assertTrue(second.ref().endsWith("music_disc.pigstep") && second.serial() > first.serial(), "then pigstep: " + second);
+                "starts with the disc in its slot, plays " + first);
         bubie.dj().next();
         Dj.Track third = bubie.getDjTrack();
-        helper.assertTrue(third.isLink() && third.title().equals("My Song"), "then the link, titled from its file: " + third);
+        helper.assertTrue(third.isLink() && third.title().equals("My Song") && third.serial() > first.serial(),
+                "then the link, titled from its file (not the disc in storage): " + third);
         bubie.dj().next();
         helper.assertTrue(bubie.getDjTrack().ref().endsWith("music_disc.cat"), "and back to the start");
         bubie.dj().previous();
@@ -60,6 +58,18 @@ public class DjGameTests {
             helper.assertTrue(bubie.getDjTrack().isNone(), "stops");
             helper.succeed();
         });
+    }
+
+    /** Taking the disc out of its slot while it plays stops it (or moves on to the links); it doesn't play on. */
+    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 60)
+    public static void djStopsWhenItsDiscIsTakenOut(GameTestHelper helper) {
+        BubieEntity bubie = dj(helper);
+        bubie.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_CAT));
+        bubie.dj().toggle();
+        helper.assertTrue(bubie.getDjTrack().ref().endsWith("music_disc.cat"), "plays the disc");
+        bubie.disc().setItem(0, ItemStack.EMPTY);
+        helper.succeedWhen(() -> helper.assertTrue(bubie.getDjTrack().isNone() && !bubie.dj().isPlaying(),
+                "stopped once the disc was taken, plays " + bubie.getDjTrack()));
     }
 
     @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 20)
