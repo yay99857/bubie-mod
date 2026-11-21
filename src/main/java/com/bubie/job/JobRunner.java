@@ -614,6 +614,14 @@ public class JobRunner {
         }
 
         float perTick = harvest ? 1.0F : BlockBreaker.progressPerTick(bubie, target, state, tool);
+        if (perTick <= 0 && !tool.isEmpty() && BlockBreaker.progressPerTick(bubie, target, state, ItemStack.EMPTY) > 0) {
+            // the tool does nothing here although the block can be broken: an electric tool with an empty battery
+            // (Atomic Disassembler, Powah or Flux tools...). Say so instead of "working" while skipping every block.
+            Status why = BlockBreaker.outOfEnergy(tool) ? Status.TOOL_NO_ENERGY : Status.NO_TOOL;
+            if (job.layered() || job instanceof MinerJob) rest(why, 100);
+            else bubie.setStatus(why);
+            return;
+        }
         if (perTick <= 0) {
             fail(target, 6000); // unbreakable
             return;

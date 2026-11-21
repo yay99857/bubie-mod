@@ -254,5 +254,7 @@
   "bubie.status.nothing_to_do.collector": "No items on the ground %s.",
   "bubie.status.nothing_to_do.builder": "Nothing to build: click it with a set-up Blueprint.",
   "bubie.status.nothing_to_do.courier": "No containers with items %s.",
-  "bubie.status.nothing_to_do.guard": "No monsters %s. On watch."
+  "bubie.status.nothing_to_do.guard": "No monsters %s. On watch.",
+  "bubie.status.tool_no_energy": "Its tool is out of energy",
+  "bubie.status.tool_no_energy.help": "The electric tool in its tool slot has an empty battery. Charge it, or give the Bubie an ordinary pickaxe, shovel or axe."
 }

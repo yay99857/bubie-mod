@@ -254,5 +254,7 @@
   "bubie.status.nothing_to_do.collector": "No hay objetos en el suelo %s.",
   "bubie.status.nothing_to_do.builder": "Nada que construir: haz clic en él con un Plano de base configurado.",
   "bubie.status.nothing_to_do.courier": "No hay cofres ni tolvas con objetos %s.",
-  "bubie.status.nothing_to_do.guard": "No hay monstruos %s. De guardia."
+  "bubie.status.nothing_to_do.guard": "No hay monstruos %s. De guardia.",
+  "bubie.status.tool_no_energy": "Su herramienta no tiene energía",
+  "bubie.status.tool_no_energy.help": "La herramienta eléctrica de su ranura de herramienta tiene la batería vacía. Cárgala o dale al Bubie un pico, una pala o un hacha normal."
 }

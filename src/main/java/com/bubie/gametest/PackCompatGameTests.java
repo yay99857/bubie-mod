@@ -62,6 +62,24 @@ public class PackCompatGameTests {
         return n;
     }
 
+    /** A Quarry holding an Atomic Disassembler with an empty battery says so, instead of "working" and skipping blocks. */
+    @GameTest(template = FIELD, timeoutTicks = 200)
+    public static void emptyAtomicDisassemblerIsReported(GameTestHelper helper) {
+        if (skip(helper, "mekanism")) return;
+        floor(helper, Blocks.DIRT);
+        BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(5, 1, 5));
+        bubie.setEnergy(40000);
+        ItemStack tool = new ItemStack(item("mekanism:atomic_disassembler"));
+        IEnergyStorage energy = tool.getCapability(Capabilities.EnergyStorage.ITEM);
+        helper.assertTrue(energy != null && energy.getEnergyStored() == 0, "a new disassembler starts empty");
+        bubie.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, tool);
+        bubie.setJob(JobType.QUARRY);
+        bubie.setArea(WorkArea.of(helper.absolutePos(new BlockPos(3, 0, 3)), helper.absolutePos(new BlockPos(7, 0, 7))));
+        bubie.setMode(Mode.WORK);
+        helper.succeedWhen(() -> helper.assertTrue(bubie.getStatus() == com.bubie.entity.Status.TOOL_NO_ENERGY,
+                "status should be TOOL_NO_ENERGY, is " + bubie.getStatus()));
+    }
+
     /** A Bubie with nothing to do in its area unloads what it carries into the storage block at BOX. */
     private static void unloadsInto(GameTestHelper helper, String mod, String storage) {
         if (skip(helper, mod)) return;

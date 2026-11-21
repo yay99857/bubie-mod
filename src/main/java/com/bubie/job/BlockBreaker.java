@@ -62,6 +62,12 @@ public final class BlockBreaker {
     }
 
     /** Mining progress per tick with this tool, as a player standing where the Bubie stands would get. */
+    /** An electric tool (it holds Forge Energy) whose battery is empty. */
+    public static boolean outOfEnergy(ItemStack tool) {
+        var energy = tool.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
+        return energy != null && energy.getEnergyStored() == 0;
+    }
+
     public static float progressPerTick(BubieEntity bubie, BlockPos pos, BlockState state, ItemStack tool) {
         FakePlayer player = player(bubie, tool);
         try {

@@ -254,5 +254,7 @@
   "bubie.status.nothing_to_do.collector": "Nenhum item no chão %s.",
   "bubie.status.nothing_to_do.builder": "Nada para construir: clique nele com uma Planta de Base configurada.",
   "bubie.status.nothing_to_do.courier": "Nenhum baú ou funil com itens %s.",
-  "bubie.status.nothing_to_do.guard": "Nenhum monstro %s. De guarda."
+  "bubie.status.nothing_to_do.guard": "Nenhum monstro %s. De guarda.",
+  "bubie.status.tool_no_energy": "A ferramenta está sem energia",
+  "bubie.status.tool_no_energy.help": "A ferramenta elétrica no slot de ferramenta está com a bateria vazia. Carregue-a ou dê ao Bubie uma picareta, pá ou machado comum."
 }
