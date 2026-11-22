@@ -83,7 +83,7 @@ GameTest `twelvebubiesstaycheap`.
 Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja qual for a tarefa dele:
 - Toca o **disco de música** do slot da aba DJ (de qualquer mod) e depois até 16 **links**: arquivos `.mp3` ou `.ogg`, ou links de compartilhamento do Dropbox, Google Drive, GitHub e Audius. YouTube, Spotify e parecidos não deixam outros apps tocarem suas músicas.
 - Tocar/parar, anterior/próxima, volume; o nome da música aparece acima da cabeça.
-- A tela vira um **equalizador**, ele dança e solta notas; os Bubies a até 10 blocos dançam junto.
+- A tela vira um **equalizador**, ele dança e solta notas; os Bubies em modo **Ficar** a até 10 blocos dançam junto (quem segue ou trabalha continua no que está fazendo).
 - O som acompanha o Bubie (como uma jukebox com pernas) e chega a 32 blocos no volume máximo.
 - Os links são baixados por cada jogador que os ouve (por isso o endereço vê o IP de quem ouve): `djLinks` no servidor deixa
   só discos, e `djPlayLinks` no `config/bubie-client.toml` desliga os links para aquele jogador. O `.mp3` é decodificado pelo
@@ -153,6 +153,9 @@ Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Changelog
+### 1.5.1
+- Near a Bubie DJ, only the Bubies sitting in **Stay** mode dance along; one that follows or works keeps at it.
+
 ### 1.5.0
 - **Runs on redstone or FE, not coal** (it is a robot): a redstone dust gives 5 minutes of work, a block 45 (`redstoneEnergy` in the server config). The Station takes redstone too, and the redstone a Bubie digs up tops up its fuel slot. Coal left in a fuel slot just stays there.
 - **DJ disc slot** in the DJ tab: the disc no longer takes a storage slot or goes to the chest with the cargo, and taking it out while it plays stops it. An older Bubie moves its first disc there.
