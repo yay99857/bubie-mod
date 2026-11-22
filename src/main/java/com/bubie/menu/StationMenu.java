@@ -66,22 +66,16 @@ public class StationMenu extends AbstractContainerMenu {
         return data.get(3) != 0;
     }
 
-    /** Once a second, the Bubies living at this station go to the screen (only when something changed). */
+    /** Once a second, the Bubies living at this station go to the screen's tracker (only when something changed). */
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
         if (!(player instanceof net.minecraft.server.level.ServerPlayer server) || ticks++ % 20 != 0) return;
-        java.util.List<com.bubie.network.StationBubiesPayload.Entry> list = new java.util.ArrayList<>();
-        for (com.bubie.entity.BubieEntity b : server.serverLevel().getEntitiesOfClass(com.bubie.entity.BubieEntity.class,
-                new net.minecraft.world.phys.AABB(pos).inflate(128), b -> pos.equals(b.getHome()))) {
-            if (list.size() >= com.bubie.network.StationBubiesPayload.MAX) break;
-            list.add(new com.bubie.network.StationBubiesPayload.Entry(b.getName().getString(), b.getMode() == com.bubie.entity.Mode.WORK
-                    ? b.getJob().ordinal() : -1 - b.getMode().ordinal(), b.getStatus().ordinal(), b.getFace().ordinal(),
-                    Math.round(b.energyFraction() * 100), b.getLook().pack()));
-        }
-        if (list.equals(sent)) return;
-        sent = list;
-        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(server, new com.bubie.network.StationBubiesPayload(list));
+        com.bubie.network.StationBubiesPayload now = com.bubie.network.StationBubiesPayload.of(server.server,
+                server.level().dimension(), pos, server.level().dimension());
+        if (now.bubies().equals(sent)) return;
+        sent = now.bubies();
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(server, now);
     }
 
     @Override

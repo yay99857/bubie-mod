@@ -91,10 +91,9 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private static final EntityDataAccessor<ItemStack> DATA_PLAN = define(EntityDataSerializers.ITEM_STACK);
     private static final EntityDataAccessor<Optional<BlockPos>> DATA_PLAN_AT = define(EntityDataSerializers.OPTIONAL_BLOCK_POS);
     private static final EntityDataAccessor<Byte> DATA_PLAN_DOOR = define(EntityDataSerializers.BYTE);
-    /** The DJ: the track playing ({@link Dj.Track#encode}), the volume (0-100) and the links, one per line. */
+    /** The DJ: the track playing ({@link Dj.Track#encode}) and the volume (0-100). */
     private static final EntityDataAccessor<String> DATA_DJ = define(EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Byte> DATA_DJ_VOLUME = define(EntityDataSerializers.BYTE);
-    private static final EntityDataAccessor<String> DATA_DJ_LINKS = define(EntityDataSerializers.STRING);
     /** How far around its chest (or Station) it works when no area is marked. */
     private static final EntityDataAccessor<Byte> DATA_RADIUS = define(EntityDataSerializers.BYTE);
 
@@ -169,7 +168,6 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         builder.define(DATA_PLAN_DOOR, (byte) net.minecraft.core.Direction.SOUTH.get3DDataValue());
         builder.define(DATA_DJ, "");
         builder.define(DATA_DJ_VOLUME, (byte) 70);
-        builder.define(DATA_DJ_LINKS, "");
         builder.define(DATA_RADIUS, (byte) 8);
     }
 
@@ -364,16 +362,6 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     public void setDjVolume(int volume) {
         entityData.set(DATA_DJ_VOLUME, (byte) Math.max(0, Math.min(100, volume)));
-    }
-
-    /** The links, as the client sees them (the menu lists them). */
-    public List<String> getDjLinks() {
-        String s = entityData.get(DATA_DJ_LINKS);
-        return s.isEmpty() ? List.of() : List.of(s.split("\n"));
-    }
-
-    void syncDjLinks() {
-        entityData.set(DATA_DJ_LINKS, String.join("\n", dj.links()));
     }
 
     public ItemStack getNeed() {
@@ -721,6 +709,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         if (moodTicks > 0) moodTicks--;
         dj.tick();
         listenForMusic();
+        reportToTracker();
         entityData.set(DATA_FACE, (byte) pickFace().ordinal());
         if (getMaxEnergy() != BubieConfig.MAX_ENERGY.get()) entityData.set(DATA_MAX_ENERGY, BubieConfig.MAX_ENERGY.get());
         if (tickCount % 20 == 0) {
@@ -737,6 +726,20 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         if (getStatus().problem && tickCount % 40 == 0 && level() instanceof ServerLevel server) {
             server.sendParticles(ParticleTypes.SMOKE, getX(), getY() + 1.05, getZ(), 2, 0.15, 0.05, 0.15, 0.01);
         }
+    }
+
+    /** Every two seconds a Bubie with a home tells the world's registry where it is and what it is doing. */
+    private void reportToTracker() {
+        if (tickCount % 40 != 0 || !(level() instanceof ServerLevel server)) return;
+        BubieRegistry registry = BubieRegistry.get(server.getServer());
+        BlockPos home = getHome();
+        if (home == null) {
+            registry.forget(getUUID());
+            return;
+        }
+        registry.sight(getUUID(), new BubieRegistry.Sighting(getName().getString(), level().dimension().location().toString(),
+                blockPosition().asLong(), home.asLong(), getMode() == Mode.WORK ? getJob().ordinal() : -1 - getMode().ordinal(),
+                getStatus().ordinal(), getFace().ordinal(), Math.round(energyFraction() * 100), getLook().pack()));
     }
 
     private void vacuumItems() {
@@ -835,6 +838,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     public void remove(RemovalReason reason) {
         if (!level().isClientSide && reason.shouldDestroy() && level() instanceof ServerLevel server) {
             BubieRegistry.get(server.getServer()).remove(getOwnerUUID(), getUUID());
+            BubieRegistry.get(server.getServer()).forget(getUUID());
             runner.release();
         }
         super.remove(reason);

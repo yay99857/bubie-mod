@@ -399,11 +399,8 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             g.drawString(font, title, x, y, BubieUi.AMBER_LIGHT, false);
         }
         y += 14;
-        int bw = (w - 4) / 3;
-        button(g, x, y, bw, 13, Component.literal("◀◀"), false, () -> send(BubieCommandPayload.DJ_PREVIOUS, 0), tip("dj.previous"));
-        button(g, x + bw + 2, y, w - 2 * bw - 4, 13, Component.literal(track.isNone() ? "▶" : "■"), !track.isNone(),
+        button(g, x, y, w, 13, Component.literal(track.isNone() ? "▶" : "■"), !track.isNone(),
                 () -> send(BubieCommandPayload.DJ_TOGGLE, 0), tip(track.isNone() ? "dj.play" : "dj.stop"));
-        button(g, x + w - bw, y, bw, 13, Component.literal("▶▶"), false, () -> send(BubieCommandPayload.DJ_NEXT, 0), tip("dj.next"));
         y += 19;
         int volume = bubie.getDjVolume();
         label(g, Component.translatable("bubie.ui.dj.volume", volume), x, y);
@@ -415,26 +412,6 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         y = BubieMenu.DISC_Y;
         g.drawString(font, Component.translatable("bubie.ui.dj.disc"), BubieMenu.DISC_X + 22, y + 5, BubieUi.DIM, false);
         y += 22;
-        java.util.List<String> links = bubie.getDjLinks();
-        label(g, Component.translatable("bubie.ui.dj.links", links.size(), com.bubie.entity.Dj.MAX_LINKS), x, y);
-        y += 10;
-        int shown = Math.min(links.size(), 4);
-        for (int i = 0; i < shown; i++) {
-            int index = i;
-            String title = font.plainSubstrByWidth(com.bubie.entity.Dj.linkTitle(links.get(i)), w - 16);
-            g.drawString(font, title, x, y + 2, BubieUi.AMBER, false);
-            button(g, x + w - 12, y, 12, 11, Component.literal("×"), false, () -> send(BubieCommandPayload.DJ_REMOVE_LINK, index), tip("dj.remove"));
-            y += 13;
-        }
-        if (links.size() > shown) {
-            g.drawString(font, "+" + (links.size() - shown), x, y + 2, BubieUi.DIM, false);
-            y += 12;
-        }
-        if (links.size() < com.bubie.entity.Dj.MAX_LINKS) {
-            button(g, x, y, w, 13, Component.translatable("bubie.ui.dj.add"), false,
-                    () -> minecraft.setScreen(new DjLinkScreen(this, bubie)));
-            y += 17;
-        }
         helpIfFits(g, Component.translatable("bubie.ui.dj.help"), x, y);
     }
 

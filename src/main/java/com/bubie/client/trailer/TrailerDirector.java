@@ -298,7 +298,7 @@ public final class TrailerDirector {
             b.addTag("crew");
             b.setMode(Mode.FOLLOW);
             if (i == 0) {
-                b.dj().addLink("https://example.com/Bubie_Party_Mix.ogg");
+                b.disc().setItem(0, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.MUSIC_DISC_PIGSTEP));
                 b.dj().toggle();
             }
         }

@@ -36,12 +36,11 @@ Languages: English, Português (Brasil), Español.
 
 ## 🎶 Bubie the DJ
 Any Bubie can play music for everyone nearby, whatever job it has. Open its menu, **DJ** tab:
-- It plays the **music disc** in the DJ tab's slot (from any mod), then up to 16 **links**: `.mp3` or `.ogg` files, or Dropbox, Google Drive, GitHub and Audius share links. YouTube, Spotify and the like don't let other apps play their music.
-- Play / stop, previous / next and volume; the song title floats over its head.
+- It plays the **music disc** in the DJ tab's slot (from any mod), over and over while it is switched on.
+- Play / stop and volume; the song title floats over its head.
 - Its screen turns into an **equalizer**, it dances and sends out notes, and the Bubies sitting in Stay mode within 10 blocks dance along.
 - The sound follows the Bubie as it walks, like a jukebox on legs.
 
-Links are downloaded by each player who hears them. Servers can allow discs only (`djLinks`), and each player can turn links off for themselves (`djPlayLinks` in the client config).
 
 ## 📋 How to use it
 1. Craft the **Bubie Clipboard** and Shift + click a chest.
@@ -53,7 +52,7 @@ Links are downloaded by each player who hears them. Servers can allow discs only
 | ![The Job tab](https://media.forgecdn.net/attachments/2241/436/05-menu_job-png.png) | ![The Status tab](https://media.forgecdn.net/attachments/2241/437/06-menu_status-png.png) |
 
 ## ⚡ Energy, home and chips
-- It is a robot: it runs on redstone (one dust = 5 minutes of work, a block = 45) or FE, not coal. The **Bubie Station** charges it with FE or redstone, stores what it brings back, and is where it rests at night.
+- It is a robot: it runs on redstone (one dust = 5 minutes of work, a block = 45) or FE, not coal. The **Bubie Station** charges it with FE or redstone, stores what it brings back, and is where it rests at night. Its menu has a **tracker**: where each Bubie living there is and what it is doing, and the **Wireless Station** shows the same in your hand, from anywhere.
 - Four chip slots: Speed, Storage, Range, Magnet, Smelting and Efficiency.
 - At 0 health it **shuts down** into its item, keeping everything. It runs from monsters and never dies.
 - A balloon over its head says what's wrong when it stops.
@@ -86,10 +85,10 @@ Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele
 (que outro Bubie pode ir enchendo).
 
 - Shift + clique num baú com a **Prancheta do Bubie** e clique no Bubie: ele trabalha em volta do baú (o raio se ajusta no menu). Dê uma ferramenta e um pouco de redstone. Para uma área exata, marque 2 cantos antes.
-- A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia.
+- A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia. O menu dela tem um **Rastreador** (onde está cada Bubie e o que está fazendo), e a **Estação Sem Fio** mostra o mesmo na sua mão, de qualquer lugar.
 - **Editar meu Bubie:** cores do casco, do moletom e da luz da tela, olhos e boca.
 - **Guarda:** enfrenta os monstros da área com a arma que você der, junta o que eles largam e vigia à noite.
-- **Bubie DJ:** na aba **DJ** do menu, ele toca o disco do slot da aba e links de `.mp3`/`.ogg`, Dropbox, Drive ou Audius para todo mundo por perto. A tela vira um equalizador, ele dança e os Bubies em modo Ficar em volta dançam junto.
+- **Bubie DJ:** na aba **DJ** do menu, ele toca o disco de música do slot da aba para todo mundo por perto. A tela vira um equalizador, ele dança e os Bubies em modo Ficar em volta dançam junto.
 - Guarda em Sophisticated Storage, Functional Storage, cofres do Create e bins do Mekanism; respeita as áreas do FTB Chunks; amigos do mesmo time do FTB Teams também dão ordens.
 - Se a vida acaba, ele desliga e vira o item, sem perder nada.
 

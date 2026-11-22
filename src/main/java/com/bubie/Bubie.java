@@ -74,6 +74,8 @@ public class Bubie {
     public static final DeferredItem<ClipboardItem> CLIPBOARD = ITEMS.register("bubie_clipboard",
             () -> new ClipboardItem(new Item.Properties().stacksTo(1)));
     public static final DeferredItem<BlockItem> STATION_ITEM = ITEMS.registerSimpleBlockItem(STATION);
+    public static final DeferredItem<com.bubie.item.WirelessStationItem> WIRELESS_STATION = ITEMS.register("wireless_station",
+            () -> new com.bubie.item.WirelessStationItem(new Item.Properties().stacksTo(1)));
     public static final Map<ChipType, DeferredItem<ChipItem>> CHIPS = new EnumMap<>(ChipType.class);
 
     static {
@@ -98,6 +100,7 @@ public class Bubie {
                 out.accept(BUBIE_ITEM.get());
                 out.accept(CLIPBOARD.get());
                 out.accept(STATION_ITEM.get());
+                out.accept(WIRELESS_STATION.get());
                 for (ChipType type : ChipType.values()) out.accept(CHIPS.get(type).get());
             })
             .build());
@@ -120,14 +123,11 @@ public class Bubie {
         });
         modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
                 .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle)
-                .playToServer(com.bubie.network.DjLinkPayload.TYPE, com.bubie.network.DjLinkPayload.STREAM_CODEC,
-                        com.bubie.network.DjLinkPayload::handle)
+                .playToServer(com.bubie.network.TrackerRequestPayload.TYPE, com.bubie.network.TrackerRequestPayload.STREAM_CODEC,
+                        com.bubie.network.TrackerRequestPayload::handle)
                 .playToClient(com.bubie.network.StationBubiesPayload.TYPE, com.bubie.network.StationBubiesPayload.STREAM_CODEC,
                         com.bubie.network.StationBubiesPayload::handle));
         modBus.addListener(StationChunks::register);
-        // the DJ's .mp3 decoder ships inside the jar (Jar-in-Jar); say so in the log, for bug reports
-        com.mojang.logging.LogUtils.getLogger().info("Bubie DJ: mp3 decoder {}",
-                classExists("javazoom.jl.decoder.Decoder") ? "ready" : "missing (mp3 links won't play, ogg still will)");
         // Base Blueprint 1.3.0+: a blueprint asks for a helper ("Built by: Bubie" in its menu)
         if (com.bubie.compat.BlueprintCompat.loaded() && classExists("com.baseblueprint.api.HelperBuildEvent")) {
             com.bubie.compat.BlueprintHelper.register();

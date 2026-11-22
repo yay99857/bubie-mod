@@ -224,6 +224,33 @@ def item_clipboard():
     img.save("item", "bubie_clipboard.png")
 
 
+def item_wireless_station():
+    """A cream handheld with an antenna and a little Bubie face on its screen."""
+    img = Img(16, 16)
+    rows = [
+        "..........a.....",
+        "..........o.....",
+        "..........o.....",
+        "...oooooooooo...",
+        "...ohhhhhhhdo...",
+        "...ohKKKKKKdo...",
+        "...ohKakkaKdo...",
+        "...ohKkkkkKdo...",
+        "...ohKkaakKdo...",
+        "...ohKKKKKKdo...",
+        "...ohsssssddo...",
+        "...ohcscsasdo...",
+        "...ohsssssddo...",
+        "...ohcscscsdo...",
+        "...osddddddDo...",
+        "....oooooooo....",
+    ]
+    assert all(len(row) == 16 for row in rows)
+    img.grid(0, 0, rows, {"o": OUTLINE, "h": SH0, "s": SH1, "d": SH2, "D": SH3, "k": SCREEN, "K": SCREEN_DEEP,
+                          "a": G1, "c": C0})
+    img.save("item", "wireless_station.png")
+
+
 CHIP_SYMBOLS = {
     "speed": (rgb("FFE066"), ["..#.", ".##.", "##..", ".#.."]),
     "storage": (SH1, ["####", "#..#", "####", "####"]),
@@ -308,5 +335,6 @@ if __name__ == "__main__":
     entity()
     item_bubie()
     item_clipboard()
+    item_wireless_station()
     item_chips()
     station()

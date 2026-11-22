@@ -208,14 +208,13 @@ public final class ShotDirector {
         steps.add(new Step(wait, r));
     }
 
-    /** -PdjShots=<link>: the DJ scene only, playing a disc and then that link. */
-    private static final String DJ_LINK = System.getProperty("bubie.djshots");
+    /** -PdjShots: the DJ scene only. */
+    private static final boolean DJ_ONLY = System.getProperty("bubie.djshots") != null;
 
     private static void djScene(ServerPlayer p) {
         BubieEntity dj = spawn(p, 0, 0, 0);
         dj.setMode(Mode.STAY);
         dj.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_PIGSTEP));
-        if (DJ_LINK != null && !DJ_LINK.isBlank() && !DJ_LINK.equals("true")) dj.dj().addLink(DJ_LINK);
         dj.dj().toggle();
         BubieEntity friend = spawn(p, 2, 1, 150);
         friend.setLook(new com.bubie.entity.Look(4, 10, 3, 7, 7));
@@ -241,29 +240,7 @@ public final class ShotDirector {
         }));
         add(20, () -> BubieScreen.selectTab(3));
         add(20, () -> shot("menu_dj"));
-        add(5, () -> {
-            if (mc.screen instanceof BubieScreen screen && screen.getMenu().bubie() != null) {
-                mc.setScreen(new DjLinkScreen(screen, screen.getMenu().bubie()));
-            }
-        });
-        add(20, () -> shot("dj_add_link"));
-        add(5, () -> {
-            if (mc.screen instanceof DjLinkScreen link) link.type("C:\\Users\\me\\Downloads\\song.mp3");
-        });
-        add(10, () -> shot("dj_add_local"));
-        add(5, () -> {
-            if (mc.screen instanceof DjLinkScreen link) link.type("https://www.youtube.com/watch?v=abc");
-        });
-        add(10, () -> shot("dj_add_youtube"));
         add(5, () -> mc.setScreen(null));
-        // skip the disc: the link plays (the log shows whether it streamed and decoded)
-        add(20, () -> server(p -> p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6))
-                .forEach(b -> {
-                    b.dj().next();
-                    LOG.info("DJ now plays {}", b.getDjTrack());
-                })));
-        add(400, () -> server(p -> p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6))
-                .forEach(b -> LOG.info("DJ after 20 s plays {}", b.getDjTrack()))));
         add(20, () -> LOG.info("dj shots done"));
         add(20, () -> Minecraft.getInstance().stop());
     }
@@ -292,7 +269,7 @@ public final class ShotDirector {
             cmd(p, "forceload add " + (cx - 48) + " " + (cz - 48) + " " + (cx + 48) + " " + (cz + 48));
             p.teleportTo(p.serverLevel(), cx, 200, cz, 0, 0);
         }));
-        if (DJ_LINK != null) {
+        if (DJ_ONLY) {
             djSteps(mc);
             return;
         }

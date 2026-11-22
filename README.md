@@ -32,6 +32,7 @@ As expressões automáticas (feliz, trabalhando, erro, dormindo, machucado) apar
 | **Bubie** | cobre, vidro, cobre / cobre, redstone, cobre / _, lã preta, _ |
 | **Prancheta do Bubie** | _, redstone, _ / papel, graveto, papel / papel, papel, papel |
 | **Estação do Bubie** | cobre, vidro, cobre / redstone, baú, redstone / ferro, ferro, ferro |
+| **Estação Sem Fio** | _, tocha de redstone, _ / cobre, vidro, cobre / cobre, bússola, cobre |
 | **Chips** | pepita de ouro e redstone em volta de: açúcar (velocidade), baú (armazenamento), bússola (alcance), funil (ímã), alto-forno (fundição), bloco de cobre (eficiência) |
 
 Um Bubie novo já vem com a energia de dois pós de redstone.
@@ -48,6 +49,8 @@ Um Bubie novo já vem com a energia de dois pós de redstone.
 | Prancheta: clique no Bubie | Entrega área, baú e casa, e ele começa a trabalhar |
 | Prancheta: Shift + clique no ar | Limpa a prancheta |
 | Clique no Bubie com um Chip | Instala o chip |
+| Estação Sem Fio: Shift + clique numa Estação | Vincula o aparelho àquela Estação |
+| Estação Sem Fio: clique direito | Abre o Rastreador daquela Estação, de qualquer lugar |
 
 **Onde ele trabalha:** sem área marcada, em volta do baú (ou da Estação, se não tiver baú), num raio que você ajusta
 com − e + na aba Área do menu (8 por padrão; Chips de alcance aumentam o máximo). O Lenhador procura as árvores em volta,
@@ -81,13 +84,10 @@ GameTest `twelvebubiesstaycheap`.
 
 ## DJ
 Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja qual for a tarefa dele:
-- Toca o **disco de música** do slot da aba DJ (de qualquer mod) e depois até 16 **links**: arquivos `.mp3` ou `.ogg`, ou links de compartilhamento do Dropbox, Google Drive, GitHub e Audius. YouTube, Spotify e parecidos não deixam outros apps tocarem suas músicas.
-- Tocar/parar, anterior/próxima, volume; o nome da música aparece acima da cabeça.
+- Toca o **disco de música** do slot da aba DJ (de qualquer mod), sem parar, enquanto estiver ligado.
+- Tocar/parar e volume; o nome da música aparece acima da cabeça.
 - A tela vira um **equalizador**, ele dança e solta notas; os Bubies em modo **Ficar** a até 10 blocos dançam junto (quem segue ou trabalha continua no que está fazendo).
 - O som acompanha o Bubie (como uma jukebox com pernas) e chega a 32 blocos no volume máximo.
-- Os links são baixados por cada jogador que os ouve (por isso o endereço vê o IP de quem ouve): `djLinks` no servidor deixa
-  só discos, e `djPlayLinks` no `config/bubie-client.toml` desliga os links para aquele jogador. O `.mp3` é decodificado pelo
-  JLayer (LGPL 2.1), que vai dentro do jar.
 
 ## Regras
 - Ele quebra blocos em nome do dono (um jogador falso com o seu UUID), então as proteções de terreno (FTB Chunks) valem para ele como para você.
@@ -108,7 +108,13 @@ Com `advancedJobsNeedChip = true` no servidor (o Bubie Pack liga), o Minerador, 
 com um **chip de programa** instalado; até lá mostram "Precisa de um chip de programa". Fora do pack a opção vem desligada.
 
 ## Estação
-O menu da Estação lista, ao lado dos slots, os Bubies que moram nela: rosto, nome, tarefa, situação e bateria.
+O menu da Estação tem, ao lado dos slots, o **Rastreador**: os Bubies que moram nela, cada um com rosto, nome, tarefa,
+situação, coordenadas, distância com uma seta para o lado onde ele está, e bateria. A roda do mouse rola a lista. Cada
+Bubie com casa informa a posição a cada 2 segundos, e a última posição fica guardada no mundo, então o Rastreador
+mostra também quem está longe, em área descarregada.
+
+A **Estação Sem Fio** é o Rastreador na mão: vincule o aparelho a uma Estação (Shift + clique nela) e o clique direito
+mostra a mesma lista de qualquer lugar, até de outra dimensão. Ela só mostra; não abre o inventário da Estação.
 
 ## Chips (4 slots)
 Velocidade (+50% minerar, +20% andar), Armazenamento (+9 espaços, até 36), Alcance (área maior), Ímã (pega itens a 5 blocos),
@@ -117,7 +123,7 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 ## Configuração (`serverconfig/bubie-server.toml`)
 `maxPerPlayer` (3 por jogador em servidor dedicado), `maxPerPlayerSingleplayer` (12 no single player e em LAN), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
 `areaSize` (32), `scanPerTick`, `restAtNight`, `stationLoadsChunks` (false), `teleportWhenStuck` (true), `homeRadius`,
-`djLinks` (true), `advancedJobsNeedChip` (false). No cliente (`config/bubie-client.toml`): `djPlayLinks` (true).
+`advancedJobsNeedChip` (false). No cliente (`config/bubie-client.toml`): `buildGhosts` (true).
 
 ## Compatibilidade
 Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./gradlew runPackGameTest`, 21 testes).
@@ -153,6 +159,11 @@ Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Changelog
+### 1.6.0
+- **Tracker** in the Station's menu: where each Bubie living there is (coordinates, distance and direction) and what it is doing, also when it is far away in unloaded chunks.
+- New item, the **Wireless Station**: link it to a Station (Shift + click) and right-click anywhere to see that Station's tracker.
+- The DJ plays music discs only: audio links are gone (they did not work reliably). The jar no longer carries an mp3 decoder.
+
 ### 1.5.2
 - **Builder**: what is still to place shows in the world as see-through blocks. Aim at one to see which block goes there and place it yourself to help: the Bubie counts it. With Base Blueprint 1.4.0, "Built by: Bubie" in the blueprint menu makes a right-click on a block hand the base over, on the previewed spot.
 - Up to **12 Bubies** in a singleplayer world (`maxPerPlayerSingleplayer`); dedicated servers keep 3 per player (`maxPerPlayer`).
