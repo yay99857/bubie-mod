@@ -118,7 +118,7 @@ dependencies {
         runtimeOnly files(bb)
     } else {
         compileOnly 'curse.maven:base-blueprint-1809447:9744795'   // Base Blueprint 1.4.0
-        runtimeOnly 'curse.maven:base-blueprint-1809447:9719130'
+        runtimeOnly 'curse.maven:base-blueprint-1809447:9744795'
     }
 }
 
