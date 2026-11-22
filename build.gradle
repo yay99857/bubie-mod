@@ -5,7 +5,7 @@ plugins {
     id 'com.gradleup.shadow' version '8.3.6'
 }
 
-// Forge 1.20.1 backport of Bubie 1.5.0. Frozen: bug fixes only, new features go to the NeoForge 1.21.1 version (main).
+// Forge 1.20.1 backport of Bubie 1.5. Frozen: bug fixes only, new features go to the NeoForge 1.21.1 version (main).
 version = project.mod_version
 group = project.mod_group_id
 

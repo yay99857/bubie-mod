@@ -2,7 +2,7 @@
 
 # Bubie
 
-> **Branch `forge-1.20.1`: versão congelada.** É o Bubie 1.5.0 portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
+> **Branch `forge-1.20.1`: versão congelada.** É o Bubie 1.5.1 portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
 > o mesmo jar roda no NeoForge 1.20.1)**. Só recebe correção de bug; as novidades saem na versão de NeoForge 1.21.1 (`main`).
 > Diferenças para a 1.21.1: a tarefa **Construtor** não existe aqui (o mod Base Blueprint é só de 1.21.1), e as
 > ferramentas de trailer e screenshots ficaram só no `main`.
@@ -157,6 +157,9 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Changelog
+### 1.5.1
+- Near a Bubie DJ, only the Bubies sitting in **Stay** mode dance along; one that follows or works keeps at it.
+
 ### 1.5.0
 - **Runs on redstone or FE, not coal** (it is a robot): a redstone dust gives 5 minutes of work, a block 45 (`redstoneEnergy` in the server config). The Station takes redstone too, and the redstone a Bubie digs up tops up its fuel slot. Coal left in a fuel slot just stays there.
 - **DJ disc slot** in the DJ tab: the disc no longer takes a storage slot or goes to the chest with the cargo, and taking it out while it plays stops it. An older Bubie moves its first disc there.
@@ -173,7 +176,7 @@ O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 - Spanish translation.
 
 ### 1.3.0
-- **Bubie the DJ**: plays the music discs in its storage and .mp3/.ogg links for everyone nearby; equalizer face, dance, notes, and Bubies sitting in Stay mode nearby dance along.
+- **Bubie the DJ**: plays the music discs in its storage and .mp3/.ogg links for everyone nearby; equalizer face, dance, notes, and Bubies nearby dance along.
 
 ### 1.2.0
 - **Courier** job; Bubies share the work (claimed targets); a stuck Bubie teleports or says so; Builder progress in the menu and Jade.
