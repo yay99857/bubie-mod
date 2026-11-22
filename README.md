@@ -88,7 +88,7 @@ GameTest `twelvebubiesstaycheap`.
 Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja qual for a tarefa dele:
 - Toca o **disco de música** do slot da aba DJ (de qualquer mod) e depois até 16 **links**: arquivos `.mp3` ou `.ogg`, ou links de compartilhamento do Dropbox, Google Drive, GitHub e Audius. YouTube, Spotify e parecidos não deixam outros apps tocarem suas músicas.
 - Tocar/parar, anterior/próxima, volume; o nome da música aparece acima da cabeça.
-- A tela vira um **equalizador**, ele dança e solta notas; os Bubies a até 10 blocos dançam junto.
+- A tela vira um **equalizador**, ele dança e solta notas; os Bubies em modo **Ficar** a até 10 blocos dançam junto (quem segue ou trabalha continua no que está fazendo).
 - O som acompanha o Bubie (como uma jukebox com pernas) e chega a 32 blocos no volume máximo.
 - Os links são baixados por cada jogador que os ouve (por isso o endereço vê o IP de quem ouve): `djLinks` no servidor deixa
   só discos, e `djPlayLinks` no `config/bubie-client.toml` desliga os links para aquele jogador. O `.mp3` é decodificado pelo
@@ -173,7 +173,7 @@ O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 - Spanish translation.
 
 ### 1.3.0
-- **Bubie the DJ**: plays the music discs in its storage and .mp3/.ogg links for everyone nearby; equalizer face, dance, notes, and Bubies nearby dance along.
+- **Bubie the DJ**: plays the music discs in its storage and .mp3/.ogg links for everyone nearby; equalizer face, dance, notes, and Bubies sitting in Stay mode nearby dance along.
 
 ### 1.2.0
 - **Courier** job; Bubies share the work (claimed targets); a stuck Bubie teleports or says so; Builder progress in the menu and Jade.

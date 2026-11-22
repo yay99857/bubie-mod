@@ -5,6 +5,7 @@ import com.bubie.client.dj.LinkResolver;
 import com.bubie.entity.BubieEntity;
 import com.bubie.entity.Dj;
 import com.bubie.entity.Face;
+import com.bubie.entity.Mode;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -23,6 +24,30 @@ public class DjGameTests {
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(8, 1, 8));
         bubie.setEnergy(40000);
         return bubie;
+    }
+
+    /** Near a DJ, only the Bubies sitting in Stay mode dance; the ones following (or working) keep their own face. */
+    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 100)
+    public static void onlyBubiesThatStayDanceAlong(GameTestHelper helper) {
+        BubieEntity dj = dj(helper);
+        dj.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_CAT));
+        BubieEntity sitting = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(6, 1, 8));
+        BubieEntity following = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(10, 1, 8));
+        sitting.setEnergy(40000);
+        following.setEnergy(40000);
+        sitting.setMode(Mode.STAY);
+        following.setMode(Mode.FOLLOW);
+        dj.dj().toggle();
+        helper.runAfterDelay(25, () -> {
+            helper.assertTrue(dj.getFace() == Face.MUSIC, "the DJ shows the equalizer, has " + dj.getFace());
+            helper.assertTrue(sitting.getFace() == Face.MUSIC, "the one sitting dances, has " + sitting.getFace());
+            helper.assertTrue(following.getFace() != Face.MUSIC, "the one following does not dance");
+            sitting.setMode(Mode.FOLLOW);
+            helper.runAfterDelay(2, () -> {
+                helper.assertTrue(sitting.getFace() != Face.MUSIC, "told to follow, it stops dancing at once");
+                helper.succeed();
+            });
+        });
     }
 
     @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 100)

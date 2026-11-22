@@ -38,7 +38,7 @@ Languages: English, Português (Brasil), Español.
 Any Bubie can play music for everyone nearby, whatever job it has. Open its menu, **DJ** tab:
 - It plays the **music disc** in the DJ tab's slot (from any mod), then up to 16 **links**: `.mp3` or `.ogg` files, or Dropbox, Google Drive, GitHub and Audius share links. YouTube, Spotify and the like don't let other apps play their music.
 - Play / stop, previous / next and volume; the song title floats over its head.
-- Its screen turns into an **equalizer**, it dances and sends out notes, and every Bubie within 10 blocks dances along.
+- Its screen turns into an **equalizer**, it dances and sends out notes, and the Bubies sitting in Stay mode within 10 blocks dance along.
 - The sound follows the Bubie as it walks, like a jukebox on legs.
 
 Links are downloaded by each player who hears them. Servers can allow discs only (`djLinks`), and each player can turn links off for themselves (`djPlayLinks` in the client config).
@@ -89,7 +89,7 @@ Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele
 - A **Estação do Bubie** carrega com FE de qualquer cabo ou combustível e é a casa dele. Com ela, ele nunca fica sem energia.
 - **Editar meu Bubie:** cores do casco, do moletom e da luz da tela, olhos e boca.
 - **Guarda:** enfrenta os monstros da área com a arma que você der, junta o que eles largam e vigia à noite.
-- **Bubie DJ:** na aba **DJ** do menu, ele toca o disco do slot da aba e links de `.mp3`/`.ogg`, Dropbox, Drive ou Audius para todo mundo por perto. A tela vira um equalizador, ele dança e os Bubies em volta dançam junto.
+- **Bubie DJ:** na aba **DJ** do menu, ele toca o disco do slot da aba e links de `.mp3`/`.ogg`, Dropbox, Drive ou Audius para todo mundo por perto. A tela vira um equalizador, ele dança e os Bubies em modo Ficar em volta dançam junto.
 - Guarda em Sophisticated Storage, Functional Storage, cofres do Create e bins do Mekanism; respeita as áreas do FTB Chunks; amigos do mesmo time do FTB Teams também dão ordens.
 - Se a vida acaba, ele desliga e vira o item, sem perder nada.
 
