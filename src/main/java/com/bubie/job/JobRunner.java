@@ -27,9 +27,9 @@ import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.LivingEntity;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import com.bubie.compat.Caps;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemHandlerHelper;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -489,7 +489,7 @@ public class JobRunner {
                 bubie.swing(InteractionHand.MAIN_HAND);
                 if (bubie.doHurtTarget(enemy)) {
                     ItemStack weapon = bubie.getTool();
-                    if (weapon.isDamageableItem()) weapon.hurtAndBreak(1, bubie, net.minecraft.world.entity.EquipmentSlot.MAINHAND);
+                    if (weapon.isDamageableItem()) weapon.hurtAndBreak(1, bubie, b -> b.broadcastBreakEvent(net.minecraft.world.entity.EquipmentSlot.MAINHAND));
                 }
                 bubie.spendEnergy(5.0);
                 attackCooldown = 12;
@@ -844,11 +844,11 @@ public class JobRunner {
         // The face toward the Bubie first: some blocks (Mekanism bins, sided machines) give nothing for "no side".
         Vec3 from = bubie.position().subtract(Vec3.atCenterOf(pos));
         Direction facing = Direction.getNearest(from.x, from.y, from.z);
-        IItemHandler handler = level().getCapability(Capabilities.ItemHandler.BLOCK, pos, facing);
-        if (handler == null) handler = level().getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+        IItemHandler handler = Caps.items(level(), pos, facing);
+        if (handler == null) handler = Caps.items(level(), pos, null);
         for (Direction dir : Direction.values()) {
             if (handler != null) break;
-            handler = level().getCapability(Capabilities.ItemHandler.BLOCK, pos, dir);
+            handler = Caps.items(level(), pos, dir);
         }
         return handler;
     }
@@ -909,11 +909,11 @@ public class JobRunner {
             ItemStack stack = bubie.storage().getItem(i);
             if (stack.isEmpty()) continue;
             // redstone it found tops up its own fuel slot (up to 16); the rest goes to the chest
-            if (BubieConfig.REQUIRE_ENERGY.get() && stack.is(net.neoforged.neoforge.common.Tags.Items.DUSTS_REDSTONE)) {
+            if (BubieConfig.REQUIRE_ENERGY.get() && stack.is(net.minecraftforge.common.Tags.Items.DUSTS_REDSTONE)) {
                 ItemStack fuel = bubie.extra().getItem(BubieEntity.FUEL_SLOT);
                 if (fuel.isEmpty()) {
                     bubie.extra().setItem(BubieEntity.FUEL_SLOT, stack.split(Math.min(16, stack.getCount())));
-                } else if (ItemStack.isSameItemSameComponents(fuel, stack) && fuel.getCount() < 16) {
+                } else if (ItemStack.isSameItemSameTags(fuel, stack) && fuel.getCount() < 16) {
                     int n = Math.min(stack.getCount(), 16 - fuel.getCount());
                     fuel.grow(n);
                     stack.shrink(n);

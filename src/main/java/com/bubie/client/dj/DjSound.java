@@ -30,7 +30,7 @@ public final class DjSound extends AbstractTickableSoundInstance {
     private boolean failed;
 
     DjSound(BubieEntity bubie, Dj.Track track) {
-        super(SoundEvent.createVariableRangeEvent(track.isLink() ? STREAM : ResourceLocation.parse(track.ref())),
+        super(SoundEvent.createVariableRangeEvent(track.isLink() ? STREAM : new ResourceLocation(track.ref())),
                 SoundSource.RECORDS, SoundInstance.createUnseededRandom());
         this.bubie = bubie;
         this.track = track;

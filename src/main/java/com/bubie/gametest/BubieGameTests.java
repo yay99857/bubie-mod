@@ -8,7 +8,7 @@ import com.bubie.entity.Mode;
 import com.bubie.entity.Status;
 import com.bubie.entity.WorkArea;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
+
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -23,8 +23,8 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 /** Run with ./gradlew runGameTestServer (exits non-zero when a test fails). Template "field": 16×10×16 of air over stone. */
 @GameTestHolder(Bubie.MOD_ID)
@@ -50,7 +50,7 @@ public class BubieGameTests {
     }
 
     static int inChest(GameTestHelper helper, Item item) {
-        ChestBlockEntity chest = helper.getBlockEntity(CHEST);
+        ChestBlockEntity chest = (ChestBlockEntity) helper.getBlockEntity(CHEST);
         int n = 0;
         for (int i = 0; i < chest.getContainerSize(); i++) {
             if (chest.getItem(i).is(item)) n += chest.getItem(i).getCount();
@@ -79,7 +79,7 @@ public class BubieGameTests {
             for (int y = 1; y < 5; y++) helper.assertBlockNotPresent(Blocks.OAK_LOG, trunk.above(y));
             helper.assertBlockPresent(Blocks.OAK_SAPLING, trunk);
             helper.assertTrue(inChest(helper, Items.OAK_LOG) >= 5, "5 logs in the chest; status " + bubie.getStatus()
-                    + ", carrying " + bubie.storage().getItems() + ", chest " + ((ChestBlockEntity) helper.getBlockEntity(CHEST)).getItem(0) + "," + ((ChestBlockEntity) helper.getBlockEntity(CHEST)).getItem(1) + ", loose items " + helper.getLevel().getEntitiesOfClass(
+                    + ", carrying " + bubie.storage() + ", chest " + ((ChestBlockEntity) helper.getBlockEntity(CHEST)).getItem(0) + "," + ((ChestBlockEntity) helper.getBlockEntity(CHEST)).getItem(1) + ", loose items " + helper.getLevel().getEntitiesOfClass(
                     ItemEntity.class, new AABB(helper.absolutePos(trunk)).inflate(8)).size());
         });
     }
@@ -87,17 +87,24 @@ public class BubieGameTests {
     @GameTest(template = FIELD, timeoutTicks = 800)
     public static void farmerHarvestsAndReplants(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
-        for (int x = 6; x <= 8; x++) {
-            helper.setBlock(new BlockPos(x, 0, 8), Blocks.FARMLAND);
-            helper.setBlock(new BlockPos(x, 1, 8), Blocks.WHEAT.defaultBlockState().setValue(CropBlock.AGE, 7));
-        }
-        bubie(helper, new BlockPos(4, 1, 8), JobType.FARMER, ItemStack.EMPTY, new BlockPos(5, 1, 7), new BlockPos(9, 2, 9));
-        helper.succeedWhen(() -> {
+        for (int x = 6; x <= 8; x++) helper.setBlock(new BlockPos(x, 0, 8), Blocks.FARMLAND);
+        // The 1.20.1 test world has no sky light, and wheat pops off (and can't be planted) in the dark: a lamp over
+        // the field first, the wheat and the Bubie once its light is there.
+        helper.setBlock(new BlockPos(7, 4, 8), Blocks.GLOWSTONE);
+        helper.runAfterDelay(20, () -> {
             for (int x = 6; x <= 8; x++) {
-                BlockState crop = helper.getBlockState(new BlockPos(x, 1, 8));
-                helper.assertTrue(crop.is(Blocks.WHEAT) && crop.getValue(CropBlock.AGE) == 0, "wheat replanted at " + x);
+                helper.setBlock(new BlockPos(x, 1, 8), Blocks.WHEAT.defaultBlockState().setValue(CropBlock.AGE, 7));
             }
-            helper.assertTrue(inChest(helper, Items.WHEAT) >= 3, "3 wheat in the chest");
+            BubieEntity bubie = bubie(helper, new BlockPos(4, 1, 8), JobType.FARMER, ItemStack.EMPTY, new BlockPos(5, 1, 7),
+                    new BlockPos(9, 2, 9));
+            helper.succeedWhen(() -> {
+                for (int x = 6; x <= 8; x++) {
+                    BlockState crop = helper.getBlockState(new BlockPos(x, 1, 8));
+                    helper.assertTrue(crop.is(Blocks.WHEAT) && crop.getValue(CropBlock.AGE) == 0, "wheat replanted at " + x
+                            + "; there is " + crop + ", status " + bubie.getStatus() + ", carrying " + bubie.storage());
+                }
+                helper.assertTrue(inChest(helper, Items.WHEAT) >= 3, "3 wheat in the chest");
+            });
         });
     }
 
@@ -201,10 +208,10 @@ public class BubieGameTests {
             ItemEntity drop = helper.getLevel().getEntitiesOfClass(ItemEntity.class, box).stream()
                     .filter(e -> e.getItem().is(Bubie.BUBIE_ITEM.get())).findFirst().orElse(null);
             helper.assertTrue(drop != null, "the Bubie item dropped");
-            var data = drop.getItem().get(DataComponents.CUSTOM_DATA);
-            helper.assertTrue(data != null && data.copyTag().getCompound("Bubie").getList("Storage", 10).size() == 1,
+            var data = drop.getItem().getTag();
+            helper.assertTrue(data != null && data.getCompound("Bubie").getList("Storage", 10).size() == 1,
                     "the item keeps the diamonds");
-            var saved = com.bubie.entity.Look.load(data.copyTag().getCompound("Bubie").getCompound("Look"));
+            var saved = com.bubie.entity.Look.load(data.getCompound("Bubie").getCompound("Look"));
             helper.assertTrue(saved.equals(new com.bubie.entity.Look(1, 3, 2, 6, 1)), "the item keeps the look, got " + saved);
             helper.assertTrue(com.bubie.entity.Look.unpack(saved.pack()).equals(saved), "look packs and unpacks");
         });

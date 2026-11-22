@@ -14,20 +14,19 @@ import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.minecraft.world.item.crafting.SingleRecipeInput;
+
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.common.util.FakePlayerFactory;
-import net.neoforged.neoforge.event.level.BlockDropsEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.common.Tags;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.common.util.FakePlayerFactory;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 
 import javax.annotation.Nullable;
-import java.util.Iterator;
 import java.util.UUID;
 
 /**
@@ -35,7 +34,7 @@ import java.util.UUID;
  * (FTB Chunks claims, spawn protection mods, BreakEvent listeners) treats the Bubie as its owner. Drops go straight
  * into the Bubie's storage.
  */
-@EventBusSubscriber(modid = Bubie.MOD_ID)
+@Mod.EventBusSubscriber(modid = Bubie.MOD_ID)
 public final class BlockBreaker {
     @Nullable
     private static BubieEntity capturing;
@@ -64,7 +63,7 @@ public final class BlockBreaker {
     /** Mining progress per tick with this tool, as a player standing where the Bubie stands would get. */
     /** An electric tool (it holds Forge Energy) whose battery is empty. */
     public static boolean outOfEnergy(ItemStack tool) {
-        var energy = tool.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
+        var energy = com.bubie.compat.Caps.energy(tool);
         return energy != null && energy.getEnergyStored() == 0;
     }
 
@@ -102,7 +101,7 @@ public final class BlockBreaker {
         FakePlayer player = player(bubie, ItemStack.EMPTY);
         try {
             BlockState state = bubie.level().getBlockState(pos);
-            InteractionResult result = state.useWithoutItem(bubie.level(), player,
+            InteractionResult result = state.use(bubie.level(), player, InteractionHand.MAIN_HAND,
                     new BlockHitResult(Vec3.atCenterOf(pos), Direction.UP, pos, false));
             collectLoose(bubie, new AABB(pos).inflate(1.5));
             return result.consumesAction();
@@ -147,9 +146,9 @@ public final class BlockBreaker {
         if (bubie.chipCount(ChipType.SMELTING) == 0) return stack;
         if (!stack.is(Tags.Items.RAW_MATERIALS) && !stack.is(Tags.Items.ORES)) return stack;
         ServerLevel level = (ServerLevel) bubie.level();
-        return level.getRecipeManager().getRecipeFor(RecipeType.SMELTING, new SingleRecipeInput(stack), level)
-                .map(holder -> {
-                    ItemStack result = holder.value().getResultItem(level.registryAccess()).copy();
+        return level.getRecipeManager().getRecipeFor(RecipeType.SMELTING, new net.minecraft.world.SimpleContainer(stack), level)
+                .map(recipe -> {
+                    ItemStack result = recipe.getResultItem(level.registryAccess()).copy();
                     if (result.isEmpty()) return stack;
                     result.setCount(Math.min(result.getMaxStackSize(), result.getCount() * stack.getCount()));
                     bubie.spendEnergy(100.0 * stack.getCount());
@@ -158,16 +157,13 @@ public final class BlockBreaker {
                 .orElse(stack);
     }
 
+    /** While a Bubie breaks a block, what the block drops never reaches the world: it goes into the Bubie. */
     @SubscribeEvent
-    static void onDrops(BlockDropsEvent event) {
+    public static void onDrop(EntityJoinLevelEvent event) {
         BubieEntity bubie = capturing;
-        if (bubie == null || !(event.getBreaker() instanceof FakePlayer)) return;
-        Iterator<ItemEntity> it = event.getDrops().iterator();
-        while (it.hasNext()) {
-            ItemEntity drop = it.next();
-            ItemStack rest = bubie.insert(processed(bubie, drop.getItem()));
-            if (rest.isEmpty()) it.remove();
-            else drop.setItem(rest);
-        }
+        if (bubie == null || event.getLevel() != bubie.level() || !(event.getEntity() instanceof ItemEntity drop)) return;
+        ItemStack rest = bubie.insert(processed(bubie, drop.getItem()));
+        if (rest.isEmpty()) event.setCanceled(true);
+        else drop.setItem(rest);
     }
 }

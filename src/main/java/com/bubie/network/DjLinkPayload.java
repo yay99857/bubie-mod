@@ -2,32 +2,37 @@ package com.bubie.network;
 
 import com.bubie.Bubie;
 import com.bubie.entity.BubieEntity;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 /** Client to server: an audio link for the Bubie DJ's playlist. */
-public record DjLinkPayload(int entityId, String url) implements CustomPacketPayload {
-    public static final Type<DjLinkPayload> TYPE = new Type<>(Bubie.id("dj_link"));
-    public static final StreamCodec<ByteBuf, DjLinkPayload> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.VAR_INT, DjLinkPayload::entityId,
-            ByteBufCodecs.stringUtf8(1024), DjLinkPayload::url,
-            DjLinkPayload::new);
+public record DjLinkPayload(int entityId, String url) {
+    private static final int MAX_URL = 1024;
 
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeVarInt(entityId);
+        buf.writeUtf(url, MAX_URL);
     }
 
-    public static void handle(DjLinkPayload payload, IPayloadContext context) {
+    public static DjLinkPayload read(FriendlyByteBuf buf) {
+        return new DjLinkPayload(buf.readVarInt(), buf.readUtf(MAX_URL));
+    }
+
+    public void send() {
+        Bubie.CHANNEL.sendToServer(this);
+    }
+
+    public static void handle(DjLinkPayload payload, Supplier<NetworkEvent.Context> supplier) {
+        NetworkEvent.Context context = supplier.get();
+        context.setPacketHandled(true);
         context.enqueueWork(() -> {
-            Player player = context.player();
-            if (!(player.level().getEntity(payload.entityId()) instanceof BubieEntity bubie)) return;
+            Player player = context.getSender();
+            if (player == null || !(player.level().getEntity(payload.entityId()) instanceof BubieEntity bubie)) return;
             if (!bubie.canCommand(player) || bubie.distanceToSqr(player) > 12 * 12) return;
             Component refused = bubie.dj().addLink(payload.url());
             player.displayClientMessage(refused != null ? refused.copy().withStyle(ChatFormatting.YELLOW)

@@ -11,9 +11,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Mth;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,7 +75,7 @@ public class LookScreen extends Screen {
     }
 
     private void save() {
-        PacketDistributor.sendToServer(new BubieCommandPayload(bubie.getId(), BubieCommandPayload.SET_LOOK, look.pack()));
+        new BubieCommandPayload(bubie.getId(), BubieCommandPayload.SET_LOOK, look.pack()).send();
         onClose();
     }
 
@@ -85,6 +83,7 @@ public class LookScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        renderBackground(g);
         super.render(g, mouseX, mouseY, partialTick);
         hits.clear();
         int mx = mouseX - left, my = mouseY - top;
@@ -130,10 +129,6 @@ public class LookScreen extends Screen {
         }
     }
 
-    @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderTransparentBackground(g);
-    }
 
     private void drawBubie(GuiGraphics g, int x, int y, int w, int h) {
         g.enableScissor(x, y, x + w, y + h);
@@ -149,8 +144,7 @@ public class LookScreen extends Screen {
         float scale = 92.0F;
         Quaternionf pose = new Quaternionf().rotateZ(Mth.PI).rotateX(-0.18F);
         Quaternionf camera = new Quaternionf().rotateX(-0.18F);
-        InventoryScreen.renderEntityInInventory(g, x + w / 2.0F, y + h - 30, scale,
-                new Vector3f(0, 0, 0), pose, camera, bubie);
+        InventoryScreen.renderEntityInInventory(g, x + w / 2, y + h - 30, (int) scale, pose, camera, bubie);
         bubie.yBodyRot = bodyRot;
         bubie.yBodyRotO = bodyO;
         bubie.setYRot(yRot);

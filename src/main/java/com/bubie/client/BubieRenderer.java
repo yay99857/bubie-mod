@@ -43,14 +43,14 @@ public class BubieRenderer extends MobRenderer<BubieEntity, BubieModel> {
             pose.pushPose();
             if (shouldShowName(bubie)) pose.translate(0.0, 0.28, 0.0);
             Component text = Component.literal("⚠ ").append(bubie.statusText()).withStyle(ChatFormatting.GOLD);
-            renderNameTag(bubie, text, pose, buffers, light, partialTick);
+            renderNameTag(bubie, text, pose, buffers, light);
             pose.popPose();
         } else if (entityRenderDispatcher.distanceToSqr(bubie) < 16 * 16) {
             com.bubie.entity.Dj.Track track = bubie.getDjTrack();
             if (!track.isNone()) {
                 pose.pushPose();
                 if (shouldShowName(bubie)) pose.translate(0.0, 0.28, 0.0);
-                renderNameTag(bubie, Component.literal("♪ " + track.title()).withStyle(ChatFormatting.AQUA), pose, buffers, light, partialTick);
+                renderNameTag(bubie, Component.literal("♪ " + track.title()).withStyle(ChatFormatting.AQUA), pose, buffers, light);
                 pose.popPose();
             }
         }
@@ -74,7 +74,7 @@ public class BubieRenderer extends MobRenderer<BubieEntity, BubieModel> {
                     ? LookTextures.music(bubie.getLook(), (bubie.tickCount + bubie.getId()) / 3)
                     : LookTextures.face(bubie.getLook(), face, blink);
             getParentModel().renderToBuffer(pose, buffers.getBuffer(RenderType.eyes(texture)), 0xF00000,
-                    OverlayTexture.NO_OVERLAY);
+                    OverlayTexture.NO_OVERLAY, 1.0F, 1.0F, 1.0F, 1.0F);
         }
     }
 

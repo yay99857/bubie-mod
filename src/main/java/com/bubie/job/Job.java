@@ -106,7 +106,7 @@ public abstract class Job {
 
     /** Cobblestone and friends: what the Bubie uses to plug water and lava before it digs next to them. */
     public static boolean isFiller(ItemStack stack) {
-        return stack.is(net.neoforged.neoforge.common.Tags.Items.COBBLESTONES)
+        return stack.is(net.minecraftforge.common.Tags.Items.COBBLESTONE)
                 || stack.is(net.minecraft.world.item.Items.DIRT)
                 || stack.is(net.minecraft.world.item.Items.NETHERRACK)
                 || stack.is(net.minecraft.world.item.Items.COBBLED_DEEPSLATE)

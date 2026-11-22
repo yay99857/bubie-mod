@@ -1,28 +1,28 @@
 package com.bubie;
 
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
 
 /** Server config (world/serverconfig/bubie-server.toml): balance and limits. */
 public final class BubieConfig {
-    public static final ModConfigSpec SPEC;
+    public static final ForgeConfigSpec SPEC;
 
-    public static final ModConfigSpec.IntValue MAX_PER_PLAYER;
-    public static final ModConfigSpec.BooleanValue REQUIRE_ENERGY;
-    public static final ModConfigSpec.IntValue MAX_ENERGY;
-    public static final ModConfigSpec.IntValue REDSTONE_ENERGY;
-    public static final ModConfigSpec.IntValue FE_PER_ENERGY;
-    public static final ModConfigSpec.DoubleValue BREAK_SPEED;
-    public static final ModConfigSpec.IntValue AREA_SIZE;
-    public static final ModConfigSpec.IntValue SCAN_PER_TICK;
-    public static final ModConfigSpec.BooleanValue REST_AT_NIGHT;
-    public static final ModConfigSpec.BooleanValue STATION_LOADS_CHUNKS;
-    public static final ModConfigSpec.BooleanValue TELEPORT_WHEN_STUCK;
-    public static final ModConfigSpec.IntValue HOME_RADIUS;
-    public static final ModConfigSpec.BooleanValue DJ_LINKS;
-    public static final ModConfigSpec.BooleanValue ADVANCED_JOBS_NEED_CHIP;
+    public static final ForgeConfigSpec.IntValue MAX_PER_PLAYER;
+    public static final ForgeConfigSpec.BooleanValue REQUIRE_ENERGY;
+    public static final ForgeConfigSpec.IntValue MAX_ENERGY;
+    public static final ForgeConfigSpec.IntValue REDSTONE_ENERGY;
+    public static final ForgeConfigSpec.IntValue FE_PER_ENERGY;
+    public static final ForgeConfigSpec.DoubleValue BREAK_SPEED;
+    public static final ForgeConfigSpec.IntValue AREA_SIZE;
+    public static final ForgeConfigSpec.IntValue SCAN_PER_TICK;
+    public static final ForgeConfigSpec.BooleanValue REST_AT_NIGHT;
+    public static final ForgeConfigSpec.BooleanValue STATION_LOADS_CHUNKS;
+    public static final ForgeConfigSpec.BooleanValue TELEPORT_WHEN_STUCK;
+    public static final ForgeConfigSpec.IntValue HOME_RADIUS;
+    public static final ForgeConfigSpec.BooleanValue DJ_LINKS;
+    public static final ForgeConfigSpec.BooleanValue ADVANCED_JOBS_NEED_CHIP;
 
     static {
-        ModConfigSpec.Builder b = new ModConfigSpec.Builder();
+        ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
         MAX_PER_PLAYER = b.comment("How many Bubies each player can have placed in the world at once.")
                 .defineInRange("maxPerPlayer", 3, 1, 64);
         REQUIRE_ENERGY = b.comment("Bubies spend energy while working and stop when it runs out. Off: they work forever.")

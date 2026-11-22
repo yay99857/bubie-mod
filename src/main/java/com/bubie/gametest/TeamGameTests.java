@@ -17,8 +17,8 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
+import net.minecraftforge.gametest.GameTestHolder;
+import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
 /** Bubies working together: the courier, shared targets, and getting stuck. */
 @GameTestHolder(Bubie.MOD_ID)
@@ -29,18 +29,18 @@ public class TeamGameTests {
         BubieGameTests.floor(helper, Blocks.STONE);
         BlockPos store = new BlockPos(12, 1, 12), furnace = new BlockPos(12, 1, 8);
         helper.setBlock(store, Blocks.CHEST);
-        ChestBlockEntity chest = helper.getBlockEntity(store);
+        ChestBlockEntity chest = (ChestBlockEntity) helper.getBlockEntity(store);
         chest.setItem(0, new ItemStack(Items.COBBLESTONE, 30));
         chest.setItem(7, new ItemStack(Items.OAK_LOG, 12));
         helper.setBlock(furnace, Blocks.FURNACE);
-        AbstractFurnaceBlockEntity oven = helper.getBlockEntity(furnace);
+        AbstractFurnaceBlockEntity oven = (AbstractFurnaceBlockEntity) helper.getBlockEntity(furnace);
         oven.setItem(1, new ItemStack(Items.COAL, 8)); // fuel stays
         oven.setItem(2, new ItemStack(Items.IRON_INGOT, 5)); // output goes
         BubieEntity bubie = BubieGameTests.bubie(helper, new BlockPos(6, 1, 6), JobType.COURIER, ItemStack.EMPTY,
                 new BlockPos(10, 1, 6), new BlockPos(14, 2, 14));
         helper.succeedWhen(() -> {
             helper.assertTrue(BubieGameTests.inChest(helper, Items.COBBLESTONE) == 30, "30 cobblestone carried; status "
-                    + bubie.getStatus() + ", carrying " + bubie.storage().getItems());
+                    + bubie.getStatus() + ", carrying " + bubie.storage());
             helper.assertTrue(BubieGameTests.inChest(helper, Items.OAK_LOG) == 12, "12 logs carried");
             helper.assertTrue(BubieGameTests.inChest(helper, Items.IRON_INGOT) == 5, "the furnace output carried");
             helper.assertTrue(oven.getItem(1).getCount() == 8, "the furnace kept its fuel");

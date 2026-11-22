@@ -6,35 +6,39 @@ import com.bubie.entity.DigFilter;
 import com.bubie.entity.JobType;
 import com.bubie.entity.MineMode;
 import com.bubie.entity.Mode;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.network.handling.IPayloadContext;
+import net.minecraftforge.network.NetworkEvent;
+
+import java.util.function.Supplier;
 
 /** A button in the Bubie's menu, sent to the server. */
-public record BubieCommandPayload(int entityId, int command, int value) implements CustomPacketPayload {
+public record BubieCommandPayload(int entityId, int command, int value) {
     public static final int SET_MODE = 0, SET_JOB = 1, TOGGLE_FILTER = 2, SET_MINE_MODE = 3,
             CLEAR_AREA = 4, CLEAR_CHEST = 5, CLEAR_HOME = 6, SET_LOOK = 7,
             DJ_TOGGLE = 8, DJ_NEXT = 9, DJ_PREVIOUS = 10, DJ_VOLUME = 11, DJ_REMOVE_LINK = 12, DJ_TRACK_DONE = 13, SET_RADIUS = 14;
 
-    public static final Type<BubieCommandPayload> TYPE = new Type<>(Bubie.id("command"));
-    public static final StreamCodec<ByteBuf, BubieCommandPayload> STREAM_CODEC = StreamCodec.composite(
-            ByteBufCodecs.VAR_INT, BubieCommandPayload::entityId,
-            ByteBufCodecs.VAR_INT, BubieCommandPayload::command,
-            ByteBufCodecs.VAR_INT, BubieCommandPayload::value,
-            BubieCommandPayload::new);
-
-    @Override
-    public Type<? extends CustomPacketPayload> type() {
-        return TYPE;
+    public void write(FriendlyByteBuf buf) {
+        buf.writeVarInt(entityId);
+        buf.writeVarInt(command);
+        buf.writeVarInt(value);
     }
 
-    public static void handle(BubieCommandPayload payload, IPayloadContext context) {
+    public static BubieCommandPayload read(FriendlyByteBuf buf) {
+        return new BubieCommandPayload(buf.readVarInt(), buf.readVarInt(), buf.readVarInt());
+    }
+
+    /** From the menu to the server. */
+    public void send() {
+        Bubie.CHANNEL.sendToServer(this);
+    }
+
+    public static void handle(BubieCommandPayload payload, Supplier<NetworkEvent.Context> supplier) {
+        NetworkEvent.Context context = supplier.get();
+        context.setPacketHandled(true);
         context.enqueueWork(() -> {
-            Player player = context.player();
-            if (!(player.level().getEntity(payload.entityId()) instanceof BubieEntity bubie)) return;
+            Player player = context.getSender();
+            if (player == null || !(player.level().getEntity(payload.entityId()) instanceof BubieEntity bubie)) return;
             int v = payload.value();
             // anyone who heard a link end reports it (the owner may be away); it only skips that exact track
             if (payload.command() == DJ_TRACK_DONE) {

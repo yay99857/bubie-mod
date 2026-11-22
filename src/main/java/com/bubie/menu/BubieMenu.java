@@ -3,7 +3,7 @@ package com.bubie.menu;
 import com.bubie.Bubie;
 import com.bubie.entity.BubieEntity;
 import com.bubie.item.ChipItem;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.Container;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -36,7 +36,7 @@ public class BubieMenu extends AbstractContainerMenu {
         this(id, inventory, bubie, bubie.storage(), new ToolContainer(bubie), bubie.extra(), bubie.disc());
     }
 
-    public static BubieMenu fromNetwork(int id, Inventory inventory, RegistryFriendlyByteBuf buf) {
+    public static BubieMenu fromNetwork(int id, Inventory inventory, FriendlyByteBuf buf) {
         int entityId = buf.readVarInt();
         BubieEntity bubie = inventory.player.level().getEntity(entityId) instanceof BubieEntity b ? b : null;
         return new BubieMenu(id, inventory, bubie, new SimpleContainer(BubieEntity.STORAGE_SLOTS),

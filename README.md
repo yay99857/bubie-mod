@@ -2,7 +2,12 @@
 
 # Bubie
 
-Mod para **Minecraft 1.21.1 (NeoForge 21.1.265)**, feito para o Bubie Pack. O Bubie é um robozinho
+> **Branch `forge-1.20.1`: versão congelada.** É o Bubie 1.5.0 portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
+> o mesmo jar roda no NeoForge 1.20.1)**. Só recebe correção de bug; as novidades saem na versão de NeoForge 1.21.1 (`main`).
+> Diferenças para a 1.21.1: a tarefa **Construtor** não existe aqui (o mod Base Blueprint é só de 1.21.1), e as
+> ferramentas de trailer e screenshots ficaram só no `main`.
+
+Mod para **Minecraft 1.20.1 (Forge 47)**. O Bubie é um robozinho
 (tela CRT creme, olhos âmbar, moletom preto) como ajudante: segue você, carrega itens e, com uma tarefa e uma
 área, coleta recursos sozinho e guarda tudo num baú.
 
@@ -87,7 +92,7 @@ Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja
 - O som acompanha o Bubie (como uma jukebox com pernas) e chega a 32 blocos no volume máximo.
 - Os links são baixados por cada jogador que os ouve (por isso o endereço vê o IP de quem ouve): `djLinks` no servidor deixa
   só discos, e `djPlayLinks` no `config/bubie-client.toml` desliga os links para aquele jogador. O `.mp3` é decodificado pelo
-  JLayer (LGPL 2.1), que vai dentro do jar.
+  JLayer (LGPL 2.1), que vai dentro do jar (no pacote `com.bubie.shadow.javazoom`).
 
 ## Regras
 - Ele quebra blocos em nome do dono (um jogador falso com o seu UUID), então as proteções de terreno (FTB Chunks) valem para ele como para você.
@@ -120,7 +125,6 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 `djLinks` (true), `advancedJobsNeedChip` (false). No cliente (`config/bubie-client.toml`): `djPlayLinks` (true).
 
 ## Compatibilidade
-Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./gradlew runPackGameTest`, 21 testes).
 
 | Com | Como funciona |
 |---|---|
@@ -143,11 +147,11 @@ Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./
 ## Desenvolvimento
 | Comando | O que faz |
 |---|---|
-| `./gradlew build` | Gera `build/libs/bubie-<versão>.jar` |
+| `./gradlew build` | Gera `build/libs/bubie-forge-1.20.1-<versão>.jar` (o `-slim` ao lado é o mesmo sem o decodificador de mp3; não publique) |
 | `./gradlew runClient` | Abre o jogo com o mod |
-| `tools/prepare-pack-test.sh` e `./gradlew runPackGameTest` | Os mesmos testes com os mods do Bubie Pack (Sophisticated, Functional Storage, Create, Mekanism, Mystical Agriculture, Farmer's Delight, All the Ores) |
+
 | `./gradlew runGameTestServer` | Roda os testes de jogo (lenhador, fazendeiro, escavador, pedreira com água, minerador veio e túnel, ferramenta errada, desligar, combustível) |
-| `./gradlew runShots` | Monta cenas e tira as screenshots de `run/screenshots` (só desenvolvimento) |
+
 | `python tools/gen_textures.py` | Redesenha todas as texturas a partir da paleta do bubie.gg |
 
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).

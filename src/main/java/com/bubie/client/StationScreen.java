@@ -22,6 +22,7 @@ public class StationScreen extends AbstractContainerScreen<StationMenu> {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        renderBackground(g);
         super.render(g, mouseX, mouseY, partialTick);
         renderTooltip(g, mouseX, mouseY);
         if (hoveredSlot != null && hoveredSlot.index == 27 && !hoveredSlot.hasItem() && menu.getCarried().isEmpty()) {

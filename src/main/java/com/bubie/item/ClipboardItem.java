@@ -7,7 +7,7 @@ import com.bubie.entity.Mode;
 import com.bubie.entity.WorkArea;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -18,10 +18,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.CustomData;
+
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.capabilities.Capabilities;
+import com.bubie.compat.Caps;
 
 import javax.annotation.Nullable;
 import java.util.List;
@@ -32,6 +32,9 @@ import java.util.List;
  * Shift + right-click the air to clear it.
  */
 public class ClipboardItem extends Item {
+    /** Where the selection lives in the item's NBT. */
+    private static final String KEY = "Selection";
+
     public ClipboardItem(Properties properties) {
         super(properties);
     }
@@ -45,8 +48,8 @@ public class ClipboardItem extends Item {
     }
 
     public static Selection read(ItemStack stack) {
-        CustomData custom = stack.get(DataComponents.CUSTOM_DATA);
-        CompoundTag tag = custom == null ? new CompoundTag() : custom.copyTag();
+        CompoundTag saved = stack.getTagElement(KEY);
+        CompoundTag tag = saved == null ? new CompoundTag() : saved;
         return new Selection(pos(tag, "A"), pos(tag, "B"), pos(tag, "Chest"), pos(tag, "Home"), tag.getString("Dim"));
     }
 
@@ -62,8 +65,8 @@ public class ClipboardItem extends Item {
         if (s.chest() != null) tag.putLong("Chest", s.chest().asLong());
         if (s.home() != null) tag.putLong("Home", s.home().asLong());
         tag.putString("Dim", s.dimension());
-        if (tag.size() == 1) stack.remove(DataComponents.CUSTOM_DATA);
-        else stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        if (tag.size() == 1) stack.removeTagKey(KEY);
+        else stack.getOrCreateTag().put(KEY, tag);
     }
 
     @Override
@@ -82,7 +85,7 @@ public class ClipboardItem extends Item {
             if (level.getBlockState(pos).is(Bubie.STATION.get())) {
                 write(stack, new Selection(s.a(), s.b(), s.chest(), pos, dim));
                 say(player, Component.translatable("bubie.clipboard.home", pos.getX(), pos.getY(), pos.getZ()));
-            } else if (level.getCapability(Capabilities.ItemHandler.BLOCK, pos, context.getClickedFace()) != null) {
+            } else if (Caps.items(level, pos, context.getClickedFace()) != null) {
                 write(stack, new Selection(s.a(), s.b(), pos, s.home(), dim));
                 say(player, Component.translatable("bubie.clipboard.chest", pos.getX(), pos.getY(), pos.getZ()));
             } else {
@@ -107,7 +110,7 @@ public class ClipboardItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
             if (!level.isClientSide) {
-                stack.remove(DataComponents.CUSTOM_DATA);
+                stack.removeTagKey(KEY);
                 say(player, Component.translatable("bubie.clipboard.cleared"));
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
@@ -143,7 +146,7 @@ public class ClipboardItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         Selection s = read(stack);
         WorkArea area = s.area();
         if (area != null) {

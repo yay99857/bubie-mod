@@ -11,6 +11,8 @@ import com.bubie.item.ClipboardItem;
 import com.bubie.menu.BubieMenu;
 import com.bubie.menu.StationMenu;
 import com.bubie.network.BubieCommandPayload;
+import com.bubie.network.DjLinkPayload;
+import com.bubie.network.StationBubiesPayload;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -21,47 +23,48 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
-import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
-import net.neoforged.neoforge.registries.DeferredBlock;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredItem;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.minecraftforge.common.extensions.IForgeMenuType;
+import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.simple.SimpleChannel;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
+import net.minecraftforge.registries.RegistryObject;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.Optional;
 
 @Mod(Bubie.MOD_ID)
 public class Bubie {
     public static final String MOD_ID = "bubie";
 
-    public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MOD_ID);
-    public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MOD_ID);
-    public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, MOD_ID);
-    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MOD_ID);
-    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, MOD_ID);
+    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
+    public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MOD_ID);
+    public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, MOD_ID);
+    public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MOD_ID);
+    public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, MOD_ID);
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
 
-    public static final DeferredHolder<EntityType<?>, EntityType<BubieEntity>> BUBIE_ENTITY = ENTITIES.register("bubie",
+    public static final RegistryObject<EntityType<BubieEntity>> BUBIE_ENTITY = ENTITIES.register("bubie",
             () -> EntityType.Builder.of(BubieEntity::new, MobCategory.MISC)
                     .sized(0.6F, 0.98F)
-                    .eyeHeight(0.72F)
                     .clientTrackingRange(10)
                     .build(MOD_ID + ":bubie"));
 
-    public static final DeferredBlock<StationBlock> STATION = BLOCKS.register("bubie_station",
+    public static final RegistryObject<StationBlock> STATION = BLOCKS.register("bubie_station",
             () -> new StationBlock(BlockBehaviour.Properties.of()
                     .mapColor(MapColor.TERRACOTTA_WHITE)
                     .strength(2.5F, 6.0F)
@@ -69,12 +72,13 @@ public class Bubie {
                     .sound(SoundType.COPPER)
                     .lightLevel(state -> 4)));
 
-    public static final DeferredItem<BubieItem> BUBIE_ITEM = ITEMS.register("bubie",
+    public static final RegistryObject<BubieItem> BUBIE_ITEM = ITEMS.register("bubie",
             () -> new BubieItem(new Item.Properties().stacksTo(1)));
-    public static final DeferredItem<ClipboardItem> CLIPBOARD = ITEMS.register("bubie_clipboard",
+    public static final RegistryObject<ClipboardItem> CLIPBOARD = ITEMS.register("bubie_clipboard",
             () -> new ClipboardItem(new Item.Properties().stacksTo(1)));
-    public static final DeferredItem<BlockItem> STATION_ITEM = ITEMS.registerSimpleBlockItem(STATION);
-    public static final Map<ChipType, DeferredItem<ChipItem>> CHIPS = new EnumMap<>(ChipType.class);
+    public static final RegistryObject<BlockItem> STATION_ITEM = ITEMS.register("bubie_station",
+            () -> new BlockItem(STATION.get(), new Item.Properties()));
+    public static final Map<ChipType, RegistryObject<ChipItem>> CHIPS = new EnumMap<>(ChipType.class);
 
     static {
         for (ChipType type : ChipType.values()) {
@@ -83,15 +87,15 @@ public class Bubie {
     }
 
     @SuppressWarnings("DataFlowIssue")
-    public static final Supplier<BlockEntityType<StationBlockEntity>> STATION_BE = BLOCK_ENTITIES.register("bubie_station",
+    public static final RegistryObject<BlockEntityType<StationBlockEntity>> STATION_BE = BLOCK_ENTITIES.register("bubie_station",
             () -> BlockEntityType.Builder.of(StationBlockEntity::new, STATION.get()).build(null));
 
-    public static final Supplier<MenuType<BubieMenu>> BUBIE_MENU = MENUS.register("bubie",
-            () -> IMenuTypeExtension.create(BubieMenu::fromNetwork));
-    public static final Supplier<MenuType<StationMenu>> STATION_MENU = MENUS.register("bubie_station",
-            () -> IMenuTypeExtension.create(StationMenu::fromNetwork));
+    public static final RegistryObject<MenuType<BubieMenu>> BUBIE_MENU = MENUS.register("bubie",
+            () -> IForgeMenuType.create(BubieMenu::fromNetwork));
+    public static final RegistryObject<MenuType<StationMenu>> STATION_MENU = MENUS.register("bubie_station",
+            () -> IForgeMenuType.create(StationMenu::fromNetwork));
 
-    public static final Supplier<CreativeModeTab> TAB = TABS.register("bubie", () -> CreativeModeTab.builder()
+    public static final RegistryObject<CreativeModeTab> TAB = TABS.register("bubie", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.bubie"))
             .icon(() -> new ItemStack(BUBIE_ITEM.get()))
             .displayItems((params, out) -> {
@@ -102,9 +106,15 @@ public class Bubie {
             })
             .build());
 
-    public Bubie(IEventBus modBus, ModContainer container) {
-        container.registerConfig(ModConfig.Type.SERVER, BubieConfig.SPEC);
-        container.registerConfig(ModConfig.Type.CLIENT, BubieClientConfig.SPEC);
+    private static final String PROTOCOL = "1";
+    /** Menu buttons and DJ links to the server; the Bubies of an open Station to the client. */
+    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(id("main"), () -> PROTOCOL,
+            PROTOCOL::equals, PROTOCOL::equals);
+
+    public Bubie() {
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, BubieConfig.SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, BubieClientConfig.SPEC);
         ITEMS.register(modBus);
         BLOCKS.register(modBus);
         ENTITIES.register(modBus);
@@ -114,36 +124,27 @@ public class Bubie {
 
         modBus.addListener((EntityAttributeCreationEvent event) ->
                 event.put(BUBIE_ENTITY.get(), BubieEntity.createAttributes().build()));
-        modBus.addListener((RegisterCapabilitiesEvent event) -> {
-            event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, STATION_BE.get(), (be, side) -> be.storageHandler());
-            event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, STATION_BE.get(), (be, side) -> be.energy());
-        });
-        modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
-                .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle)
-                .playToServer(com.bubie.network.DjLinkPayload.TYPE, com.bubie.network.DjLinkPayload.STREAM_CODEC,
-                        com.bubie.network.DjLinkPayload::handle)
-                .playToClient(com.bubie.network.StationBubiesPayload.TYPE, com.bubie.network.StationBubiesPayload.STREAM_CODEC,
-                        com.bubie.network.StationBubiesPayload::handle));
-        modBus.addListener(StationChunks::register);
-        // the DJ's .mp3 decoder ships inside the jar (Jar-in-Jar); say so in the log, for bug reports
+        modBus.addListener((FMLCommonSetupEvent event) -> event.enqueueWork(StationChunks::register));
+        CHANNEL.registerMessage(0, BubieCommandPayload.class, BubieCommandPayload::write, BubieCommandPayload::read,
+                BubieCommandPayload::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(1, DjLinkPayload.class, DjLinkPayload::write, DjLinkPayload::read,
+                DjLinkPayload::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
+        CHANNEL.registerMessage(2, StationBubiesPayload.class, StationBubiesPayload::write, StationBubiesPayload::read,
+                StationBubiesPayload::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
+        // the DJ's .mp3 decoder ships inside the jar; say so in the log, for bug reports
         com.mojang.logging.LogUtils.getLogger().info("Bubie DJ: mp3 decoder {}",
-                classExists("javazoom.jl.decoder.Decoder") ? "ready" : "missing (mp3 links won't play, ogg still will)");
-        // Base Blueprint 1.3.0+: its menu's "Build with Bubie" button
-        if (com.bubie.compat.BlueprintCompat.loaded() && classExists("com.baseblueprint.api.HelperBuildEvent")) {
-            com.bubie.compat.BlueprintHelper.register();
-        }
+                mp3Decoder() ? "ready" : "missing (mp3 links won't play, ogg still will)");
     }
 
-    private static boolean classExists(String name) {
+    private static boolean mp3Decoder() {
         try {
-            Class.forName(name, false, Bubie.class.getClassLoader());
-            return true;
-        } catch (ClassNotFoundException e) {
+            return javazoom.jl.decoder.Decoder.class.getName() != null;
+        } catch (LinkageError e) {
             return false;
         }
     }
 
     public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+        return new ResourceLocation(MOD_ID, path);
     }
 }

@@ -1,13 +1,12 @@
 package com.bubie.entity;
 
 import com.bubie.BubieConfig;
-import net.minecraft.core.Holder;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.JukeboxSong;
+import net.minecraft.world.item.RecordItem;
 
 import javax.annotation.Nullable;
 import java.net.URI;
@@ -56,7 +55,7 @@ public final class Dj {
     }
 
     /** One entry of the playlist: a disc slot of the Bubie's storage or a link. */
-    private record Entry(@Nullable Holder<JukeboxSong> song, @Nullable String link) {
+    private record Entry(@Nullable RecordItem song, @Nullable String link) {
     }
 
     private final BubieEntity bubie;
@@ -210,10 +209,10 @@ public final class Dj {
         long now = bubie.level().getGameTime();
         Track track;
         if (entry.song() != null) {
-            JukeboxSong song = entry.song().value();
-            endsAt = now + Math.max(20, song.lengthInTicks()) + 20; // a breath between songs
-            track = new Track(serial, "disc", song.soundEvent().value().getLocation().toString(),
-                    song.description().getString());
+            RecordItem song = entry.song();
+            endsAt = now + Math.max(20, song.getLengthInTicks()) + 20; // a breath between songs
+            track = new Track(serial, "disc", song.getSound().getLocation().toString(),
+                    song.getDisplayName().getString());
         } else {
             endsAt = now + LINK_FALLBACK_TICKS;
             track = new Track(serial, "link", entry.link(), linkTitle(entry.link()));
@@ -232,16 +231,16 @@ public final class Dj {
         // the disc it is playing was taken out (or swapped): move on to what is there now
         Track track = bubie.getDjTrack();
         if (bubie.tickCount % 5 == 0 && !track.isNone() && !track.isLink()
-                && !discSong().map(s -> s.value().soundEvent().value().getLocation().toString().equals(track.ref())).orElse(false)) {
+                && !discSong().map(s -> s.getSound().getLocation().toString().equals(track.ref())).orElse(false)) {
             start(index);
             return;
         }
         if (bubie.level().getGameTime() >= endsAt) start(index + 1);
     }
 
-    private Optional<Holder<JukeboxSong>> discSong() {
+    private Optional<RecordItem> discSong() {
         ItemStack stack = bubie.disc().getItem(0);
-        return stack.isEmpty() ? Optional.empty() : JukeboxSong.fromStack(bubie.registryAccess(), stack);
+        return stack.getItem() instanceof RecordItem disc ? Optional.of(disc) : Optional.empty();
     }
 
     // ------------------------------------------------------------------ saving

@@ -14,8 +14,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
+import com.bubie.compat.Caps;
+import net.minecraftforge.items.IItemHandler;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -75,8 +75,8 @@ public class CourierJob extends Job {
 
     @Nullable
     static IItemHandler source(ServerLevel level, BlockPos pos) {
-        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, Direction.DOWN);
-        return handler != null ? handler : level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+        IItemHandler handler = Caps.items(level, pos, Direction.DOWN);
+        return handler != null ? handler : Caps.items(level, pos, null);
     }
 
     /** Takes as much as it can carry (and the builder needs) from the container. */
@@ -134,7 +134,7 @@ public class CourierJob extends Job {
             }
         }
         if (need == null) return null;
-        IItemHandler dest = level.getCapability(Capabilities.ItemHandler.BLOCK, chest, null);
+        IItemHandler dest = Caps.items(level, chest, null);
         if (dest != null) {
             for (int slot = 0; slot < dest.getSlots(); slot++) {
                 ItemStack s = dest.getStackInSlot(slot);

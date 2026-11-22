@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.BrushableBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.common.Tags;
+import net.minecraftforge.common.Tags;
 
 /** Digger: sand, gravel, dirt and clay in the area, layer by layer from the top (filters in the menu). */
 public class DigJob extends Job {
@@ -34,8 +34,8 @@ public class DigJob extends Job {
     public boolean isTarget(ServerLevel level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof BrushableBlock) return false; // suspicious sand/gravel: archaeology
         if (!state.getFluidState().isEmpty()) return false;
-        if (on(DigFilter.SAND) && (state.is(BlockTags.SAND) || state.is(Tags.Blocks.SANDS))) return true;
-        if (on(DigFilter.GRAVEL) && (state.is(Blocks.GRAVEL) || state.is(Tags.Blocks.GRAVELS))) return true;
+        if (on(DigFilter.SAND) && (state.is(BlockTags.SAND) || state.is(Tags.Blocks.SAND))) return true;
+        if (on(DigFilter.GRAVEL) && (state.is(Blocks.GRAVEL) || state.is(Tags.Blocks.GRAVEL))) return true;
         if (on(DigFilter.DIRT) && (state.is(BlockTags.DIRT) || state.is(Blocks.DIRT_PATH))) return true;
         return on(DigFilter.CLAY) && state.is(Blocks.CLAY);
     }

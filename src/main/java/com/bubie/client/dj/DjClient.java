@@ -6,11 +6,10 @@ import com.bubie.entity.BubieEntity;
 import com.bubie.entity.Dj;
 import com.bubie.network.BubieCommandPayload;
 import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.event.TickEvent;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,7 +19,7 @@ import java.util.Map;
  * Plays what every nearby Bubie DJ is playing: starts a {@link DjSound} when a Bubie's track changes, stops it when
  * the Bubie stops or leaves, and tells the server when a link ended (the server knows how long discs last).
  */
-@EventBusSubscriber(modid = Bubie.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Bubie.MOD_ID, value = Dist.CLIENT)
 public final class DjClient {
     private static final double HEAR = 48;
     /** Links shorter than this are reported as broken, not as finished, a moment later (no double skips). */
@@ -42,7 +41,8 @@ public final class DjClient {
     }
 
     @SubscribeEvent
-    static void tick(ClientTickEvent.Post event) {
+    public static void tick(TickEvent.ClientTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null) {
             PLAYING.values().forEach(p -> mc.getSoundManager().stop(p.sound));
@@ -65,8 +65,8 @@ public final class DjClient {
                     && (p.sound.linkEnded() || !mc.getSoundManager().isActive(p.sound))) {
                 p.reported = true;
                 if (p.ticks >= MIN_LINK_TICKS || p.sound.linkEnded()) {
-                    PacketDistributor.sendToServer(new BubieCommandPayload(bubie.getId(), BubieCommandPayload.DJ_TRACK_DONE,
-                            p.sound.track().serial()));
+                    new BubieCommandPayload(bubie.getId(), BubieCommandPayload.DJ_TRACK_DONE,
+                            p.sound.track().serial()).send();
                 }
             }
         }

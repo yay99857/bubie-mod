@@ -13,9 +13,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.util.BlockSnapshot;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.event.EventHooks;
+import net.minecraftforge.common.util.BlockSnapshot;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.event.ForgeEventFactory;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -125,8 +125,8 @@ public class BuilderJob extends Job {
         FakePlayer player = BlockBreaker.player(bubie, ItemStack.EMPTY);
         BlockSnapshot snapshot = BlockSnapshot.create(level.dimension(), level, pos);
         if (!level.setBlock(pos, block.defaultBlockState(), Block.UPDATE_ALL)
-                || EventHooks.onBlockPlace(player, snapshot, Direction.UP)) {
-            snapshot.restore(Block.UPDATE_ALL);
+                || ForgeEventFactory.onBlockPlace(player, snapshot, Direction.UP)) {
+            snapshot.restore(true, false);
             bubie.insert(one);
             return false;
         }

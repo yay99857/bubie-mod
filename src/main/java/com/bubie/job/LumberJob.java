@@ -15,7 +15,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.common.Tags;
+import net.minecraftforge.common.Tags;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ public class LumberJob extends Job {
         if (!state.is(BlockTags.LOGS)) return false;
         BlockState below = level.getBlockState(pos.below());
         if (below.is(BlockTags.LOGS)) return false;
-        if (!below.is(BlockTags.DIRT) && !below.is(Tags.Blocks.STONES) && !below.is(BlockTags.SAND)) return false;
+        if (!below.is(BlockTags.DIRT) && !below.is(Tags.Blocks.STONE) && !below.is(BlockTags.SAND)) return false;
         return tree(level, pos) != null;
     }
 
@@ -90,7 +90,7 @@ public class LumberJob extends Job {
             for (Direction dir : Direction.values()) {
                 BlockPos n = pos.relative(dir);
                 BlockState s = level.getBlockState(n);
-                if (s.is(BlockTags.PLANKS) || s.is(Tags.Blocks.GLASS_BLOCKS) || s.is(BlockTags.DOORS)
+                if (s.is(BlockTags.PLANKS) || s.is(Tags.Blocks.GLASS) || s.is(BlockTags.DOORS)
                         || level.getBlockEntity(n) != null) {
                     return null; // built by someone
                 }
@@ -141,7 +141,7 @@ public class LumberJob extends Job {
         for (String[] swap : swaps) {
             if (!path.endsWith(swap[0])) continue;
             String name = path.substring(0, path.length() - swap[0].length()) + swap[1];
-            ResourceLocation saplingId = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), name);
+            ResourceLocation saplingId = new ResourceLocation(id.getNamespace(), name);
             Item item = BuiltInRegistries.ITEM.get(saplingId);
             if (item != Items.AIR) return item;
             if (name.startsWith("mangrove")) return Items.MANGROVE_PROPAGULE;

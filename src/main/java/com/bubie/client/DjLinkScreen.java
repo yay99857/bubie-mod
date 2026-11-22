@@ -8,7 +8,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 /** "Add link" from the DJ tab: paste an .mp3 or .ogg address for the Bubie to play. */
@@ -73,7 +72,7 @@ public class DjLinkScreen extends Screen {
     private void submit() {
         String url = field.getValue().trim();
         if (problem(url) != null || !Dj.isValidLink(url)) return;
-        PacketDistributor.sendToServer(new DjLinkPayload(bubie.getId(), url));
+        new DjLinkPayload(bubie.getId(), url).send();
         onClose();
     }
 
@@ -87,8 +86,8 @@ public class DjLinkScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.renderBackground(g, mouseX, mouseY, partialTick);
+    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        renderBackground(g);
         BubieUi.casing(g, left, top, W, H);
         g.drawString(font, title, left + 10, top + 8, BubieUi.INK, false);
         g.drawString(font, Component.translatable("bubie.ui.dj.add_help"), left + 10, top + 20, BubieUi.INK_SOFT, false);
@@ -99,6 +98,7 @@ public class DjLinkScreen extends Screen {
                 y += 9;
             }
         }
+        super.render(g, mouseX, mouseY, partialTick);
     }
 
     @Override

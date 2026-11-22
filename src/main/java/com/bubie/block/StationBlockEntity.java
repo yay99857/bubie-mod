@@ -5,7 +5,7 @@ import com.bubie.BubieConfig;
 import com.bubie.entity.BubieEntity;
 import com.bubie.menu.StationMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -21,9 +21,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.energy.EnergyStorage;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.energy.EnergyStorage;
+import net.minecraftforge.energy.IEnergyStorage;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 
@@ -103,6 +107,8 @@ public class StationBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private final StationEnergy energy = new StationEnergy();
+    private LazyOptional<IItemHandler> storageCap = LazyOptional.of(() -> storage);
+    private LazyOptional<IEnergyStorage> energyCap = LazyOptional.of(() -> energy);
     /** Bubie energy already paid for with burnt fuel. */
     private int fuelBuffer;
     private boolean chunksLoaded;
@@ -206,19 +212,41 @@ public class StationBlockEntity extends BlockEntity implements MenuProvider {
         return given;
     }
 
+    /** Pipes, hoppers and cables, on every side: the storage (fuel slot first) and the FE buffer. */
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.saveAdditional(tag, registries);
-        tag.put("Items", items.serializeNBT(registries));
-        tag.put("Energy", energy.serializeNBT(registries));
+    public <T> LazyOptional<T> getCapability(Capability<T> cap, @Nullable Direction side) {
+        if (cap == ForgeCapabilities.ITEM_HANDLER) return storageCap.cast();
+        if (cap == ForgeCapabilities.ENERGY) return energyCap.cast();
+        return super.getCapability(cap, side);
+    }
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        storageCap.invalidate();
+        energyCap.invalidate();
+    }
+
+    @Override
+    public void reviveCaps() {
+        super.reviveCaps();
+        storageCap = LazyOptional.of(() -> storage);
+        energyCap = LazyOptional.of(() -> energy);
+    }
+
+    @Override
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        tag.put("Items", items.serializeNBT());
+        tag.put("Energy", energy.serializeNBT());
         tag.putInt("FuelBuffer", fuelBuffer);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        items.deserializeNBT(registries, tag.getCompound("Items"));
-        if (tag.contains("Energy")) energy.deserializeNBT(registries, tag.get("Energy"));
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        items.deserializeNBT(tag.getCompound("Items"));
+        if (tag.contains("Energy")) energy.deserializeNBT(tag.get("Energy"));
         fuelBuffer = tag.getInt("FuelBuffer");
     }
 

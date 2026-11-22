@@ -16,7 +16,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,11 +54,12 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
 
     private void send(int command, int value) {
         BubieEntity bubie = menu.bubie();
-        if (bubie != null) PacketDistributor.sendToServer(new BubieCommandPayload(bubie.getId(), command, value));
+        if (bubie != null) new BubieCommandPayload(bubie.getId(), command, value).send();
     }
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        renderBackground(g);
         BubieMenu.djTabOpen = tab == Tab.DJ;
         this.mouseX = mouseX;
         this.mouseY = mouseY;

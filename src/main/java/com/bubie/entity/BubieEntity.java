@@ -94,7 +94,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     /** How far around its chest (or Station) it works when no area is marked. */
     private static final EntityDataAccessor<Byte> DATA_RADIUS = define(EntityDataSerializers.BYTE);
 
-    private static final ResourceLocation SPEED_CHIP_ID = Bubie.id("speed_chip");
+    private static final UUID SPEED_CHIP_ID = UUID.fromString("5b1f0e0c-7a51-4d1e-9c3b-2f6a8d4e1b70");
 
     private static <T> EntityDataAccessor<T> define(net.minecraft.network.syncher.EntityDataSerializer<T> serializer) {
         return SynchedEntityData.defineId(BubieEntity.class, serializer);
@@ -127,6 +127,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         setPersistenceRequired();
         setCanPickUpLoot(false);
         setDropChance(EquipmentSlot.MAINHAND, 0);
+        setMaxUpStep(1.0F);
         extra.addListener(container -> onChipsChanged());
     }
 
@@ -135,35 +136,40 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
                 .add(Attributes.MAX_HEALTH, 20.0)
                 .add(Attributes.MOVEMENT_SPEED, 0.28)
                 .add(Attributes.FOLLOW_RANGE, 48.0)
-                .add(Attributes.STEP_HEIGHT, 1.0)
+
                 .add(Attributes.ATTACK_DAMAGE, 2.0) // the Guard; a weapon in the tool slot adds its own damage
                 .add(Attributes.ATTACK_KNOCKBACK, 0.3);
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(DATA_OWNER, Optional.empty());
-        builder.define(DATA_MODE, (byte) Mode.FOLLOW.ordinal());
-        builder.define(DATA_JOB, (byte) JobType.LUMBERJACK.ordinal());
-        builder.define(DATA_MINE_MODE, (byte) MineMode.VEIN.ordinal());
-        builder.define(DATA_FILTER, (byte) DigFilter.ALL);
-        builder.define(DATA_FACE, (byte) Face.IDLE.ordinal());
-        builder.define(DATA_STATUS, (byte) Status.IDLE.ordinal());
-        builder.define(DATA_UNLOCKED, (byte) BASE_STORAGE);
-        builder.define(DATA_ENERGY, 0);
-        builder.define(DATA_MAX_ENERGY, 48000);
-        builder.define(DATA_AREA_MIN, Optional.empty());
-        builder.define(DATA_AREA_MAX, Optional.empty());
-        builder.define(DATA_CHEST, Optional.empty());
-        builder.define(DATA_HOME, Optional.empty());
-        builder.define(DATA_LOOK, Look.DEFAULT.pack());
-        builder.define(DATA_NEED, ItemStack.EMPTY);
-        builder.define(DATA_BUILD, 0);
-        builder.define(DATA_DJ, "");
-        builder.define(DATA_DJ_VOLUME, (byte) 70);
-        builder.define(DATA_DJ_LINKS, "");
-        builder.define(DATA_RADIUS, (byte) 8);
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        entityData.define(DATA_OWNER, Optional.empty());
+        entityData.define(DATA_MODE, (byte) Mode.FOLLOW.ordinal());
+        entityData.define(DATA_JOB, (byte) JobType.LUMBERJACK.ordinal());
+        entityData.define(DATA_MINE_MODE, (byte) MineMode.VEIN.ordinal());
+        entityData.define(DATA_FILTER, (byte) DigFilter.ALL);
+        entityData.define(DATA_FACE, (byte) Face.IDLE.ordinal());
+        entityData.define(DATA_STATUS, (byte) Status.IDLE.ordinal());
+        entityData.define(DATA_UNLOCKED, (byte) BASE_STORAGE);
+        entityData.define(DATA_ENERGY, 0);
+        entityData.define(DATA_MAX_ENERGY, 48000);
+        entityData.define(DATA_AREA_MIN, Optional.empty());
+        entityData.define(DATA_AREA_MAX, Optional.empty());
+        entityData.define(DATA_CHEST, Optional.empty());
+        entityData.define(DATA_HOME, Optional.empty());
+        entityData.define(DATA_LOOK, Look.DEFAULT.pack());
+        entityData.define(DATA_NEED, ItemStack.EMPTY);
+        entityData.define(DATA_BUILD, 0);
+        entityData.define(DATA_DJ, "");
+        entityData.define(DATA_DJ_VOLUME, (byte) 70);
+        entityData.define(DATA_DJ_LINKS, "");
+        entityData.define(DATA_RADIUS, (byte) 8);
+    }
+
+    @Override
+    protected float getStandingEyeHeight(net.minecraft.world.entity.Pose pose, net.minecraft.world.entity.EntityDimensions dimensions) {
+        return 0.72F;
     }
 
     @Override
@@ -513,7 +519,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     }
 
     public static boolean isDisc(ItemStack stack) {
-        return stack.has(net.minecraft.core.component.DataComponents.JUKEBOX_PLAYABLE);
+        return stack.getItem() instanceof net.minecraft.world.item.RecordItem;
     }
 
     public JobRunner runner() {
@@ -548,8 +554,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         if (speed != null) {
             speed.removeModifier(SPEED_CHIP_ID);
             int n = chipCount(ChipType.SPEED);
-            if (n > 0) speed.addOrUpdateTransientModifier(
-                    new AttributeModifier(SPEED_CHIP_ID, 0.2 * n, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+            if (n > 0) speed.addTransientModifier(
+                    new AttributeModifier(SPEED_CHIP_ID, "Bubie speed chips", 0.2 * n, AttributeModifier.Operation.MULTIPLY_BASE));
         }
     }
 
@@ -560,7 +566,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         for (int pass = 0; pass < 2 && !rest.isEmpty(); pass++) {
             for (int i = 0; i < unlocked && !rest.isEmpty(); i++) {
                 ItemStack in = storage.getItem(i);
-                if (pass == 0 && !in.isEmpty() && ItemStack.isSameItemSameComponents(in, rest)) {
+                if (pass == 0 && !in.isEmpty() && ItemStack.isSameItemSameTags(in, rest)) {
                     int move = Math.min(rest.getCount(), in.getMaxStackSize() - in.getCount());
                     if (move > 0) {
                         in.grow(move);
@@ -601,15 +607,15 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     /** Bubie energy from one item of fuel: redstone dust, or a block of redstone (nine dusts). Coal is not fuel. */
     public static int fuelValue(ItemStack stack) {
         int dust = BubieConfig.REDSTONE_ENERGY.get();
-        if (stack.is(net.neoforged.neoforge.common.Tags.Items.DUSTS_REDSTONE)) return dust;
-        if (stack.is(net.neoforged.neoforge.common.Tags.Items.STORAGE_BLOCKS_REDSTONE)) return dust * 9;
+        if (stack.is(net.minecraftforge.common.Tags.Items.DUSTS_REDSTONE)) return dust;
+        if (stack.is(net.minecraftforge.common.Tags.Items.STORAGE_BLOCKS_REDSTONE)) return dust * 9;
         return 0;
     }
 
     /** What the fuel slot takes: anything that burns, or any item that stores FE (batteries, pocket accumulators). */
     public static boolean isFuel(ItemStack stack) {
         if (fuelValue(stack) > 0) return true;
-        var energy = stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
+        var energy = com.bubie.compat.Caps.energy(stack);
         return energy != null && energy.canExtract();
     }
 
@@ -619,7 +625,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private void burnFuel() {
         if (!BubieConfig.REQUIRE_ENERGY.get()) return;
         ItemStack fuel = extra.getItem(FUEL_SLOT);
-        var battery = fuel.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
+        var battery = com.bubie.compat.Caps.energy(fuel);
         if (battery != null && battery.canExtract()) {
             int need = Math.min(BATTERY_RATE, getMaxEnergy() - getEnergy());
             int fePer = Math.max(1, BubieConfig.FE_PER_ENERGY.get());
@@ -751,10 +757,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             ClipboardItem.applyTo(held, this, player);
             return InteractionResult.CONSUME;
         }
-        if (com.bubie.compat.BlueprintCompat.isBlueprint(held) && com.bubie.compat.BlueprintCompat.loaded()) {
-            com.bubie.compat.BlueprintCompat.handOver(this, player, held);
-            return InteractionResult.CONSUME;
-        }
+
         if (held.getItem() instanceof ChipItem) {
             for (int i = 1; i <= CHIP_SLOTS; i++) {
                 if (extra.getItem(i).isEmpty()) {
@@ -772,7 +775,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             return InteractionResult.CONSUME;
         }
         if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.openMenu(new SimpleMenuProvider(
+            net.minecraftforge.network.NetworkHooks.openScreen(serverPlayer, new SimpleMenuProvider(
                     (id, inv, p) -> new BubieMenu(id, inv, this), getDisplayName()), buf -> buf.writeVarInt(getId()));
         }
         return InteractionResult.CONSUME;
@@ -809,7 +812,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     }
 
     @Override
-    protected void dropAllDeathLoot(ServerLevel level, DamageSource source) {
+    protected void dropAllDeathLoot(DamageSource source) {
         // everything is inside the item made in die()
     }
 
@@ -825,7 +828,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     /** Machines that attack as fake players (mob crushers, deployers, turrets) leave Bubies alone. */
     @Override
     public boolean hurt(DamageSource source, float amount) {
-        if (source.getEntity() instanceof net.neoforged.neoforge.common.util.FakePlayer) return false;
+        if (source.getEntity() instanceof net.minecraftforge.common.util.FakePlayer) return false;
         return super.hurt(source, amount);
     }
 
@@ -845,7 +848,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     }
 
     @Override
-    public boolean canBeLeashed() {
+    public boolean canBeLeashed(Player player) {
         return false;
     }
 
@@ -909,11 +912,11 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         tag.put("Storage", saveContainer(storage));
         tag.put("Extra", saveContainer(extra));
         tag.put("Disc", saveContainer(disc));
-        if (!getTool().isEmpty()) tag.put("Tool", getTool().save(registryAccess()));
+        if (!getTool().isEmpty()) tag.put("Tool", getTool().save(new CompoundTag()));
         dj.save(tag);
         if (!buildPlan.isEmpty() && buildOrigin != null) {
             CompoundTag build = new CompoundTag();
-            build.put("Blueprint", buildPlan.save(registryAccess()));
+            build.put("Blueprint", buildPlan.save(new CompoundTag()));
             build.putLong("Origin", buildOrigin.asLong());
             build.putByte("Door", (byte) buildDoor.get3DDataValue());
             build.putInt("Progress", entityData.get(DATA_BUILD));
@@ -952,11 +955,11 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             loading = false;
         }
         if (tag.contains("Tool")) {
-            setItemSlot(EquipmentSlot.MAINHAND, ItemStack.parseOptional(registryAccess(), tag.getCompound("Tool")));
+            setItemSlot(EquipmentSlot.MAINHAND, ItemStack.of(tag.getCompound("Tool")));
         }
         if (tag.contains("Build")) {
             CompoundTag build = tag.getCompound("Build");
-            buildPlan = ItemStack.parseOptional(registryAccess(), build.getCompound("Blueprint"));
+            buildPlan = ItemStack.of(build.getCompound("Blueprint"));
             buildOrigin = BlockPos.of(build.getLong("Origin"));
             buildDoor = net.minecraft.core.Direction.from3DDataValue(build.getByte("Door"));
             entityData.set(DATA_BUILD, build.getInt("Progress"));
@@ -978,7 +981,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             if (stack.isEmpty()) continue;
             CompoundTag entry = new CompoundTag();
             entry.putByte("Slot", (byte) i);
-            list.add(stack.save(registryAccess(), entry));
+            list.add(stack.save(entry));
         }
         return list;
     }
@@ -989,7 +992,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             CompoundTag entry = list.getCompound(i);
             int slot = entry.getByte("Slot") & 255;
             if (slot < container.getContainerSize()) {
-                container.setItem(slot, ItemStack.parseOptional(registryAccess(), entry));
+                container.setItem(slot, ItemStack.of(entry));
             }
         }
     }

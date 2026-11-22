@@ -1,35 +1,37 @@
 package com.bubie.client;
 
 import com.bubie.Bubie;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.EntityRenderersEvent;
-import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
-@EventBusSubscriber(modid = Bubie.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Bubie.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class ClientSetup {
     private ClientSetup() {
     }
 
     @SubscribeEvent
-    static void layers(EntityRenderersEvent.RegisterLayerDefinitions event) {
+    public static void layers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(BubieModel.LAYER, BubieModel::createLayer);
     }
 
     @SubscribeEvent
-    static void renderers(EntityRenderersEvent.RegisterRenderers event) {
+    public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(Bubie.BUBIE_ENTITY.get(), BubieRenderer::new);
     }
 
     @SubscribeEvent
-    static void reload(net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent event) {
+    public static void reload(net.minecraftforge.client.event.RegisterClientReloadListenersEvent event) {
         event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> LookTextures.clear());
     }
 
     @SubscribeEvent
-    static void screens(RegisterMenuScreensEvent event) {
-        event.register(Bubie.BUBIE_MENU.get(), BubieScreen::new);
-        event.register(Bubie.STATION_MENU.get(), StationScreen::new);
+    public static void screens(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            net.minecraft.client.gui.screens.MenuScreens.register(Bubie.BUBIE_MENU.get(), BubieScreen::new);
+            net.minecraft.client.gui.screens.MenuScreens.register(Bubie.STATION_MENU.get(), StationScreen::new);
+        });
     }
 }

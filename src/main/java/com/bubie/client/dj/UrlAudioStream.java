@@ -9,7 +9,7 @@ import javazoom.jl.decoder.Header;
 import javazoom.jl.decoder.SampleBuffer;
 import net.minecraft.Util;
 import net.minecraft.client.sounds.AudioStream;
-import net.minecraft.client.sounds.JOrbisAudioStream;
+import com.mojang.blaze3d.audio.OggAudioStream;
 import org.lwjgl.BufferUtils;
 import org.slf4j.Logger;
 
@@ -66,7 +66,7 @@ public final class UrlAudioStream implements AudioStream {
             } catch (IOException e) {
                 throw new CompletionException(e);
             }
-        }, Util.nonCriticalIoPool());
+        }, Util.ioPool());
     }
 
     private UrlAudioStream(String url) throws IOException {
@@ -111,7 +111,7 @@ public final class UrlAudioStream implements AudioStream {
     }
 
     private static Source ogg(InputStream in) throws IOException {
-        JOrbisAudioStream jorbis = new JOrbisAudioStream(in);
+        OggAudioStream jorbis = new OggAudioStream(in);
         return new Source() {
             @Override
             public AudioFormat format() {

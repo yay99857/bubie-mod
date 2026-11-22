@@ -4,7 +4,7 @@ import com.bubie.Bubie;
 import com.bubie.entity.BubieEntity;
 import com.bubie.entity.WorkArea;
 import com.bubie.item.ClipboardItem;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.Minecraft;
@@ -17,10 +17,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.client.event.RenderLevelStageEvent;
 
 import javax.annotation.Nullable;
 
@@ -28,10 +28,10 @@ import javax.annotation.Nullable;
  * Outlines in the world: with a clipboard in hand, the selection (amber), its chest (teal) and home (cream), plus the
  * areas of your Bubies nearby; and for ten seconds after "Show in world" in a Bubie menu, that Bubie area.
  */
-@EventBusSubscriber(modid = Bubie.MOD_ID, value = Dist.CLIENT)
+@Mod.EventBusSubscriber(modid = Bubie.MOD_ID, value = Dist.CLIENT)
 public final class AreaPreview {
     // Own buffer, flushed right here: Sodium and Iris wrap the shared one and may never draw lines put in it.
-    private static final MultiBufferSource.BufferSource BUFFERS = MultiBufferSource.immediate(new ByteBufferBuilder(1 << 16));
+    private static final MultiBufferSource.BufferSource BUFFERS = MultiBufferSource.immediate(new BufferBuilder(1 << 16));
 
     private AreaPreview() {
     }
@@ -46,7 +46,7 @@ public final class AreaPreview {
     }
 
     @SubscribeEvent
-    static void onRender(RenderLevelStageEvent event) {
+    public static void onRender(RenderLevelStageEvent event) {
         if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;

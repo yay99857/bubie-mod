@@ -7,7 +7,7 @@ import com.bubie.entity.BubieEntity;
 import com.bubie.entity.JobType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.component.DataComponents;
+
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -20,7 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.CustomData;
+
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
@@ -43,19 +43,15 @@ public class BubieItem extends Item {
         ItemStack stack = new ItemStack(Bubie.BUBIE_ITEM.get());
         CompoundTag data = new CompoundTag();
         bubie.writeBubieData(data);
-        CompoundTag root = new CompoundTag();
-        root.put(KEY, data);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
-        if (bubie.hasCustomName()) stack.set(DataComponents.CUSTOM_NAME, bubie.getCustomName());
+        stack.getOrCreateTag().put(KEY, data);
+        if (bubie.hasCustomName()) stack.setHoverName(bubie.getCustomName());
         return stack;
     }
 
     @Nullable
     private static CompoundTag data(ItemStack stack) {
-        CustomData custom = stack.get(DataComponents.CUSTOM_DATA);
-        if (custom == null) return null;
-        CompoundTag root = custom.copyTag();
-        return root.contains(KEY) ? root.getCompound(KEY) : null;
+        CompoundTag root = stack.getTag();
+        return root != null && root.contains(KEY) ? root.getCompound(KEY) : null;
     }
 
     @Override
@@ -83,7 +79,7 @@ public class BubieItem extends Item {
         }
         bubie.setOwnerUUID(player.getUUID());
         bubie.setHealth(bubie.getMaxHealth());
-        if (stack.has(DataComponents.CUSTOM_NAME)) bubie.setCustomName(stack.getHoverName());
+        if (stack.hasCustomHoverName()) bubie.setCustomName(stack.getHoverName());
 
         BlockPos pos = context.getClickedPos();
         if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) pos = pos.relative(context.getClickedFace());
@@ -103,7 +99,7 @@ public class BubieItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
         CompoundTag data = data(stack);
         if (data == null) {
             tooltip.add(Component.translatable("item.bubie.bubie.new").withStyle(ChatFormatting.GRAY));
@@ -116,7 +112,7 @@ public class BubieItem extends Item {
         tooltip.add(Component.translatable("bubie.tooltip.energy",
                 Math.round(100.0F * data.getInt("Energy") / max)).withStyle(ChatFormatting.GRAY));
         int items = 0;
-        for (Tag t : data.getList("Storage", Tag.TAG_COMPOUND)) items += ((CompoundTag) t).getInt("count");
+        for (Tag t : data.getList("Storage", Tag.TAG_COMPOUND)) items += ((CompoundTag) t).getByte("Count");
         if (items > 0) tooltip.add(Component.translatable("bubie.tooltip.items", items).withStyle(ChatFormatting.GRAY));
         ListTag extra = data.getList("Extra", Tag.TAG_COMPOUND);
         int chips = 0;

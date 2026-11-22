@@ -3,7 +3,7 @@ package com.bubie.menu;
 import com.bubie.Bubie;
 import com.bubie.block.StationBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -12,9 +12,9 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
+import net.minecraftforge.items.SlotItemHandler;
 
 public class StationMenu extends AbstractContainerMenu {
     public static final int FUEL_X = 8, FUEL_Y = 92, INV_Y = 122;
@@ -30,7 +30,7 @@ public class StationMenu extends AbstractContainerMenu {
         this(id, inventory, station.items(), data, station.getBlockPos());
     }
 
-    public static StationMenu fromNetwork(int id, Inventory inventory, RegistryFriendlyByteBuf buf) {
+    public static StationMenu fromNetwork(int id, Inventory inventory, FriendlyByteBuf buf) {
         BlockPos pos = buf.readBlockPos();
         return new StationMenu(id, inventory, new ItemStackHandler(STORAGE + 1) {
             @Override
@@ -81,7 +81,7 @@ public class StationMenu extends AbstractContainerMenu {
         }
         if (list.equals(sent)) return;
         sent = list;
-        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(server, new com.bubie.network.StationBubiesPayload(list));
+        new com.bubie.network.StationBubiesPayload(list).sendTo(server);
     }
 
     @Override
