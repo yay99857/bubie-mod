@@ -2,7 +2,7 @@
 
 # Bubie
 
-> **Branch `forge-1.20.1`: versão congelada.** É o Bubie 1.5.2 portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
+> **Branch `forge-1.20.1`: versão congelada.** É o Bubie 1.5.x portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
 > o mesmo jar roda no NeoForge 1.20.1)**. Só recebe correção de bug; as novidades saem na versão de NeoForge 1.21.1 (`main`).
 > Diferenças para a 1.21.1: a tarefa **Construtor** não existe aqui (o mod Base Blueprint é só de 1.21.1), e as
 > ferramentas de trailer e screenshots ficaram só no `main`.
@@ -86,13 +86,10 @@ GameTest `twelvebubiesstaycheap`.
 
 ## DJ
 Na aba **DJ** do menu, qualquer Bubie toca música para quem estiver perto, seja qual for a tarefa dele:
-- Toca o **disco de música** do slot da aba DJ (de qualquer mod) e depois até 16 **links**: arquivos `.mp3` ou `.ogg`, ou links de compartilhamento do Dropbox, Google Drive, GitHub e Audius. YouTube, Spotify e parecidos não deixam outros apps tocarem suas músicas.
-- Tocar/parar, anterior/próxima, volume; o nome da música aparece acima da cabeça.
+- Toca o **disco de música** do slot da aba DJ (de qualquer mod), sem parar, enquanto estiver ligado.
+- Tocar/parar e volume; o nome da música aparece acima da cabeça.
 - A tela vira um **equalizador**, ele dança e solta notas; os Bubies em modo **Ficar** a até 10 blocos dançam junto (quem segue ou trabalha continua no que está fazendo).
 - O som acompanha o Bubie (como uma jukebox com pernas) e chega a 32 blocos no volume máximo.
-- Os links são baixados por cada jogador que os ouve (por isso o endereço vê o IP de quem ouve): `djLinks` no servidor deixa
-  só discos, e `djPlayLinks` no `config/bubie-client.toml` desliga os links para aquele jogador. O `.mp3` é decodificado pelo
-  JLayer (LGPL 2.1), que vai dentro do jar (no pacote `com.bubie.shadow.javazoom`).
 
 ## Regras
 - Ele quebra blocos em nome do dono (um jogador falso com o seu UUID), então as proteções de terreno (FTB Chunks) valem para ele como para você.
@@ -122,7 +119,7 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 ## Configuração (`serverconfig/bubie-server.toml`)
 `maxPerPlayer` (3 por jogador em servidor dedicado), `maxPerPlayerSingleplayer` (12 no single player e em LAN), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
 `areaSize` (32), `scanPerTick`, `restAtNight`, `stationLoadsChunks` (false), `teleportWhenStuck` (true), `homeRadius`,
-`djLinks` (true), `advancedJobsNeedChip` (false). No cliente (`config/bubie-client.toml`): `djPlayLinks` (true).
+`advancedJobsNeedChip` (false).
 
 ## Compatibilidade
 
@@ -147,7 +144,7 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 ## Desenvolvimento
 | Comando | O que faz |
 |---|---|
-| `./gradlew build` | Gera `build/libs/bubie-forge-1.20.1-<versão>.jar` (o `-slim` ao lado é o mesmo sem o decodificador de mp3; não publique) |
+| `./gradlew build` | Gera `build/libs/bubie-forge-1.20.1-<versão>.jar` |
 | `./gradlew runClient` | Abre o jogo com o mod |
 
 | `./gradlew runGameTestServer` | Roda os testes de jogo (lenhador, fazendeiro, escavador, pedreira com água, minerador veio e túnel, ferramenta errada, desligar, combustível) |
@@ -157,6 +154,9 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Changelog
+### 1.5.3
+- The DJ plays music discs only: audio links are gone (they did not work reliably). The jar no longer carries an mp3 decoder.
+
 ### 1.5.2
 - Up to **12 Bubies** in a singleplayer world (`maxPerPlayerSingleplayer`); dedicated servers keep 3 per player (`maxPerPlayer`).
 

@@ -11,7 +11,6 @@ import com.bubie.item.ClipboardItem;
 import com.bubie.menu.BubieMenu;
 import com.bubie.menu.StationMenu;
 import com.bubie.network.BubieCommandPayload;
-import com.bubie.network.DjLinkPayload;
 import com.bubie.network.StationBubiesPayload;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -107,14 +106,13 @@ public class Bubie {
             .build());
 
     private static final String PROTOCOL = "1";
-    /** Menu buttons and DJ links to the server; the Bubies of an open Station to the client. */
+    /** Menu buttons to the server; the Bubies of an open Station to the client. */
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(id("main"), () -> PROTOCOL,
             PROTOCOL::equals, PROTOCOL::equals);
 
     public Bubie() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, BubieConfig.SPEC);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, BubieClientConfig.SPEC);
         ITEMS.register(modBus);
         BLOCKS.register(modBus);
         ENTITIES.register(modBus);
@@ -127,21 +125,8 @@ public class Bubie {
         modBus.addListener((FMLCommonSetupEvent event) -> event.enqueueWork(StationChunks::register));
         CHANNEL.registerMessage(0, BubieCommandPayload.class, BubieCommandPayload::write, BubieCommandPayload::read,
                 BubieCommandPayload::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
-        CHANNEL.registerMessage(1, DjLinkPayload.class, DjLinkPayload::write, DjLinkPayload::read,
-                DjLinkPayload::handle, Optional.of(NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(2, StationBubiesPayload.class, StationBubiesPayload::write, StationBubiesPayload::read,
                 StationBubiesPayload::handle, Optional.of(NetworkDirection.PLAY_TO_CLIENT));
-        // the DJ's .mp3 decoder ships inside the jar; say so in the log, for bug reports
-        com.mojang.logging.LogUtils.getLogger().info("Bubie DJ: mp3 decoder {}",
-                mp3Decoder() ? "ready" : "missing (mp3 links won't play, ogg still will)");
-    }
-
-    private static boolean mp3Decoder() {
-        try {
-            return javazoom.jl.decoder.Decoder.class.getName() != null;
-        } catch (LinkageError e) {
-            return false;
-        }
     }
 
     public static ResourceLocation id(String path) {

@@ -1,94 +1,57 @@
 package com.bubie.entity;
 
-import com.bubie.BubieConfig;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.RecordItem;
 
-import javax.annotation.Nullable;
-import java.net.URI;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /**
- * The Bubie as a DJ: plays the music discs it carries (any mod's discs) and the audio links it was given, one after
- * the other, for everyone nearby. The server keeps the playlist and the clock; clients hear it through
- * {@code client.DjClient}, which reads the synced {@link Track}.
+ * The Bubie as a DJ: plays the music disc in its DJ slot (any mod's disc) for everyone nearby, over and over while
+ * it is switched on. The server keeps the clock; clients hear it through {@code client.DjClient}, which reads the
+ * synced {@link Track}.
  */
 public final class Dj {
-    public static final int MAX_LINKS = 16, MAX_LINK_LENGTH = 512;
-    /** A link has no known length: a client reports its end; this is the fallback. */
-    private static final int LINK_FALLBACK_TICKS = 20 * 60 * 15;
-
-    /** What is playing, as synced to clients: kind "disc" (ref = sound event id) or "link" (ref = URL). */
-    public record Track(int serial, String kind, String ref, String title) {
-        public static final Track NONE = new Track(0, "", "", "");
+    /** What is playing, as synced to clients: the disc's sound event id and its title. */
+    public record Track(int serial, String ref, String title) {
+        public static final Track NONE = new Track(0, "", "");
 
         public boolean isNone() {
-            return kind.isEmpty();
-        }
-
-        public boolean isLink() {
-            return kind.equals("link");
+            return ref.isEmpty();
         }
 
         public String encode() {
-            return isNone() ? "" : serial + "\n" + kind + "\n" + ref + "\n" + title;
+            return isNone() ? "" : serial + "\n" + ref + "\n" + title;
         }
 
         public static Track decode(String s) {
             if (s == null || s.isEmpty()) return NONE;
-            String[] p = s.split("\n", 4);
-            if (p.length < 4) return NONE;
+            String[] p = s.split("\n", 3);
+            if (p.length < 3) return NONE;
             try {
-                return new Track(Integer.parseInt(p[0]), p[1], p[2], p[3]);
+                return new Track(Integer.parseInt(p[0]), p[1], p[2]);
             } catch (NumberFormatException e) {
                 return NONE;
             }
         }
     }
 
-    /** One entry of the playlist: a disc slot of the Bubie's storage or a link. */
-    private record Entry(@Nullable RecordItem song, @Nullable String link) {
-    }
-
     private final BubieEntity bubie;
-    private final List<String> links = new ArrayList<>();
     private boolean playing;
-    private int index, serial;
+    private int serial;
     private long endsAt;
 
     Dj(BubieEntity bubie) {
         this.bubie = bubie;
     }
 
-    public List<String> links() {
-        return links;
-    }
-
     public boolean isPlaying() {
         return playing;
     }
 
-    private List<Entry> playlist() {
-        List<Entry> list = new ArrayList<>();
-        // the disc in the DJ tab's slot (discs in its storage are just cargo)
-        discSong().ifPresent(s -> list.add(new Entry(s, null)));
-        if (BubieConfig.DJ_LINKS.get()) for (String link : links) list.add(new Entry(null, link));
-        return list;
-    }
-
-    // ------------------------------------------------------------------ commands
-
     public void toggle() {
         if (playing) stop();
-        else start(index);
+        else start();
     }
 
     public void stop() {
@@ -96,128 +59,18 @@ public final class Dj {
         bubie.setDjTrack(Track.NONE);
     }
 
-    public void next() {
-        if (playing) start(index + 1);
-        else index++;
-    }
-
-    public void previous() {
-        if (playing) start(index - 1);
-        else index--;
-    }
-
-    /** A client heard the end of this link (or could not load it). */
-    public void trackDone(int doneSerial) {
-        if (playing && doneSerial == serial) start(index + 1);
-    }
-
-    /** Adds a link; null if it was accepted, else why not. */
-    @Nullable
-    public Component addLink(String url) {
-        url = url.trim();
-        if (!BubieConfig.DJ_LINKS.get()) return Component.translatable("bubie.dj.links_off");
-        if (links.size() >= MAX_LINKS) return Component.translatable("bubie.dj.too_many", MAX_LINKS);
-        if (!isValidLink(url)) return Component.translatable("bubie.dj.bad_link");
-        String site = unsupportedSite(url);
-        if (site != null) return Component.translatable("bubie.dj.unsupported_site", site);
-        links.add(url);
-        bubie.syncDjLinks();
-        return null;
-    }
-
-    public void removeLink(int i) {
-        if (i >= 0 && i < links.size()) {
-            links.remove(i);
-            bubie.syncDjLinks();
-        }
-    }
-
-    public static boolean isValidLink(String url) {
-        if (url.isEmpty() || url.length() > MAX_LINK_LENGTH || url.indexOf('\n') >= 0) return false;
-        try {
-            URI uri = URI.create(url);
-            String scheme = uri.getScheme();
-            return ("http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme)) && uri.getHost() != null;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    /**
-     * Streaming services that only hand their music to their own players (DRM, private APIs or 30-second previews), so
-     * a link to them can't play: the name to tell the player, or null for any other link.
-     */
-    @Nullable
-    public static String unsupportedSite(String url) {
-        String host = host(url);
-        if (host.equals("youtu.be") || host.equals("youtube.com") || host.endsWith(".youtube.com")) return "YouTube";
-        if (host.equals("soundcloud.com") || host.endsWith(".soundcloud.com")) return "SoundCloud";
-        if (host.equals("spotify.com") || host.endsWith(".spotify.com") || host.equals("spotify.link")) return "Spotify";
-        if (host.equals("deezer.com") || host.endsWith(".deezer.com") || host.equals("deezer.page.link")) return "Deezer";
-        if (host.equals("music.apple.com")) return "Apple Music";
-        if (host.equals("tidal.com") || host.endsWith(".tidal.com")) return "Tidal";
-        if (host.equals("music.amazon.com") || host.startsWith("music.amazon.")) return "Amazon Music";
-        return null;
-    }
-
-    private static String host(String url) {
-        try {
-            String host = URI.create(url).getHost();
-            return host == null ? "" : host.toLowerCase(java.util.Locale.ROOT);
-        } catch (IllegalArgumentException e) {
-            return "";
-        }
-    }
-
-    /**
-     * The file name of a link, without the extension: "Song%20Name.mp3" → "Song Name"; an Audius track page
-     * "audius.co/artist/my-song" → "my song"; a Google Drive file, which has no name in its link → "Google Drive".
-     */
-    public static String linkTitle(String url) {
-        String host = host(url);
-        if (host.equals("drive.google.com") || host.equals("drive.usercontent.google.com")) return "Google Drive";
-        String path = url;
-        int q = path.indexOf('?');
-        if (q >= 0) path = path.substring(0, q);
-        while (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-        path = path.substring(path.lastIndexOf('/') + 1);
-        int dot = path.lastIndexOf('.');
-        if (dot > 0) path = path.substring(0, dot);
-        try {
-            path = URLDecoder.decode(path, StandardCharsets.UTF_8);
-        } catch (IllegalArgumentException ignored) {
-            // keep it encoded
-        }
-        path = path.replace('_', ' ');
-        if (host.equals("audius.co") || host.equals("www.audius.co")) path = path.replace('-', ' ');
-        path = path.trim();
-        return path.isEmpty() ? URI.create(url).getHost() : path;
-    }
-
-    // ------------------------------------------------------------------ playing
-
-    private void start(int at) {
-        List<Entry> list = playlist();
-        if (list.isEmpty()) {
+    /** Plays the disc in the slot from its beginning; with no disc there, stops. */
+    private void start() {
+        Optional<RecordItem> disc = discSong();
+        if (disc.isEmpty()) {
             stop();
             return;
         }
-        index = Math.floorMod(at, list.size());
-        Entry entry = list.get(index);
+        RecordItem song = disc.get();
         serial++;
         playing = true;
-        long now = bubie.level().getGameTime();
-        Track track;
-        if (entry.song() != null) {
-            RecordItem song = entry.song();
-            endsAt = now + Math.max(20, song.getLengthInTicks()) + 20; // a breath between songs
-            track = new Track(serial, "disc", song.getSound().getLocation().toString(),
-                    song.getDisplayName().getString());
-        } else {
-            endsAt = now + LINK_FALLBACK_TICKS;
-            track = new Track(serial, "link", entry.link(), linkTitle(entry.link()));
-        }
-        bubie.setDjTrack(track);
+        endsAt = bubie.level().getGameTime() + Math.max(20, song.getLengthInTicks()) + 20; // a breath before it starts over
+        bubie.setDjTrack(new Track(serial, song.getSound().getLocation().toString(), song.getDisplayName().getString()));
     }
 
     void tick() {
@@ -228,14 +81,14 @@ public final class Dj {
             level.sendParticles(net.minecraft.core.particles.ParticleTypes.NOTE, bubie.getX(), bubie.getY() + 1.3, bubie.getZ(),
                     0, colour, 0, 0, 1);
         }
-        // the disc it is playing was taken out (or swapped): move on to what is there now
+        // the disc it is playing was taken out (or swapped): play what is there now, or stop
         Track track = bubie.getDjTrack();
-        if (bubie.tickCount % 5 == 0 && !track.isNone() && !track.isLink()
+        if (bubie.tickCount % 5 == 0 && !track.isNone()
                 && !discSong().map(s -> s.getSound().getLocation().toString().equals(track.ref())).orElse(false)) {
-            start(index);
+            start();
             return;
         }
-        if (bubie.level().getGameTime() >= endsAt) start(index + 1);
+        if (bubie.level().getGameTime() >= endsAt) start();
     }
 
     private Optional<RecordItem> discSong() {
@@ -247,26 +100,14 @@ public final class Dj {
 
     void save(CompoundTag tag) {
         CompoundTag dj = new CompoundTag();
-        ListTag list = new ListTag();
-        for (String link : links) list.add(StringTag.valueOf(link));
-        dj.put("Links", list);
-        dj.putInt("Index", index);
         dj.putByte("Volume", (byte) bubie.getDjVolume());
         tag.put("Dj", dj);
     }
 
     void load(CompoundTag tag) {
-        links.clear();
         playing = false;
         if (!tag.contains("Dj")) return;
         CompoundTag dj = tag.getCompound("Dj");
-        ListTag list = dj.getList("Links", 8);
-        for (int i = 0; i < list.size() && links.size() < MAX_LINKS; i++) {
-            String link = list.getString(i);
-            if (isValidLink(link)) links.add(link);
-        }
-        bubie.syncDjLinks();
-        index = dj.getInt("Index");
         if (dj.contains("Volume")) bubie.setDjVolume(dj.getByte("Volume"));
     }
 }

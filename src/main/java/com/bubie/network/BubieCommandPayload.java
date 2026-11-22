@@ -16,7 +16,7 @@ import java.util.function.Supplier;
 public record BubieCommandPayload(int entityId, int command, int value) {
     public static final int SET_MODE = 0, SET_JOB = 1, TOGGLE_FILTER = 2, SET_MINE_MODE = 3,
             CLEAR_AREA = 4, CLEAR_CHEST = 5, CLEAR_HOME = 6, SET_LOOK = 7,
-            DJ_TOGGLE = 8, DJ_NEXT = 9, DJ_PREVIOUS = 10, DJ_VOLUME = 11, DJ_REMOVE_LINK = 12, DJ_TRACK_DONE = 13, SET_RADIUS = 14;
+            DJ_TOGGLE = 8, DJ_VOLUME = 11, SET_RADIUS = 14;
 
     public void write(FriendlyByteBuf buf) {
         buf.writeVarInt(entityId);
@@ -40,11 +40,6 @@ public record BubieCommandPayload(int entityId, int command, int value) {
             Player player = context.getSender();
             if (player == null || !(player.level().getEntity(payload.entityId()) instanceof BubieEntity bubie)) return;
             int v = payload.value();
-            // anyone who heard a link end reports it (the owner may be away); it only skips that exact track
-            if (payload.command() == DJ_TRACK_DONE) {
-                if (bubie.distanceToSqr(player) < 96 * 96) bubie.dj().trackDone(v);
-                return;
-            }
             if (!bubie.canCommand(player) || bubie.distanceToSqr(player) > 12 * 12) return;
             switch (payload.command()) {
                 case SET_MODE -> bubie.setMode(Mode.byId(v));
@@ -70,10 +65,7 @@ public record BubieCommandPayload(int entityId, int command, int value) {
                 }
                 case SET_RADIUS -> bubie.setWorkRadius(v);
                 case DJ_TOGGLE -> bubie.dj().toggle();
-                case DJ_NEXT -> bubie.dj().next();
-                case DJ_PREVIOUS -> bubie.dj().previous();
                 case DJ_VOLUME -> bubie.setDjVolume(v);
-                case DJ_REMOVE_LINK -> bubie.dj().removeLink(v);
                 default -> {
                 }
             }

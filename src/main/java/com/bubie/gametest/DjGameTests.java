@@ -1,7 +1,6 @@
 package com.bubie.gametest;
 
 import com.bubie.Bubie;
-import com.bubie.client.dj.LinkResolver;
 import com.bubie.entity.BubieEntity;
 import com.bubie.entity.Dj;
 import com.bubie.entity.Face;
@@ -15,7 +14,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.gametest.GameTestHolder;
 import net.minecraftforge.gametest.PrefixGameTestTemplate;
 
-/** The DJ's playlist on the server: discs from the storage, then links, and what clients are told to play. */
+/** The DJ on the server: the disc in its slot, and what clients are told to play. */
 @GameTestHolder(Bubie.MOD_ID)
 @PrefixGameTestTemplate(false)
 public class DjGameTests {
@@ -51,34 +50,19 @@ public class DjGameTests {
     }
 
     @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 100)
-    public static void djPlaysDiscsThenLinksInOrder(GameTestHelper helper) {
+    public static void djPlaysTheDiscInItsSlot(GameTestHelper helper) {
         BubieEntity bubie = dj(helper);
         bubie.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_CAT)); // the DJ tab's disc slot
-        bubie.insert(new ItemStack(Items.COBBLESTONE, 10)); // not music
-        bubie.insert(new ItemStack(Items.MUSIC_DISC_PIGSTEP)); // a disc in storage is cargo, not the playlist
-        helper.assertTrue(bubie.dj().addLink("https://example.com/music/My_Song.mp3") == null, "a good link is accepted");
-
+        bubie.insert(new ItemStack(Items.MUSIC_DISC_PIGSTEP)); // a disc in storage is cargo, not music
         bubie.dj().toggle();
         Dj.Track first = bubie.getDjTrack();
-        helper.assertTrue(!first.isNone() && first.kind().equals("disc") && first.ref().endsWith("music_disc.cat"),
-                "starts with the disc in its slot, plays " + first);
-        bubie.dj().next();
-        Dj.Track third = bubie.getDjTrack();
-        helper.assertTrue(third.isLink() && third.title().equals("My Song") && third.serial() > first.serial(),
-                "then the link, titled from its file (not the disc in storage): " + third);
-        bubie.dj().next();
-        helper.assertTrue(bubie.getDjTrack().ref().endsWith("music_disc.cat"), "and back to the start");
-        bubie.dj().previous();
-        helper.assertTrue(bubie.getDjTrack().isLink(), "previous goes back to the link");
-
-        // a client reports the end of the link: only that exact track moves the playlist on
-        int serial = bubie.getDjTrack().serial();
-        bubie.dj().trackDone(serial - 1);
-        helper.assertTrue(bubie.getDjTrack().serial() == serial, "an old report changes nothing");
-        bubie.dj().trackDone(serial);
-        helper.assertTrue(bubie.getDjTrack().ref().endsWith("music_disc.cat"), "the reported end plays the next");
-
-        helper.runAfterDelay(2, () -> {
+        helper.assertTrue(!first.isNone() && first.ref().endsWith("music_disc.cat"), "plays the disc in its slot, plays " + first);
+        // swapping the disc while it plays moves on to the new one
+        bubie.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_PIGSTEP));
+        helper.runAfterDelay(8, () -> {
+            Dj.Track second = bubie.getDjTrack();
+            helper.assertTrue(second.ref().endsWith("music_disc.pigstep") && second.serial() > first.serial(),
+                    "the new disc plays: " + second);
             helper.assertTrue(bubie.getFace() == Face.MUSIC, "dances with the equalizer face, has " + bubie.getFace());
             bubie.dj().toggle();
             helper.assertTrue(bubie.getDjTrack().isNone(), "stops");
@@ -86,7 +70,7 @@ public class DjGameTests {
         });
     }
 
-    /** Taking the disc out of its slot while it plays stops it (or moves on to the links); it doesn't play on. */
+    /** Taking the disc out of its slot while it plays stops it; it doesn't play on. */
     @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 60)
     public static void djStopsWhenItsDiscIsTakenOut(GameTestHelper helper) {
         BubieEntity bubie = dj(helper);
@@ -99,49 +83,11 @@ public class DjGameTests {
     }
 
     @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 20)
-    public static void djRefusesBadLinksAndStopsWithoutMusic(GameTestHelper helper) {
+    public static void djWithoutADiscStaysStopped(GameTestHelper helper) {
         BubieEntity bubie = dj(helper);
-        helper.assertTrue(bubie.dj().addLink("file:///etc/passwd") != null, "file links are refused");
-        helper.assertTrue(bubie.dj().addLink("javascript:alert(1)") != null, "other schemes are refused");
-        helper.assertTrue(bubie.dj().addLink("not a link") != null, "text is refused");
-        helper.assertTrue(bubie.dj().addLink("https://example.com/a.ogg\nb") != null, "line breaks are refused");
-        for (int i = 0; i < Dj.MAX_LINKS; i++) bubie.dj().addLink("https://example.com/" + i + ".ogg");
-        helper.assertTrue(bubie.dj().addLink("https://example.com/extra.ogg") != null, "the playlist has a limit");
-        helper.assertTrue(bubie.getDjLinks().size() == Dj.MAX_LINKS, "clients see the links");
-        bubie.dj().removeLink(0);
-        helper.assertTrue(bubie.getDjLinks().size() == Dj.MAX_LINKS - 1, "removing works");
-        while (!bubie.getDjLinks().isEmpty()) bubie.dj().removeLink(0);
-
+        bubie.insert(new ItemStack(Items.MUSIC_DISC_PIGSTEP)); // only in storage: cargo
         bubie.dj().toggle();
         helper.assertTrue(bubie.getDjTrack().isNone() && !bubie.dj().isPlaying(), "nothing to play: stays stopped");
-        helper.succeed();
-    }
-
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 20)
-    public static void djTakesShareLinksAndRefusesStreamingServices(GameTestHelper helper) {
-        BubieEntity bubie = dj(helper);
-        for (String url : new String[]{"https://www.youtube.com/watch?v=abc", "https://youtu.be/abc", "https://music.youtube.com/watch?v=abc",
-                "https://soundcloud.com/artist/song", "https://open.spotify.com/track/abc", "https://www.deezer.com/track/123"}) {
-            helper.assertTrue(bubie.dj().addLink(url) != null, "a streaming service is refused with a reason: " + url);
-        }
-        helper.assertTrue(Dj.unsupportedSite("https://notyoutube.com/a.mp3") == null, "only those sites, not look-alikes");
-        helper.assertTrue(bubie.dj().addLink("https://audius.co/Xsetra/xsetra-fragments") == null, "Audius is taken");
-        helper.assertTrue(Dj.linkTitle("https://audius.co/Xsetra/xsetra-fragments").equals("xsetra fragments"), "Audius title from the page");
-        helper.assertTrue(Dj.linkTitle("https://drive.google.com/file/d/1AbC/view?usp=sharing").equals("Google Drive"), "Drive title");
-        helper.assertTrue(Dj.linkTitle("https://www.dropbox.com/scl/fi/x1/Party_Mix.mp3?rlkey=k&dl=0").equals("Party Mix"), "Dropbox title");
-
-        String dropbox = LinkResolver.rewrite("https://www.dropbox.com/scl/fi/x1/Party_Mix.mp3?rlkey=k&dl=0");
-        helper.assertTrue(dropbox.equals("https://www.dropbox.com/scl/fi/x1/Party_Mix.mp3?rlkey=k&dl=1"), "Dropbox downloads: " + dropbox);
-        String bare = LinkResolver.rewrite("https://dropbox.com/s/x1/song.ogg");
-        helper.assertTrue(bare.equals("https://www.dropbox.com/s/x1/song.ogg?dl=1"), "Dropbox without a query: " + bare);
-        String drive = LinkResolver.rewrite("https://drive.google.com/file/d/1AbC-d_E/view?usp=sharing");
-        helper.assertTrue(drive.equals("https://drive.usercontent.google.com/download?id=1AbC-d_E&export=download&confirm=t"), "Drive: " + drive);
-        String open = LinkResolver.rewrite("https://drive.google.com/open?id=1AbC");
-        helper.assertTrue(open.startsWith("https://drive.usercontent.google.com/download?id=1AbC&"), "Drive open link: " + open);
-        String github = LinkResolver.rewrite("https://github.com/me/music/blob/main/songs/a.ogg");
-        helper.assertTrue(github.equals("https://github.com/me/music/raw/main/songs/a.ogg"), "GitHub file page: " + github);
-        String plain = "https://example.com/music/My_Song.mp3";
-        helper.assertTrue(LinkResolver.rewrite(plain).equals(plain), "a plain file link is left alone");
         helper.succeed();
     }
 }

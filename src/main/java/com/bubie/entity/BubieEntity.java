@@ -87,10 +87,9 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private static final EntityDataAccessor<ItemStack> DATA_NEED = define(EntityDataSerializers.ITEM_STACK);
     /** Builder progress: total blocks of the plan (high 16 bits) and blocks still to place (low 16 bits). */
     private static final EntityDataAccessor<Integer> DATA_BUILD = define(EntityDataSerializers.INT);
-    /** The DJ: the track playing ({@link Dj.Track#encode}), the volume (0-100) and the links, one per line. */
+    /** The DJ: the track playing ({@link Dj.Track#encode}) and the volume (0-100). */
     private static final EntityDataAccessor<String> DATA_DJ = define(EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Byte> DATA_DJ_VOLUME = define(EntityDataSerializers.BYTE);
-    private static final EntityDataAccessor<String> DATA_DJ_LINKS = define(EntityDataSerializers.STRING);
     /** How far around its chest (or Station) it works when no area is marked. */
     private static final EntityDataAccessor<Byte> DATA_RADIUS = define(EntityDataSerializers.BYTE);
 
@@ -163,7 +162,6 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         entityData.define(DATA_BUILD, 0);
         entityData.define(DATA_DJ, "");
         entityData.define(DATA_DJ_VOLUME, (byte) 70);
-        entityData.define(DATA_DJ_LINKS, "");
         entityData.define(DATA_RADIUS, (byte) 8);
     }
 
@@ -356,16 +354,6 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     public void setDjVolume(int volume) {
         entityData.set(DATA_DJ_VOLUME, (byte) Math.max(0, Math.min(100, volume)));
-    }
-
-    /** The links, as the client sees them (the menu lists them). */
-    public List<String> getDjLinks() {
-        String s = entityData.get(DATA_DJ_LINKS);
-        return s.isEmpty() ? List.of() : List.of(s.split("\n"));
-    }
-
-    void syncDjLinks() {
-        entityData.set(DATA_DJ_LINKS, String.join("\n", dj.links()));
     }
 
     public ItemStack getNeed() {
