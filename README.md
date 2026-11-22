@@ -2,7 +2,7 @@
 
 # Bubie
 
-> **Branch `forge-1.20.1`: versão congelada.** É o Bubie 1.5.1 portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
+> **Branch `forge-1.20.1`: versão congelada.** É o Bubie 1.5.2 portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
 > o mesmo jar roda no NeoForge 1.20.1)**. Só recebe correção de bug; as novidades saem na versão de NeoForge 1.21.1 (`main`).
 > Diferenças para a 1.21.1: a tarefa **Construtor** não existe aqui (o mod Base Blueprint é só de 1.21.1), e as
 > ferramentas de trailer e screenshots ficaram só no `main`.
@@ -120,7 +120,7 @@ Velocidade (+50% minerar, +20% andar), Armazenamento (+9 espaços, até 36), Alc
 Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips iguais somam.
 
 ## Configuração (`serverconfig/bubie-server.toml`)
-`maxPerPlayer` (3), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
+`maxPerPlayer` (3 por jogador em servidor dedicado), `maxPerPlayerSingleplayer` (12 no single player e em LAN), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
 `areaSize` (32), `scanPerTick`, `restAtNight`, `stationLoadsChunks` (false), `teleportWhenStuck` (true), `homeRadius`,
 `djLinks` (true), `advancedJobsNeedChip` (false). No cliente (`config/bubie-client.toml`): `djPlayLinks` (true).
 
@@ -157,6 +157,9 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Changelog
+### 1.5.2
+- Up to **12 Bubies** in a singleplayer world (`maxPerPlayerSingleplayer`); dedicated servers keep 3 per player (`maxPerPlayer`).
+
 ### 1.5.1
 - Near a Bubie DJ, only the Bubies sitting in **Stay** mode dance along; one that follows or works keeps at it.
 

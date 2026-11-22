@@ -7,6 +7,7 @@ public final class BubieConfig {
     public static final ForgeConfigSpec SPEC;
 
     public static final ForgeConfigSpec.IntValue MAX_PER_PLAYER;
+    public static final ForgeConfigSpec.IntValue MAX_PER_PLAYER_SINGLEPLAYER;
     public static final ForgeConfigSpec.BooleanValue REQUIRE_ENERGY;
     public static final ForgeConfigSpec.IntValue MAX_ENERGY;
     public static final ForgeConfigSpec.IntValue REDSTONE_ENERGY;
@@ -23,8 +24,11 @@ public final class BubieConfig {
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
-        MAX_PER_PLAYER = b.comment("How many Bubies each player can have placed in the world at once.")
+        MAX_PER_PLAYER = b.comment("How many Bubies each player can have placed in the world at once, on a dedicated server.")
                 .defineInRange("maxPerPlayer", 3, 1, 64);
+        MAX_PER_PLAYER_SINGLEPLAYER = b.comment("The same limit in a singleplayer world (also while it is open to LAN),",
+                        "where the computer only has your own Bubies to run.")
+                .defineInRange("maxPerPlayerSingleplayer", 12, 1, 64);
         REQUIRE_ENERGY = b.comment("Bubies spend energy while working and stop when it runs out. Off: they work forever.")
                 .define("requireEnergy", true);
         MAX_ENERGY = b.comment("Battery size, in ticks of work (20 ticks = 1 second).")
@@ -59,5 +63,10 @@ public final class BubieConfig {
     }
 
     private BubieConfig() {
+    }
+
+    /** How many Bubies one player may have switched on in this world. */
+    public static int maxPerPlayer(net.minecraft.server.MinecraftServer server) {
+        return server.isDedicatedServer() ? MAX_PER_PLAYER.get() : MAX_PER_PLAYER_SINGLEPLAYER.get();
     }
 }
