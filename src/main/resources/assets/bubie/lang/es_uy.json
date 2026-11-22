@@ -198,6 +198,7 @@
   "bubie.status.stuck": "Atascado",
   "bubie.status.stuck.help": "Lleva un rato sin poder caminar. Libéralo (un hoyo, una puerta, una valla) o acércalo al trabajo.",
   "bubie.status.no_material.item": "Esperando %s ×%s",
+  "bubie.ghost.place": "Aquí va %s. Colócalo para ayudar a %s.",
   "bubie.tooltip.build": "Construidos %s / %s bloques",
   "bubie.ui.build": "Base: %s / %s bloques",
   "bubie.ui.tab.dj": "DJ",

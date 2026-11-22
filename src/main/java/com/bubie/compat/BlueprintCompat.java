@@ -91,4 +91,38 @@ public final class BlueprintCompat {
         for (BaseBuilder.Placement p : plan.toPlace()) steps.add(new Step(p.pos(), p.block()));
         return steps;
     }
+
+    private static Boolean ghostApi;
+
+    /** Base Blueprint 1.4.0+: a plan can be asked for with the door on a given side, without a player. */
+    private static boolean ghostApi() {
+        if (ghostApi == null) {
+            try {
+                BaseBuilder.class.getMethod("plan", net.minecraft.world.level.Level.class, Player.class, BlueprintSettings.class,
+                        BlockPos.class, BaseBuilder.Materials.class, Direction.class);
+                ghostApi = true;
+            } catch (NoSuchMethodException | LinkageError e) {
+                ghostApi = false;
+            }
+        }
+        return ghostApi;
+    }
+
+    /**
+     * What is still left to place, worked out from the Bubie's synced plan alone (no fake player): what the client
+     * draws as see-through blocks. Empty with a Base Blueprint older than 1.4.0.
+     */
+    public static List<Step> ghost(BubieEntity bubie) {
+        ItemStack stack = bubie.getBuildPlan();
+        BlockPos origin = bubie.getBuildOrigin();
+        if (stack.isEmpty() || origin == null || !ghostApi()) return List.of();
+        Block floor = stack.get(com.baseblueprint.ModComponents.MATERIAL.get());
+        if (floor == null) return List.of();
+        Block walls = stack.get(com.baseblueprint.ModComponents.WALL_MATERIAL.get());
+        BaseBuilder.Plan plan = BaseBuilder.plan(bubie.level(), null, BaseBuilder.settings(stack).clamped(), origin,
+                new BaseBuilder.Materials(floor, walls == null ? floor : walls), bubie.getBuildDoor());
+        List<Step> steps = new ArrayList<>(plan.toPlace().size());
+        for (BaseBuilder.Placement p : plan.toPlace()) steps.add(new Step(p.pos(), p.block()));
+        return steps;
+    }
 }

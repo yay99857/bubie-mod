@@ -198,6 +198,7 @@
   "bubie.status.stuck": "Stuck",
   "bubie.status.stuck.help": "It couldn't walk anywhere for a while. Free it (a hole, a door, a fence) or bring it closer to the work.",
   "bubie.status.no_material.item": "Waiting for %s ×%s",
+  "bubie.ghost.place": "%s goes here. Place it to help %s.",
   "bubie.tooltip.build": "Built %s / %s blocks",
   "bubie.ui.build": "Base: %s / %s blocks",
   "bubie.ui.tab.dj": "DJ",

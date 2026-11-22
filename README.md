@@ -66,7 +66,7 @@ chão da base.
 | **Fazendeiro** | Colhe plantações maduras e replanta com as próprias sementes. Também cana, cacto, bambu, abóbora, melancia, cacau, fungo do Nether e frutas silvestres (sem quebrar o arbusto) |
 | **Minerador** | Veio: minérios expostos na área (um veio inteiro, bloco a bloco). Túnel: galeria 1×2 no fundo da área com ramificações a cada 4 blocos, pegando todo minério que aparece e pondo tochas. Minérios pela tag `c:ores` (inclui All the Ores) |
 | **Coletor** | Junta todos os itens do chão na área |
-| **Construtor** (com o mod Base Blueprint) | Configure uma Planta de Base (forma, tamanho, material) e clique no Bubie com ela, onde a base deve ficar: ele constrói bloco por bloco, de baixo para cima, pegando os blocos no baú dele. A porta fica virada para você. Sem material, mostra "Esperando material" (com o bloco e quantos faltam) e continua quando o baú recebe mais, então outro Bubie (um Lenhador ou uma Pedreira) pode abastecer o mesmo baú enquanto ele constrói. O menu e o Jade mostram o progresso (blocos feitos / total). Com a Base Blueprint 1.3.0+, o botão **Construir com Bubie** no menu da planta entrega a planta ao seu Bubie mais próximo, para construir onde você está olhando |
+| **Construtor** (com o mod Base Blueprint) | Configure uma Planta de Base (forma, tamanho, material) e clique no Bubie com ela, onde a base deve ficar: ele constrói bloco por bloco, de baixo para cima, pegando os blocos no baú dele. A porta fica virada para você. Sem material, mostra "Esperando material" (com o bloco e quantos faltam) e continua quando o baú recebe mais, então outro Bubie (um Lenhador ou uma Pedreira) pode abastecer o mesmo baú enquanto ele constrói. O menu e o Jade mostram o progresso (blocos feitos / total). Com a Base Blueprint 1.4.0+, escolha **Quem constrói: Bubie** no menu da planta e clique num bloco: a prévia âmbar mostra onde, e o seu Bubie mais próximo constrói ali. O que ainda falta aparece no mundo como **blocos fantasma**: mire num deles para ver qual bloco vai ali e coloque você mesmo para ajudar, que o Bubie desconta do que falta (`buildGhosts` no `config/bubie-client.toml` desliga) |
 | **Guarda** | Enfrenta os monstros que entram na área (ou em volta da Estação) com a arma do slot de ferramenta e junta o que eles largam. Não foge, não descansa à noite e deixa os creepers em paz (acertar um de perto só faz ele explodir na base) |
 | **Entregador** | Esvazia os baús, funis e saídas de fornalha da área no baú dele (a fornalha fica com o combustível). Se o baú dele é o de um Construtor, leva só o que a planta ainda precisa |
 
@@ -115,7 +115,7 @@ Velocidade (+50% minerar, +20% andar), Armazenamento (+9 espaços, até 36), Alc
 Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips iguais somam.
 
 ## Configuração (`serverconfig/bubie-server.toml`)
-`maxPerPlayer` (3), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
+`maxPerPlayer` (3 por jogador em servidor dedicado), `maxPerPlayerSingleplayer` (12 no single player e em LAN), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
 `areaSize` (32), `scanPerTick`, `restAtNight`, `stationLoadsChunks` (false), `teleportWhenStuck` (true), `homeRadius`,
 `djLinks` (true), `advancedJobsNeedChip` (false). No cliente (`config/bubie-client.toml`): `djPlayLinks` (true).
 
@@ -153,6 +153,10 @@ Testado com os mods do Bubie Pack carregados (`tools/prepare-pack-test.sh` e `./
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Changelog
+### 1.5.2
+- **Builder**: what is still to place shows in the world as see-through blocks. Aim at one to see which block goes there and place it yourself to help: the Bubie counts it. With Base Blueprint 1.4.0, "Built by: Bubie" in the blueprint menu makes a right-click on a block hand the base over, on the previewed spot.
+- Up to **12 Bubies** in a singleplayer world (`maxPerPlayerSingleplayer`); dedicated servers keep 3 per player (`maxPerPlayer`).
+
 ### 1.5.1
 - Near a Bubie DJ, only the Bubies sitting in **Stay** mode dance along; one that follows or works keeps at it.
 

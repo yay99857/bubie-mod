@@ -63,6 +63,36 @@ final class BuilderScenarios {
         return n;
     }
 
+    /**
+     * The player builds along: blocks of the plan they place themselves are blocks the Bubie no longer has to, and
+     * what the client is told is left (the see-through blocks) is exactly what the Bubie plans.
+     */
+    static void countsWhatThePlayerPlaced(GameTestHelper helper) {
+        BubieGameTests.floor(helper, Blocks.STONE);
+        // the chest starts empty, so nothing is built before the player has had their turn
+        BubieEntity bubie = builder(helper, new BlockPos(9, 1, 9), blueprint(5, 2, true, Blocks.COBBLESTONE), ItemStack.EMPTY);
+        java.util.List<BlueprintCompat.Step> plan = BlueprintCompat.plan(bubie);
+        int total = plan.size();
+        java.util.Set<BlockPos> planned = new java.util.HashSet<>();
+        for (BlueprintCompat.Step s : plan) planned.add(s.pos());
+        java.util.Set<BlockPos> ghosts = new java.util.HashSet<>();
+        for (BlueprintCompat.Step s : BlueprintCompat.ghost(bubie)) ghosts.add(s.pos());
+        helper.assertTrue(ghosts.equals(planned), "the ghost blocks are the plan: " + ghosts.size() + " ghosts, " + total + " planned");
+
+        int mine = total / 2;
+        for (int i = 0; i < mine; i++) helper.getLevel().setBlockAndUpdate(plan.get(i).pos(), plan.get(i).block().defaultBlockState());
+        helper.assertTrue(BlueprintCompat.plan(bubie).size() == total - mine, "what the player placed is off the plan");
+        helper.assertTrue(BlueprintCompat.ghost(bubie).size() == total - mine, "and off the ghosts");
+        ChestBlockEntity chest = helper.getBlockEntity(CHEST);
+        chest.setItem(0, new ItemStack(Items.COBBLESTONE, total - mine)); // exactly the rest
+        helper.succeedWhen(() -> {
+            helper.assertTrue(BlueprintCompat.plan(bubie).isEmpty(), "still " + BlueprintCompat.plan(bubie).size()
+                    + " to place; status " + bubie.getStatus());
+            helper.assertTrue(placed(helper, bubie, Blocks.COBBLESTONE) == total, "the whole base stands");
+            helper.assertTrue(bubie.getStatus() == Status.DONE, "reports done, is " + bubie.getStatus());
+        });
+    }
+
     static void buildsFromChest(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.STONE);
         BubieEntity bubie = builder(helper, new BlockPos(9, 1, 9), blueprint(5, 2, true, Blocks.COBBLESTONE),

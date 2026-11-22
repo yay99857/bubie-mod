@@ -87,6 +87,10 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private static final EntityDataAccessor<ItemStack> DATA_NEED = define(EntityDataSerializers.ITEM_STACK);
     /** Builder progress: total blocks of the plan (high 16 bits) and blocks still to place (low 16 bits). */
     private static final EntityDataAccessor<Integer> DATA_BUILD = define(EntityDataSerializers.INT);
+    /** The Builder's plan, for the client to draw the blocks still to place: the blueprint, where, the door side. */
+    private static final EntityDataAccessor<ItemStack> DATA_PLAN = define(EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<Optional<BlockPos>> DATA_PLAN_AT = define(EntityDataSerializers.OPTIONAL_BLOCK_POS);
+    private static final EntityDataAccessor<Byte> DATA_PLAN_DOOR = define(EntityDataSerializers.BYTE);
     /** The DJ: the track playing ({@link Dj.Track#encode}), the volume (0-100) and the links, one per line. */
     private static final EntityDataAccessor<String> DATA_DJ = define(EntityDataSerializers.STRING);
     private static final EntityDataAccessor<Byte> DATA_DJ_VOLUME = define(EntityDataSerializers.BYTE);
@@ -160,6 +164,9 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         builder.define(DATA_LOOK, Look.DEFAULT.pack());
         builder.define(DATA_NEED, ItemStack.EMPTY);
         builder.define(DATA_BUILD, 0);
+        builder.define(DATA_PLAN, ItemStack.EMPTY);
+        builder.define(DATA_PLAN_AT, Optional.empty());
+        builder.define(DATA_PLAN_DOOR, (byte) net.minecraft.core.Direction.SOUTH.get3DDataValue());
         builder.define(DATA_DJ, "");
         builder.define(DATA_DJ_VOLUME, (byte) 70);
         builder.define(DATA_DJ_LINKS, "");
@@ -306,7 +313,14 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         buildPlan = plan;
         buildOrigin = origin;
         buildDoor = door;
+        syncBuildPlan();
         runner.reset();
+    }
+
+    private void syncBuildPlan() {
+        entityData.set(DATA_PLAN, buildPlan.copy());
+        entityData.set(DATA_PLAN_AT, Optional.ofNullable(buildOrigin));
+        entityData.set(DATA_PLAN_DOOR, (byte) buildDoor.get3DDataValue());
     }
 
     /** A new plan of this many blocks: progress starts at zero. */
@@ -382,16 +396,16 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     }
 
     public ItemStack getBuildPlan() {
-        return buildPlan;
+        return level().isClientSide ? entityData.get(DATA_PLAN) : buildPlan;
     }
 
     @Nullable
     public BlockPos getBuildOrigin() {
-        return buildOrigin;
+        return level().isClientSide ? entityData.get(DATA_PLAN_AT).orElse(null) : buildOrigin;
     }
 
     public net.minecraft.core.Direction getBuildDoor() {
-        return buildDoor;
+        return level().isClientSide ? net.minecraft.core.Direction.from3DDataValue(entityData.get(DATA_PLAN_DOOR)) : buildDoor;
     }
 
     /** How many of an item the Bubie carries. */
@@ -406,7 +420,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     public WorkArea getWorkArea() {
         if (getJob() == JobType.BUILDER) {
             // the builder works around its plan; the area only feeds the outline and loose-item checks
-            return buildOrigin == null ? null : WorkArea.around(buildOrigin, 8, 1, 8);
+            BlockPos origin = getBuildOrigin();
+            return origin == null ? null : WorkArea.around(origin, 8, 1, 8);
         }
         WorkArea marked = getMarkedArea();
         if (marked != null) return marked;
@@ -967,6 +982,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             buildPlan = ItemStack.EMPTY;
             buildOrigin = null;
         }
+        syncBuildPlan();
         dj.load(tag);
         setDjTrack(Dj.Track.NONE);
         onChipsChanged();

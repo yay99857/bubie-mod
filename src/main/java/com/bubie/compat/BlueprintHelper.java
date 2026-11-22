@@ -13,7 +13,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Base Blueprint 1.3.0+: "Build with Bubie" in the blueprint menu hands the blueprint to the player's nearest Bubie.
+ * Base Blueprint asks for a helper (1.4.0: a right-click on a block with "Built by: Bubie" set in the blueprint menu;
+ * 1.3: the "Build with Bubie" button of that menu): the blueprint goes to the player's nearest Bubie, to build there.
  * Only registered when that event class exists, so Bubie still runs with older Base Blueprint versions.
  */
 public final class BlueprintHelper {

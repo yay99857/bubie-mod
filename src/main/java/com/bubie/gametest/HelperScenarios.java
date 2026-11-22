@@ -15,7 +15,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.common.NeoForge;
 
-/** Base Blueprint 1.3.0's "Build with Bubie" button; only loaded when its event class exists. */
+/** Base Blueprint asking for a helper to build; only loaded when its event class exists (1.3.0+). */
 final class HelperScenarios {
     private HelperScenarios() {
     }
@@ -46,6 +46,42 @@ final class HelperScenarios {
         helper.assertTrue(origin.equals(near.getBuildOrigin()), "at the looked-at spot, not where it stands");
         helper.assertTrue(far.getJob() != JobType.BUILDER && stranger.getJob() != JobType.BUILDER, "the others don't");
         helper.assertTrue(plan.getCount() == 1, "the player keeps the blueprint");
+        helper.succeed();
+    }
+
+    /**
+     * Base Blueprint 1.4.0: with "Built by: Bubie" set in the menu, right-clicking a block (the same click that shows
+     * the preview) hands the base to the Bubie, on that block, and places nothing at once.
+     */
+    static void clickingABlockHandsTheBaseToTheBubie(GameTestHelper helper) {
+        BubieGameTests.floor(helper, Blocks.STONE);
+        ServerPlayer player = net.neoforged.neoforge.common.util.FakePlayerFactory.get(helper.getLevel(),
+                new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "BlueprintClicker"));
+        BlockPos stand = helper.absolutePos(new BlockPos(8, 1, 14));
+        player.setPos(stand.getX() + 0.5, stand.getY(), stand.getZ() + 0.5);
+        BubieEntity mine = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(8, 1, 11));
+        mine.setOwnerUUID(player.getUUID());
+
+        // the settings as the menu saves them, through their codec (so this also compiles against Base Blueprint 1.3)
+        var ops = com.mojang.serialization.JsonOps.INSTANCE;
+        com.google.gson.JsonObject json = BlueprintSettings.CODEC.encodeStart(ops, new BlueprintSettings(
+                BlueprintSettings.Shape.SQUARE, 3, 3, BlueprintSettings.Floor.FILLED, 0, false, BlueprintSettings.Roof.NONE,
+                false, BlueprintSettings.Pick.FLOOR)).getOrThrow().getAsJsonObject();
+        json.addProperty("helper", true);
+        ItemStack plan = new ItemStack(BaseBlueprint.BLUEPRINT.get());
+        plan.set(ModComponents.SETTINGS.get(), BlueprintSettings.CODEC.parse(ops, json).getOrThrow());
+        plan.set(ModComponents.MATERIAL.get(), Blocks.COBBLESTONE);
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, plan);
+
+        BlockPos clicked = helper.absolutePos(new BlockPos(5, 0, 5)); // the top of a floor block
+        plan.useOn(new net.minecraft.world.item.context.UseOnContext(player, net.minecraft.world.InteractionHand.MAIN_HAND,
+                new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atCenterOf(clicked).add(0, 0.5, 0),
+                        net.minecraft.core.Direction.UP, clicked, false)));
+
+        helper.assertTrue(mine.getJob() == JobType.BUILDER && mine.getMode() == Mode.WORK, "the Bubie builds; job " + mine.getJob());
+        helper.assertTrue(clicked.above().equals(mine.getBuildOrigin()), "on the clicked block, got " + mine.getBuildOrigin());
+        helper.assertTrue(helper.getLevel().getBlockState(clicked.above()).isAir(), "nothing is placed at once");
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
         helper.succeed();
     }
 }

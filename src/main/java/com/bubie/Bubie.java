@@ -128,7 +128,7 @@ public class Bubie {
         // the DJ's .mp3 decoder ships inside the jar (Jar-in-Jar); say so in the log, for bug reports
         com.mojang.logging.LogUtils.getLogger().info("Bubie DJ: mp3 decoder {}",
                 classExists("javazoom.jl.decoder.Decoder") ? "ready" : "missing (mp3 links won't play, ogg still will)");
-        // Base Blueprint 1.3.0+: its menu's "Build with Bubie" button
+        // Base Blueprint 1.3.0+: a blueprint asks for a helper ("Built by: Bubie" in its menu)
         if (com.bubie.compat.BlueprintCompat.loaded() && classExists("com.baseblueprint.api.HelperBuildEvent")) {
             com.bubie.compat.BlueprintHelper.register();
         }

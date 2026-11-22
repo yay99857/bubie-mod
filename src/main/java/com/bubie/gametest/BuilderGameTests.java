@@ -40,6 +40,30 @@ public class BuilderGameTests {
     }
 
     @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 2400)
+    public static void builderCountsWhatThePlayerPlaced(GameTestHelper helper) {
+        if (skip(helper)) return;
+        try {
+            Class.forName("com.baseblueprint.BlueprintSettings").getMethod("helper");
+        } catch (ReflectiveOperationException e) {
+            helper.succeed(); // Base Blueprint older than 1.4.0 cannot tell the client what is left
+            return;
+        }
+        BuilderScenarios.countsWhatThePlayerPlaced(helper);
+    }
+
+    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 100)
+    public static void clickWithBuiltByBubieHandsTheBaseOver(GameTestHelper helper) {
+        if (skip(helper)) return;
+        try {
+            Class.forName("com.baseblueprint.BlueprintSettings").getMethod("helper");
+        } catch (ReflectiveOperationException e) {
+            helper.succeed(); // Base Blueprint older than 1.4.0: no "Built by" choice
+            return;
+        }
+        HelperScenarios.clickingABlockHandsTheBaseToTheBubie(helper);
+    }
+
+    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 2400)
     public static void courierBringsTheBuilderOnlyWhatItNeeds(GameTestHelper helper) {
         if (!skip(helper)) BuilderScenarios.courierFeedsTheBuilder(helper);
     }

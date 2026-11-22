@@ -198,6 +198,7 @@
   "bubie.status.stuck": "Preso",
   "bubie.status.stuck.help": "Ficou um tempo sem conseguir andar. Solte ele (um buraco, uma porta, uma cerca) ou traga ele mais perto do trabalho.",
   "bubie.status.no_material.item": "Esperando %s ×%s",
+  "bubie.ghost.place": "Aqui vai %s. Coloque para ajudar %s.",
   "bubie.tooltip.build": "Construídos %s / %s blocos",
   "bubie.ui.build": "Base: %s / %s blocos",
   "bubie.ui.tab.dj": "DJ",

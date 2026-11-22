@@ -18,7 +18,7 @@ Bubie is a cream CRT monitor in a black hoodie, as a helper for Minecraft 1.21.1
 - **Farmer:** harvests and replants crops; sugar cane, cactus, bamboo, pumpkins, melons, cocoa, nether wart, sweet berries.
 - **Miner:** exposed ore veins, or branch tunnels with torches. Uses the `c:ores` tag, so modded ores count.
 - **Collector:** gathers every item lying in the area.
-- **Builder** (with Base Blueprint): hand it a configured blueprint where the base should go and it builds it block by block, taking the blocks from its chest. Out of blocks, it waits and says which block it needs; another Bubie (a Lumberjack or a Quarry) can keep that chest filled while it builds. With Base Blueprint 1.3.0+, **Build with Bubie** in the blueprint menu sends your nearest Bubie to build where you are looking.
+- **Builder** (with Base Blueprint): hand it a configured blueprint where the base should go and it builds it block by block, taking the blocks from its chest. What is left to place shows as see-through blocks: aim at one to see which block goes there, and place blocks yourself to help. Out of blocks, it waits and says which block it needs; another Bubie (a Lumberjack or a Quarry) can keep that chest filled while it builds. With Base Blueprint 1.3.0+, **Build with Bubie** in the blueprint menu sends your nearest Bubie to build where you are looking.
 - **Guard:** fights the monsters that walk into its area with the weapon you give it, picks up their drops and keeps watch at night (creepers are left alone).
 - **Courier:** empties the chests, hoppers and furnace outputs in its area into its own chest. Feeding a Builder, it carries only what the blueprint still needs.
 
@@ -82,7 +82,7 @@ Settings in `serverconfig/bubie-server.toml`.
 ## 🇧🇷 Português
 O Bubie, um robozinho de tela CRT e moletom preto, é um ajudante: corta árvores inteiras e replanta, escava areia e terra, abre pedreiras com escada,
 colhe e replanta plantações, minera veios ou túneis e junta itens do chão, guardando tudo no seu baú.
-Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele levanta a base bloco por bloco, com o material do baú
+Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele levanta a base bloco por bloco (o que falta aparece como blocos fantasma, e você pode ajudar colocando), com o material do baú
 (que outro Bubie pode ir enchendo).
 
 - Shift + clique num baú com a **Prancheta do Bubie** e clique no Bubie: ele trabalha em volta do baú (o raio se ajusta no menu). Dê uma ferramenta e um pouco de redstone. Para uma área exata, marque 2 cantos antes.

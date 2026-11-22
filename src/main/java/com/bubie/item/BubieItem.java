@@ -66,7 +66,7 @@ public class BubieItem extends Item {
         if (!(level instanceof ServerLevel server)) return InteractionResult.SUCCESS;
 
         BubieRegistry registry = BubieRegistry.get(server.getServer());
-        int max = BubieConfig.MAX_PER_PLAYER.get();
+        int max = BubieConfig.maxPerPlayer(server.getServer());
         if (registry.count(player.getUUID()) >= max && !player.isCreative()) {
             player.displayClientMessage(Component.translatable("bubie.message.limit", max), true);
             return InteractionResult.FAIL;
