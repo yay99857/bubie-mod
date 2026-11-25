@@ -1,6 +1,7 @@
 package com.bubie.entity.ai;
 
 import com.bubie.entity.BubieEntity;
+import com.bubie.entity.JobType;
 import com.bubie.entity.Mode;
 import com.bubie.entity.Status;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
@@ -18,7 +19,7 @@ public class BubieFleeGoal extends AvoidEntityGoal<Monster> {
     @Override
     public boolean canUse() {
         // a working Guard stands its ground (it still runs when it is almost broken)
-        boolean guarding = bubie.getMode() == Mode.WORK && bubie.getJob() == com.bubie.entity.JobType.GUARD
+        boolean guarding = bubie.getMode() == Mode.WORK && bubie.getJob() == JobType.GUARD
                 && bubie.getHealth() > bubie.getMaxHealth() * 0.25F;
         return bubie.getMode() != Mode.STAY && !guarding && super.canUse();
     }

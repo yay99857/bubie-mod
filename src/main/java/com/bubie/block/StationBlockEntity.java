@@ -16,7 +16,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -132,7 +131,7 @@ public class StationBlockEntity extends BlockEntity implements MenuProvider {
 
     /** Redstone dust or blocks, like the Bubie itself (coal is not fuel). */
     public static boolean isStationFuel(ItemStack stack) {
-        return com.bubie.entity.BubieEntity.fuelValue(stack) > 0;
+        return BubieEntity.fuelValue(stack) > 0;
     }
 
     public StationBlockEntity(BlockPos pos, BlockState state) {
@@ -191,7 +190,7 @@ public class StationBlockEntity extends BlockEntity implements MenuProvider {
         }
         if (given < need) {
             ItemStack fuel = items.getStackInSlot(FUEL);
-            int burn = com.bubie.entity.BubieEntity.fuelValue(fuel);
+            int burn = BubieEntity.fuelValue(fuel);
             if (burn > 0) {
                 ItemStack remainder = fuel.getCraftingRemainingItem();
                 items.extractItem(FUEL, 1, false);

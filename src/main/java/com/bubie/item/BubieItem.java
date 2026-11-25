@@ -4,6 +4,7 @@ import com.bubie.Bubie;
 import com.bubie.BubieConfig;
 import com.bubie.data.BubieRegistry;
 import com.bubie.entity.BubieEntity;
+import com.bubie.entity.Face;
 import com.bubie.entity.JobType;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -96,7 +97,7 @@ public class BubieItem extends Item {
         }
         server.addFreshEntity(bubie);
         registry.add(player.getUUID(), bubie.getUUID());
-        bubie.showMood(com.bubie.entity.Face.HAPPY, 60);
+        bubie.showMood(Face.HAPPY, 60);
         server.playSound(null, pos, SoundEvents.BEACON_ACTIVATE, SoundSource.NEUTRAL, 0.6F, 1.8F);
         if (!player.getAbilities().instabuild || data != null) stack.shrink(1);
         return InteractionResult.CONSUME;

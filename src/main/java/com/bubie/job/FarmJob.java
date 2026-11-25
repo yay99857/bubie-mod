@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.AttachedStemBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -73,8 +74,8 @@ public class FarmJob extends Job {
 
         // the seed the crop itself names (its pick-block item), else whatever item places this block
         Item fromPick = block.getCloneItemStack(level, pos, state).getItem();
-        Item seed = fromPick != net.minecraft.world.item.Items.AIR ? fromPick : block.asItem();
-        if (seed == net.minecraft.world.item.Items.AIR) return true;
+        Item seed = fromPick != Items.AIR ? fromPick : block.asItem();
+        if (seed == Items.AIR) return true;
         ItemStack one = bubie.takeOne(s -> s.is(seed));
         if (one.isEmpty()) {
             bubie.setStatus(Status.NO_SEEDS);

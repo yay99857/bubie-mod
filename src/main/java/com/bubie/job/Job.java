@@ -4,10 +4,14 @@ import com.bubie.entity.BubieEntity;
 import com.bubie.entity.WorkArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.Tags;
 
 import javax.annotation.Nullable;
+import java.util.Map;
 
 /** One kind of work. The {@link JobRunner} finds targets (with the job's rules), walks there and calls {@link #perform}. */
 public abstract class Job {
@@ -64,13 +68,13 @@ public abstract class Job {
 
     /** The item needed to work on this target, which the Bubie fetches from its chest if it has none. */
     @Nullable
-    public net.minecraft.world.item.Item requiredItem(BlockPos pos) {
+    public Item requiredItem(BlockPos pos) {
         return null;
     }
 
     /** Everything the job still needs, by item, for one trip to the chest. */
-    public java.util.Map<net.minecraft.world.item.Item, Integer> shoppingList() {
-        return java.util.Map.of();
+    public Map<Item, Integer> shoppingList() {
+        return Map.of();
     }
 
     /** Whether to plug water and lava next to a block before breaking it (not for farms and trees). */
@@ -106,10 +110,10 @@ public abstract class Job {
 
     /** Cobblestone and friends: what the Bubie uses to plug water and lava before it digs next to them. */
     public static boolean isFiller(ItemStack stack) {
-        return stack.is(net.neoforged.neoforge.common.Tags.Items.COBBLESTONES)
-                || stack.is(net.minecraft.world.item.Items.DIRT)
-                || stack.is(net.minecraft.world.item.Items.NETHERRACK)
-                || stack.is(net.minecraft.world.item.Items.COBBLED_DEEPSLATE)
-                || stack.is(net.minecraft.world.item.Items.STONE);
+        return stack.is(Tags.Items.COBBLESTONES)
+                || stack.is(Items.DIRT)
+                || stack.is(Items.NETHERRACK)
+                || stack.is(Items.COBBLED_DEEPSLATE)
+                || stack.is(Items.STONE);
     }
 }

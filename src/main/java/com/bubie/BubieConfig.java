@@ -1,5 +1,6 @@
 package com.bubie;
 
+import net.minecraft.server.MinecraftServer;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 /** Server config (world/serverconfig/bubie-server.toml): balance and limits. */
@@ -62,7 +63,7 @@ public final class BubieConfig {
     }
 
     /** How many Bubies one player may have switched on in this world. */
-    public static int maxPerPlayer(net.minecraft.server.MinecraftServer server) {
+    public static int maxPerPlayer(MinecraftServer server) {
         return server.isDedicatedServer() ? MAX_PER_PLAYER.get() : MAX_PER_PLAYER_SINGLEPLAYER.get();
     }
 }

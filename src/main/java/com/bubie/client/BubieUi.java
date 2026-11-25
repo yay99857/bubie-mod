@@ -1,6 +1,7 @@
 package com.bubie.client;
 
 import com.bubie.entity.Face;
+import com.bubie.entity.Look;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -74,7 +75,7 @@ public final class BubieUi {
     }
 
     /** The Bubie's screen with its face, at any size (scale = GUI pixels per site pixel). */
-    public static void face(GuiGraphics g, com.bubie.entity.Look look, Face face, int x, int y, int scale) {
+    public static void face(GuiGraphics g, Look look, Face face, int x, int y, int scale) {
         int w = LookTextures.SCREEN_W * scale, h = LookTextures.SCREEN_H * scale;
         g.fill(x - scale, y - scale, x + w + scale, y + h + scale, SCREEN_DEEP);
         g.fill(x, y, x + w, y + h, SCREEN);

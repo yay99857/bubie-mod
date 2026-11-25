@@ -2,8 +2,10 @@ package com.bubie.menu;
 
 import com.bubie.Bubie;
 import com.bubie.block.StationBlockEntity;
+import com.bubie.network.StationBubiesPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -11,10 +13,12 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.SlotItemHandler;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+import java.util.List;
 
 public class StationMenu extends AbstractContainerMenu {
     public static final int FUEL_X = 8, FUEL_Y = 92, INV_Y = 122;
@@ -24,7 +28,7 @@ public class StationMenu extends AbstractContainerMenu {
     private final BlockPos pos;
     private final Player player;
     private int ticks;
-    private java.util.List<com.bubie.network.StationBubiesPayload.Entry> sent;
+    private List<StationBubiesPayload.Entry> sent;
 
     public StationMenu(int id, Inventory inventory, StationBlockEntity station, ContainerData data) {
         this(id, inventory, station.items(), data, station.getBlockPos());
@@ -70,12 +74,12 @@ public class StationMenu extends AbstractContainerMenu {
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
-        if (!(player instanceof net.minecraft.server.level.ServerPlayer server) || ticks++ % 20 != 0) return;
-        com.bubie.network.StationBubiesPayload now = com.bubie.network.StationBubiesPayload.of(server.server,
+        if (!(player instanceof ServerPlayer server) || ticks++ % 20 != 0) return;
+        StationBubiesPayload now = StationBubiesPayload.of(server.server,
                 server.level().dimension(), pos, server.level().dimension());
         if (now.bubies().equals(sent)) return;
         sent = now.bubies();
-        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(server, now);
+        PacketDistributor.sendToPlayer(server, now);
     }
 
     @Override

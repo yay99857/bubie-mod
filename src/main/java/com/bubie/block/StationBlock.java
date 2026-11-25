@@ -1,7 +1,9 @@
 package com.bubie.block;
 
+import com.bubie.Bubie;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
@@ -32,7 +34,7 @@ public class StationBlock extends BaseEntityBlock {
 
     public StationBlock(Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, net.minecraft.core.Direction.NORTH));
+        registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
     }
 
     @Override
@@ -74,7 +76,7 @@ public class StationBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide ? null : createTickerHelper(type, com.bubie.Bubie.STATION_BE.get(), StationBlockEntity::serverTick);
+        return level.isClientSide ? null : createTickerHelper(type, Bubie.STATION_BE.get(), StationBlockEntity::serverTick);
     }
 
     @Override

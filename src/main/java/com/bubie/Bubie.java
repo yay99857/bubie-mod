@@ -3,14 +3,21 @@ package com.bubie;
 import com.bubie.block.StationBlock;
 import com.bubie.block.StationBlockEntity;
 import com.bubie.block.StationChunks;
+import com.bubie.compat.BlueprintCompat;
+import com.bubie.compat.BlueprintHelper;
 import com.bubie.entity.BubieEntity;
 import com.bubie.item.BubieItem;
 import com.bubie.item.ChipItem;
 import com.bubie.item.ChipType;
 import com.bubie.item.ClipboardItem;
+import com.bubie.item.DriveItem;
+import com.bubie.item.WirelessStationItem;
 import com.bubie.menu.BubieMenu;
 import com.bubie.menu.StationMenu;
 import com.bubie.network.BubieCommandPayload;
+import com.bubie.network.RenamePayload;
+import com.bubie.network.StationBubiesPayload;
+import com.bubie.network.TrackerRequestPayload;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -75,12 +82,12 @@ public class Bubie {
             () -> new ClipboardItem(new Item.Properties().stacksTo(1)));
     public static final DeferredItem<BlockItem> STATION_ITEM = ITEMS.registerSimpleBlockItem(STATION);
     /** A Bubie's storage: what it carries lives on the drive (every Bubie comes with a Hard Drive). */
-    public static final DeferredItem<com.bubie.item.DriveItem> HARD_DRIVE = ITEMS.register("hard_drive",
-            () -> new com.bubie.item.DriveItem(18, new Item.Properties()));
-    public static final DeferredItem<com.bubie.item.DriveItem> SOLID_STATE_DRIVE = ITEMS.register("solid_state_drive",
-            () -> new com.bubie.item.DriveItem(36, new Item.Properties()));
-    public static final DeferredItem<com.bubie.item.WirelessStationItem> WIRELESS_STATION = ITEMS.register("wireless_station",
-            () -> new com.bubie.item.WirelessStationItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<DriveItem> HARD_DRIVE = ITEMS.register("hard_drive",
+            () -> new DriveItem(18, new Item.Properties()));
+    public static final DeferredItem<DriveItem> SOLID_STATE_DRIVE = ITEMS.register("solid_state_drive",
+            () -> new DriveItem(36, new Item.Properties()));
+    public static final DeferredItem<WirelessStationItem> WIRELESS_STATION = ITEMS.register("wireless_station",
+            () -> new WirelessStationItem(new Item.Properties().stacksTo(1)));
     public static final Map<ChipType, DeferredItem<ChipItem>> CHIPS = new EnumMap<>(ChipType.class);
 
     static {
@@ -131,16 +138,13 @@ public class Bubie {
         });
         modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
                 .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle)
-                .playToServer(com.bubie.network.RenamePayload.TYPE, com.bubie.network.RenamePayload.STREAM_CODEC,
-                        com.bubie.network.RenamePayload::handle)
-                .playToServer(com.bubie.network.TrackerRequestPayload.TYPE, com.bubie.network.TrackerRequestPayload.STREAM_CODEC,
-                        com.bubie.network.TrackerRequestPayload::handle)
-                .playToClient(com.bubie.network.StationBubiesPayload.TYPE, com.bubie.network.StationBubiesPayload.STREAM_CODEC,
-                        com.bubie.network.StationBubiesPayload::handle));
+                .playToServer(RenamePayload.TYPE, RenamePayload.STREAM_CODEC, RenamePayload::handle)
+                .playToServer(TrackerRequestPayload.TYPE, TrackerRequestPayload.STREAM_CODEC, TrackerRequestPayload::handle)
+                .playToClient(StationBubiesPayload.TYPE, StationBubiesPayload.STREAM_CODEC, StationBubiesPayload::handle));
         modBus.addListener(StationChunks::register);
         // Base Blueprint 1.3.0+: a blueprint asks for a helper ("Built by: Bubie" in its menu)
-        if (com.bubie.compat.BlueprintCompat.loaded() && classExists("com.baseblueprint.api.HelperBuildEvent")) {
-            com.bubie.compat.BlueprintHelper.register();
+        if (BlueprintCompat.loaded() && classExists("com.baseblueprint.api.HelperBuildEvent")) {
+            BlueprintHelper.register();
         }
     }
 

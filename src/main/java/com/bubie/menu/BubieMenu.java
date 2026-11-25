@@ -3,6 +3,7 @@ package com.bubie.menu;
 import com.bubie.Bubie;
 import com.bubie.entity.BubieEntity;
 import com.bubie.item.ChipItem;
+import com.bubie.item.ChipType;
 import com.bubie.item.DriveItem;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
@@ -13,7 +14,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeType;
 
 import javax.annotation.Nullable;
 
@@ -93,7 +93,7 @@ public class BubieMenu extends AbstractContainerMenu {
                 @Override
                 public boolean mayPlace(ItemStack stack) {
                     // the Storage Chip does nothing in a Bubie any more: it goes into a Solid-State Drive
-                    return stack.getItem() instanceof ChipItem chip && chip.type() != com.bubie.item.ChipType.STORAGE;
+                    return stack.getItem() instanceof ChipItem chip && chip.type() != ChipType.STORAGE;
                 }
 
                 @Override

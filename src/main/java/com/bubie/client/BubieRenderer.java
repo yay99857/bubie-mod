@@ -1,6 +1,7 @@
 package com.bubie.client;
 
 import com.bubie.entity.BubieEntity;
+import com.bubie.entity.Dj;
 import com.bubie.entity.Face;
 import com.bubie.entity.Status;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -46,7 +47,7 @@ public class BubieRenderer extends MobRenderer<BubieEntity, BubieModel> {
             renderNameTag(bubie, text, pose, buffers, light, partialTick);
             pose.popPose();
         } else if (entityRenderDispatcher.distanceToSqr(bubie) < 16 * 16) {
-            com.bubie.entity.Dj.Track track = bubie.getDjTrack();
+            Dj.Track track = bubie.getDjTrack();
             if (!track.isNone()) {
                 pose.pushPose();
                 if (shouldShowName(bubie)) pose.translate(0.0, 0.28, 0.0);

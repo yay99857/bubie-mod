@@ -1,12 +1,15 @@
 package com.bubie.client;
 
 import com.bubie.menu.StationMenu;
+import com.bubie.network.StationBubiesPayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 
 import java.text.NumberFormat;
+import java.util.List;
 
 public class StationScreen extends AbstractContainerScreen<StationMenu> {
     /** The tracker, to the right of the slots: where each Bubie living here is and what it is doing. */
@@ -15,7 +18,7 @@ public class StationScreen extends AbstractContainerScreen<StationMenu> {
 
     public StationScreen(StationMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
-        com.bubie.network.StationBubiesPayload.latest = java.util.List.of();
+        StationBubiesPayload.latest = List.of();
         imageWidth = LIST_X + LIST_W;
         imageHeight = 204;
         inventoryLabelY = StationMenu.INV_Y - 11;
@@ -36,7 +39,7 @@ public class StationScreen extends AbstractContainerScreen<StationMenu> {
         BubieUi.casing(g, x, y, 176, imageHeight);
         BubieUi.casing(g, x + LIST_X, y, LIST_W, imageHeight);
         BubieUi.screen(g, x + LIST_X + 5, y + 18, LIST_W - 10, imageHeight - 24);
-        scroll = net.minecraft.util.Mth.clamp(scroll, 0, TrackerList.maxScroll(tracked(), listHeight()));
+        scroll = Mth.clamp(scroll, 0, TrackerList.maxScroll(tracked(), listHeight()));
         TrackerList.draw(g, font, x + LIST_X + 9, y + 21, LIST_W - 18, listHeight(), tracked(), scroll);
         for (int i = 0; i < 27; i++) BubieUi.slot(g, x + 8 + (i % 9) * 18, y + 18 + (i / 9) * 18);
         BubieUi.slot(g, x + StationMenu.FUEL_X, y + StationMenu.FUEL_Y);
@@ -50,14 +53,14 @@ public class StationScreen extends AbstractContainerScreen<StationMenu> {
         return imageHeight - 30;
     }
 
-    private java.util.List<com.bubie.network.StationBubiesPayload.Entry> tracked() {
-        return com.bubie.network.StationBubiesPayload.latest;
+    private List<StationBubiesPayload.Entry> tracked() {
+        return StationBubiesPayload.latest;
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (mouseX >= leftPos + LIST_X) {
-            scroll = net.minecraft.util.Mth.clamp(scroll - (int) (scrollY * TrackerList.ROW / 2), 0,
+            scroll = Mth.clamp(scroll - (int) (scrollY * TrackerList.ROW / 2), 0,
                     TrackerList.maxScroll(tracked(), listHeight()));
             return true;
         }

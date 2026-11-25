@@ -1,12 +1,15 @@
 package com.bubie.client;
 
+import com.bubie.BubieConfig;
 import com.bubie.entity.BubieEntity;
 import com.bubie.entity.DigFilter;
+import com.bubie.entity.Dj;
 import com.bubie.entity.JobType;
 import com.bubie.entity.MineMode;
 import com.bubie.entity.Mode;
 import com.bubie.entity.Status;
 import com.bubie.entity.WorkArea;
+import com.bubie.item.ChipItem;
 import com.bubie.item.ChipType;
 import com.bubie.menu.BubieMenu;
 import com.bubie.network.BubieCommandPayload;
@@ -14,8 +17,10 @@ import com.bubie.network.RenamePayload;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -91,13 +96,13 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
     private int chips(ChipType type) {
         int n = 0;
         for (int i = BubieMenu.CHIPS; i < BubieMenu.DISC; i++) {
-            if (menu.getSlot(i).getItem().getItem() instanceof com.bubie.item.ChipItem chip && chip.type() == type) n++;
+            if (menu.getSlot(i).getItem().getItem() instanceof ChipItem chip && chip.type() == type) n++;
         }
         return n;
     }
 
     private int maxAreaSide() {
-        return com.bubie.BubieConfig.AREA_SIZE.get() * (1 + chips(ChipType.RANGE));
+        return BubieConfig.AREA_SIZE.get() * (1 + chips(ChipType.RANGE));
     }
 
     @Override
@@ -457,7 +462,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
 
     private void drawDj(GuiGraphics g, BubieEntity bubie, int x, int y) {
         int w = PANEL_W - 8;
-        com.bubie.entity.Dj.Track track = bubie.getDjTrack();
+        Dj.Track track = bubie.getDjTrack();
         label(g, Component.translatable("bubie.ui.dj.now"), x, y);
         y += 10;
         // one line, so the disc slot below stays put
@@ -503,7 +508,6 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
     }
 
     private void playClick() {
-        minecraft.getSoundManager().play(net.minecraft.client.resources.sounds.SimpleSoundInstance.forUI(
-                net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 }

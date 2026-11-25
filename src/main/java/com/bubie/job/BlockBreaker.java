@@ -21,6 +21,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
@@ -64,7 +65,7 @@ public final class BlockBreaker {
     /** Mining progress per tick with this tool, as a player standing where the Bubie stands would get. */
     /** An electric tool (it holds Forge Energy) whose battery is empty. */
     public static boolean outOfEnergy(ItemStack tool) {
-        var energy = tool.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
+        var energy = tool.getCapability(Capabilities.EnergyStorage.ITEM);
         return energy != null && energy.getEnergyStored() == 0;
     }
 

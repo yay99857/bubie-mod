@@ -1,15 +1,19 @@
 package com.bubie.network;
 
 import com.bubie.Bubie;
+import com.bubie.compat.BlueprintCompat;
 import com.bubie.entity.BubieEntity;
 import com.bubie.entity.DigFilter;
+import com.bubie.entity.Face;
 import com.bubie.entity.JobType;
+import com.bubie.entity.Look;
 import com.bubie.entity.MineMode;
 import com.bubie.entity.Mode;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -42,7 +46,7 @@ public record BubieCommandPayload(int entityId, int command, int value) implemen
                 case SET_JOB -> {
                     // without Base Blueprint the Builder is skipped, in whichever direction the player was going
                     JobType job = JobType.byId(v);
-                    if (job == JobType.BUILDER && !com.bubie.compat.BlueprintCompat.loaded()) {
+                    if (job == JobType.BUILDER && !BlueprintCompat.loaded()) {
                         job = JobType.byId(v + (v > bubie.getJob().ordinal() ? 1 : -1));
                     }
                     bubie.setJob(job);
@@ -55,9 +59,9 @@ public record BubieCommandPayload(int entityId, int command, int value) implemen
                 case CLEAR_CHEST -> bubie.setChest(null);
                 case CLEAR_HOME -> bubie.setHome(null);
                 case SET_LOOK -> {
-                    bubie.setLook(com.bubie.entity.Look.unpack(v));
-                    bubie.showMood(com.bubie.entity.Face.HAPPY, 60);
-                    bubie.playSound(net.minecraft.sounds.SoundEvents.NOTE_BLOCK_CHIME.value(), 0.8F, 1.6F);
+                    bubie.setLook(Look.unpack(v));
+                    bubie.showMood(Face.HAPPY, 60);
+                    bubie.playSound(SoundEvents.NOTE_BLOCK_CHIME.value(), 0.8F, 1.6F);
                 }
                 case SET_RADIUS -> bubie.setWorkRadius(v);
                 case DJ_TOGGLE -> bubie.dj().toggle();

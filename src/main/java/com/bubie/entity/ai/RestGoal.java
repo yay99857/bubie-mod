@@ -3,6 +3,7 @@ package com.bubie.entity.ai;
 import com.bubie.Bubie;
 import com.bubie.BubieConfig;
 import com.bubie.entity.BubieEntity;
+import com.bubie.entity.JobType;
 import com.bubie.entity.Mode;
 import com.bubie.entity.Status;
 import net.minecraft.core.BlockPos;
@@ -30,7 +31,7 @@ public class RestGoal extends Goal {
 
     private boolean night() {
         // the Guard's work is the night
-        return BubieConfig.REST_AT_NIGHT.get() && bubie.level().isNight() && bubie.getJob() != com.bubie.entity.JobType.GUARD;
+        return BubieConfig.REST_AT_NIGHT.get() && bubie.level().isNight() && bubie.getJob() != JobType.GUARD;
     }
 
     private boolean homeExists() {
