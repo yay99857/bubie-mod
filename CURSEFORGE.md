@@ -84,8 +84,8 @@ Settings in `serverconfig/bubie-server.toml`.
 ## 📦 Versions
 | Minecraft | Loader | Bubie | Notes |
 |---|---|---|---|
-| **26.3** | NeoForge | 2.0.0 | Newest |
-| **1.21.1** | NeoForge | 2.0.0 | Same features; the Bubie Pack's version |
+| **26.3** | NeoForge | 2.0.1 | Newest |
+| **1.21.1** | NeoForge | 2.0.1 | Same features; the Bubie Pack's version |
 | 1.20.1 | Forge | 1.5.3 | Older feature set, bug fixes only |
 
 The Builder needs **Base Blueprint** for the same Minecraft version.

@@ -64,6 +64,20 @@ public class AreaGameTests {
         bubie.setWorkRadius(500);
         helper.assertTrue(bubie.getWorkRadius() == bubie.maxWorkRadius() && bubie.getWorkArea().largestSide() <= bubie.maxAreaSide(),
                 "the radius stops at the size limit");
+
+        // Containers using FACING (like a Barrel) respect horizontal facing and safely fall back when vertical
+        BlockPos barrelAt = new BlockPos(10, 1, 3);
+        helper.setBlock(barrelAt, Blocks.BARREL.defaultBlockState().setValue(net.minecraft.world.level.block.BarrelBlock.FACING, Direction.EAST));
+        BlockPos b = helper.absolutePos(barrelAt);
+        bubie.setChest(b);
+        bubie.setJob(JobType.QUARRY);
+        bubie.setWorkRadius(3);
+        WorkArea barrelPit = bubie.getWorkArea();
+        helper.assertTrue(barrelPit != null && barrelPit.min().getX() > b.getX(), "barrel pit opens to the east: " + barrelPit);
+
+        helper.setBlock(barrelAt, Blocks.BARREL.defaultBlockState().setValue(net.minecraft.world.level.block.BarrelBlock.FACING, Direction.UP));
+        WorkArea upBarrelPit = bubie.getWorkArea();
+        helper.assertTrue(upBarrelPit != null && upBarrelPit.max().getZ() < b.getZ(), "upward barrel falls back to north: " + upBarrelPit);
         helper.succeed();
     }
 }

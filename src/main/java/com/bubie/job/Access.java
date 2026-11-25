@@ -3,12 +3,22 @@ package com.bubie.job;
 import com.bubie.entity.BubieEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.Tags;
@@ -16,9 +26,11 @@ import net.neoforged.neoforge.common.Tags;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.PriorityQueue;
 
 /**
  * Making a way where there is none, as a player would: when no path leads to where the Bubie has to be, it changes the
@@ -87,6 +99,30 @@ final class Access {
         return scars.size();
     }
 
+    void saveScars(CompoundTag tag) {
+        if (scars.isEmpty()) return;
+        ListTag list = new ListTag();
+        scars.forEach((pos, state) -> {
+            CompoundTag entry = new CompoundTag();
+            entry.putLong("Pos", pos.asLong());
+            entry.put("State", NbtUtils.writeBlockState(state));
+            list.add(entry);
+        });
+        tag.put("Scars", list);
+    }
+
+    void loadScars(CompoundTag tag, HolderLookup.Provider registries) {
+        scars.clear();
+        if (!tag.contains("Scars")) return;
+        HolderLookup<Block> blocks = registries.lookupOrThrow(Registries.BLOCK);
+        ListTag list = tag.getListOrEmpty("Scars");
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag entry = list.getCompoundOrEmpty(i);
+            BlockState state = NbtUtils.readBlockState(blocks, entry.getCompoundOrEmpty("State"));
+            if (!state.isAir()) scars.put(BlockPos.of(entry.getLongOr("Pos", 0L)), state);
+        }
+    }
+
     // ------------------------------------------------------------------ making a way
 
     /** Cells searched at most when planning a way (a box a few blocks around the Bubie and its goal). */
@@ -151,7 +187,7 @@ final class Access {
         if (prep == Prep.CHANGED) {
             steps++;
             stall = 0;
-            bubie.swingForAttack(net.minecraft.world.InteractionHand.MAIN_HAND);
+            bubie.swingForAttack(InteractionHand.MAIN_HAND);
             bubie.spendEnergy(20);
             return true;
         }
@@ -201,8 +237,8 @@ final class Access {
         int minZ = Math.min(start.getZ(), goal.getZ()) - 8, maxZ = Math.max(start.getZ(), goal.getZ()) + 8;
         Vec3 target = Vec3.atCenterOf(goal);
         boolean filler = hasFiller();
-        java.util.PriorityQueue<Node> open = new java.util.PriorityQueue<>(Comparator.comparingDouble(n -> n.cost() + n.estimate()));
-        Map<BlockPos, Double> best = new java.util.HashMap<>();
+        PriorityQueue<Node> open = new PriorityQueue<>(Comparator.comparingDouble(n -> n.cost() + n.estimate()));
+        Map<BlockPos, Double> best = new HashMap<>();
         open.add(new Node(start, 0, 0, null));
         best.put(start, 0.0);
         int seen = 0;
@@ -261,7 +297,7 @@ final class Access {
 
     /** Toward a spot along the way it opened: by path when there is one, else a block at a time without digging. */
     private void head(ServerLevel level, BlockPos to) {
-        net.minecraft.world.level.pathfinder.Path path = bubie.getNavigation().createPath(to, 1);
+        Path path = bubie.getNavigation().createPath(to, 1);
         if (path != null && path.canReach()) {
             bubie.getNavigation().moveTo(path, 1.0);
             return;
@@ -409,7 +445,7 @@ final class Access {
                 return false;
             }
             if (BlockBreaker.place(bubie, next, block)) {
-                bubie.swingForAttack(net.minecraft.world.InteractionHand.MAIN_HAND);
+                bubie.swingForAttack(InteractionHand.MAIN_HAND);
                 scars.remove(next);
                 restoring = null;
             }
@@ -421,8 +457,8 @@ final class Access {
 
     /** The very block that was there, when it carries one (dirt gives dirt; stone gives cobblestone, so filler). */
     private ItemStack original(BlockState was) {
-        net.minecraft.world.item.Item item = was.getBlock().asItem();
-        if (item == net.minecraft.world.item.Items.AIR) return ItemStack.EMPTY;
+        Item item = was.getBlock().asItem();
+        if (item == Items.AIR) return ItemStack.EMPTY;
         return bubie.takeOne(s -> s.is(item));
     }
 }
