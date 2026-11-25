@@ -671,6 +671,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         if (!getDjTrack().isNone() || (hearsMusic && getMode() == Mode.STAY)) return Face.MUSIC;
         Status status = getStatus();
         if (status == Status.NO_ENERGY || status == Status.CHARGING || status == Status.RESTING) return Face.SLEEP;
+        if (status == Status.STUCK) return Face.LOST;
         if (status.problem) return Face.ERROR;
         if (status == Status.WORKING) return Face.WORK;
         return Face.IDLE;

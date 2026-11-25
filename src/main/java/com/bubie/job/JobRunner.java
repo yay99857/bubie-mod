@@ -243,6 +243,7 @@ public class JobRunner {
     private void setState(State next) {
         state = next;
         stateTicks = 0;
+        wayFails = 0;
     }
 
     private void rest(Status status, int ticks) {
@@ -266,7 +267,8 @@ public class JobRunner {
     private void watchStuck() {
         // fighting means standing still a lot: that is not being stuck
         boolean walking = enemy == null && (state == State.MOVE || state == State.DEPOSIT || state == State.FETCH);
-        if (!walking) {
+        // making a way (digging a step, filling a floor) means standing still too: that is not being stuck either
+        if (!walking || access.busy()) {
             stuckChecks = 0;
             lastCheckPos = null;
             return;
@@ -278,8 +280,9 @@ public class JobRunner {
         stuckChecks = still ? stuckChecks + 1 : 0;
         if (stuckChecks < 3) return;
         stuckChecks = 0;
-        BlockPos goal = state == State.MOVE ? target : depositPos;
-        if (goal != null && BubieConfig.TELEPORT_WHEN_STUCK.get() && bubie.teleportNear(goal)) return;
+        // teleport only to its own chest or station (where its owner has been), never to a work target: that would
+        // let it jump into places it could not get into (behind walls, into someone's base)
+        if (state != State.MOVE && depositPos != null && BubieConfig.TELEPORT_WHEN_STUCK.get() && bubie.teleportNear(depositPos)) return;
         if (state == State.MOVE && target != null) blacklist.put(target.immutable(), now() + 1200);
         target = null;
         itemTarget = null;
@@ -552,6 +555,12 @@ public class JobRunner {
             effort = Math.max(1.0F, job.effort(level(), target));
             return;
         }
+        if (access.following(target)) {
+            // on a way it is making: a move every half second, no pathfinding in between
+            if (stateTicks % 10 == 0 && !access.step(level(), target, job, 4.3, true)) fail(target, 1200);
+            if (stateTicks > 400 + access.stepsTaken(target) * 40) fail(target, 1200);
+            return;
+        }
         if (stateTicks == 1 || (stateTicks % 20 == 0 && bubie.getNavigation().isDone())) {
             Path path = bubie.getNavigation().createPath(target, 2);
             if (path != null && !path.canReach() && !endsNear(path, target) && !endsHere(path)) {
@@ -562,7 +571,7 @@ public class JobRunner {
             }
             if (path == null || !path.canReach() && (!endsNear(path, target) || endsHere(path))) {
                 // no way there: make one, a block at a time
-                if (access.step(level(), target, job)) {
+                if (access.step(level(), target, job, 4.3, true)) {
                     moveFails = 0;
                     return;
                 }
@@ -813,25 +822,48 @@ public class JobRunner {
     /** Heads for a container; when no path leads there, makes a way (a step at a time). */
     private void walkOrDig(BlockPos pos) {
         if (stateTicks % 10 != 1) return;
+        if (access.following(pos)) {
+            // already on a way it planned: keep to it
+            if (access.step(level(), pos, job, 2.5, false)) wayFails = 0;
+            else wayFails++;
+            return;
+        }
         Path path = bubie.getNavigation().createPath(pos, 1);
         if (path != null && (path.canReach() || !endsHere(path) && path.getEndNode() != null
                 && path.getEndNode().asBlockPos().distSqr(pos) <= 4)) {
             bubie.getNavigation().moveTo(path, 1.1);
+            wayFails = 0;
             return;
         }
-        access.step(level(), pos, job);
+        if (access.step(level(), pos, job, 2.5, false)) wayFails = 0;
+        else wayFails++;
     }
+
+    /** Times in a row it could neither walk toward where it is going nor make a way there. */
+    private int wayFails;
 
     // ------------------------------------------------------------------ RETURN
 
     private void goBack() {
         bubie.setStatus(Status.WORKING);
         BlockPos home = resolveDeposit();
-        if (home == null || bubie.distanceToSqr(Vec3.atCenterOf(home)) <= 3 * 3
-                || stateTicks > 1200 + access.stepsTaken(home) * 40) {
+        if (home == null || bubie.distanceToSqr(Vec3.atCenterOf(home)) <= 3 * 3) {
             bubie.getNavigation().stop();
             returned = true;
             setState(State.SEEK);
+            return;
+        }
+        if (wayFails >= 6 || stateTicks > 1200 + access.stepsTaken(home) * 40 && !access.busy()) {
+            // no way back it can find or make: its own chest or station is the one place it may teleport to;
+            // else it says so (a question mark on its screen) instead of standing there done
+            com.mojang.logging.LogUtils.getLogger().info("Bubie {}: no way back to {} ({})", bubie.getId(), home, access.lastFailure());
+            wayFails = 0;
+            returned = true;
+            if (BubieConfig.TELEPORT_WHEN_STUCK.get() && bubie.teleportNear(home)) {
+                setState(State.SEEK);
+                return;
+            }
+            rest(Status.STUCK, 600);
             return;
         }
         walkOrDig(home);
@@ -845,6 +877,22 @@ public class JobRunner {
         if (!access.restore(level(), resolveDeposit())) setState(State.SEEK);
     }
 
+    /**
+     * A container it can neither walk nor make a way to: only then, as a last resort, it teleports there (when the
+     * config allows it), else it says it has no chest. Never while it is still making its way: that only takes time.
+     */
+    private void cannotGetTo(BlockPos pos) {
+        boolean gaveUp = wayFails >= 6 || stateTicks > 600 && !access.busy() && !bubie.getNavigation().isInProgress();
+        if (!gaveUp) return;
+        wayFails = 0;
+        com.mojang.logging.LogUtils.getLogger().info("Bubie {}: no way to its chest {} ({})", bubie.getId(), pos, access.lastFailure());
+        if (BubieConfig.TELEPORT_WHEN_STUCK.get() && bubie.teleportNear(pos)) {
+            stateTicks = 0;
+            return;
+        }
+        rest(Status.NO_CHEST, 200);
+    }
+
     /** Walks next to a container; true once it is there. */
     private boolean approach(BlockPos pos) {
         if (bubie.distanceToSqr(Vec3.atCenterOf(pos)) <= 2.8 * 2.8) {
@@ -853,12 +901,7 @@ public class JobRunner {
             return true;
         }
         walkOrDig(pos);
-        if (stateTicks > 300 + access.stepsTaken(pos) * 40 && BubieConfig.TELEPORT_WHEN_STUCK.get()) {
-            bubie.teleportNear(pos);
-            stateTicks = 0;
-        } else if (stateTicks > 600) {
-            rest(Status.NO_CHEST, 200);
-        }
+        cannotGetTo(pos);
         return false;
     }
 
@@ -968,12 +1011,7 @@ public class JobRunner {
         double dist = bubie.distanceToSqr(Vec3.atCenterOf(depositPos));
         if (dist > 2.8 * 2.8) {
             walkOrDig(depositPos);
-            if (stateTicks > 300 + access.stepsTaken(depositPos) * 40 && BubieConfig.TELEPORT_WHEN_STUCK.get()) {
-                bubie.teleportNear(depositPos);
-                stateTicks = 0;
-            } else if (stateTicks > 600) {
-                rest(Status.NO_CHEST, 200);
-            }
+            cannotGetTo(depositPos);
             return;
         }
         bubie.getNavigation().stop();

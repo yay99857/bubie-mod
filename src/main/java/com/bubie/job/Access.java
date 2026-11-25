@@ -31,8 +31,8 @@ import java.util.Map;
  * them back in, farthest from the way out first, so it never closes the path behind it.
  */
 final class Access {
-    /** Terrain changes it may make for one goal before giving up on it. */
-    static final int MAX_STEPS = 64;
+    /** Terrain changes it may make for one trip, however well it goes. */
+    static final int MAX_STEPS = 256;
     /** Never drops into a hole deeper than this when digging under its feet. */
     private static final int MAX_DROP = 4;
 
@@ -41,7 +41,7 @@ final class Access {
     private final Map<BlockPos, BlockState> scars = new LinkedHashMap<>();
     @Nullable
     private BlockPos stepsFor;
-    private int steps;
+    private int steps, lastStep;
     @Nullable
     private BlockPos restoring;
     private int restoreTicks;
@@ -53,8 +53,26 @@ final class Access {
     void reset() {
         stepsFor = null;
         steps = 0;
+        plan = null;
         restoring = null;
         restoreTicks = 0;
+    }
+
+    private String failure = "none";
+
+    /** Why the last way it tried did not work out (for the log). */
+    String lastFailure() {
+        return failure;
+    }
+
+    /** It changed the terrain or stepped along its way just now. */
+    boolean busy() {
+        return bubie.tickCount - lastStep <= 60;
+    }
+
+    /** On a way it planned to this goal (not given up, not arrived). */
+    boolean following(BlockPos goal) {
+        return plan != null && goal.equals(stepsFor) && bubie.tickCount - lastStep <= 200;
     }
 
     int stepsTaken(BlockPos goal) {
@@ -71,67 +89,167 @@ final class Access {
 
     // ------------------------------------------------------------------ making a way
 
+    /** Cells searched at most when planning a way (a box a few blocks around the Bubie and its goal). */
+    private static final int MAX_NODES = 6000;
+    /** Extra cost of a block to break, of a floor to fill, of a step up or down (walking a block costs 1). */
+    private static final double BREAK = 4, FILL = 6, CLIMB = 0.4;
+
+    /** The cells its feet go through, from where it stood when planning to where it can do what it came for. */
+    @Nullable
+    private List<BlockPos> plan;
+    private int planIndex, stall, replans;
+    private static long lastPlanTick = Long.MIN_VALUE;
+
     /**
-     * One change to the terrain that brings the Bubie closer to being able to reach {@code goal}. False when there is
-     * nothing sensible (or allowed) to do: the caller gives up on the goal as before.
+     * One move along a planned way to where it can reach {@code goal} (within {@code arrive} blocks of the goal's
+     * centre, from its eyes when {@code eyes}, else from its feet): either a change to the terrain the way needs next
+     * or a walk to the next cell. The way is planned once (a small A* that weighs walking against digging and filling)
+     * and planned again if the world gets in the way. False when there is no way it can make: the caller gives up.
      */
-    boolean step(ServerLevel level, BlockPos goal, Job job) {
-        if (!goal.equals(stepsFor)) {
+    boolean step(ServerLevel level, BlockPos goal, Job job, double arrive, boolean eyes) {
+        // a new trip (another goal, or the same one again after a while): plan from scratch
+        if (!goal.equals(stepsFor) || bubie.tickCount - lastStep > 200) {
             stepsFor = goal.immutable();
             steps = 0;
+            replans = 0;
+            plan = null;
         }
-        if (steps >= MAX_STEPS) return false;
-        boolean done = tryStep(level, goal, job);
-        if (done) {
+        lastStep = bubie.tickCount;
+        if (steps >= MAX_STEPS || replans > 8) {
+            failure = steps >= MAX_STEPS ? "too many blocks to change" : "the way kept changing under it";
+            return false;
+        }
+        BlockPos feet = bubie.blockPosition();
+        if (plan == null) {
+            // one plan per server tick, however many Bubies need one (a plan takes a millisecond or two)
+            if (level.getGameTime() == lastPlanTick) return true;
+            lastPlanTick = level.getGameTime();
+            plan = findWay(level, feet, goal, arrive, eyes, job);
+            planIndex = 0;
+            stall = 0;
+            if (plan == null) {
+                failure = "no way within reach of digging or filling" + (hasFiller() ? "" : " (no filler)");
+                return false;
+            }
+        }
+        while (planIndex < plan.size() && feet.equals(plan.get(planIndex))) {
+            planIndex++;
+            stall = 0;
+        }
+        if (planIndex >= plan.size()) {
+            plan = null; // at the end of it: the caller sees it can reach now
+            return true;
+        }
+        BlockPos next = plan.get(planIndex);
+        int across = Math.abs(feet.getX() - next.getX()) + Math.abs(feet.getZ() - next.getZ());
+        if (across > 1 || Math.abs(feet.getY() - next.getY()) > 1) {
+            plan = null; // pushed off its way
+            replans++;
+            return true;
+        }
+        Prep prep = prepare(level, feet, next, job);
+        if (prep == Prep.CHANGED) {
             steps++;
+            stall = 0;
             bubie.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
             bubie.spendEnergy(20);
+            return true;
         }
-        return done;
+        if (prep == Prep.BLOCKED || ++stall > 6) {
+            failure = prep == Prep.BLOCKED ? "a block it could not open or fill at " + next.toShortString() : "could not step to " + next.toShortString();
+            plan = null; // the world is not as planned (or it can't get there): plan again
+            replans++;
+            return true;
+        }
+        walk(next);
+        return true;
     }
 
-    private boolean tryStep(ServerLevel level, BlockPos goal, Job job) {
-        BlockPos feet = bubie.blockPosition();
-        int dx = goal.getX() - feet.getX(), dz = goal.getZ() - feet.getZ(), dy = goal.getY() - feet.getY();
-        boolean far = Math.max(Math.abs(dx), Math.abs(dz)) > 1;
-        Direction toward = Math.abs(dx) >= Math.abs(dz)
-                ? (dx >= 0 ? Direction.EAST : Direction.WEST)
-                : (dz >= 0 ? Direction.SOUTH : Direction.NORTH);
+    private enum Prep { READY, CHANGED, BLOCKED }
 
-        if (dy < -1 && !far) {
-            // the goal is right under it (a narrow pit): dig down where it stands
-            return digUnderFeet(level, feet, job);
+    /** What still has to change before it can move from {@code feet} into {@code next}: one change at a time. */
+    private Prep prepare(ServerLevel level, BlockPos feet, BlockPos next, Job job) {
+        boolean down = next.equals(feet.below());
+        for (BlockPos clear : clearFor(feet, next)) {
+            if (passable(level, clear)) continue;
+            if (down && !safeDrop(level, clear)) return Prep.BLOCKED;
+            return dig(level, clear, job) ? Prep.CHANGED : Prep.BLOCKED;
         }
-        if (dy < -1) {
-            // a step down toward the goal: clear the spot ahead and the one under it, make sure there is a floor
-            BlockPos ahead = feet.relative(toward);
-            if (!passable(level, ahead)) return dig(level, ahead, job);
-            if (!passable(level, ahead.below())) return dig(level, ahead.below(), job);
-            if (!sturdy(level, ahead.below(2))) return fill(level, ahead.below(2));
-            return walk(ahead.below());
+        if (down) return Prep.READY;
+        BlockPos floor = next.below();
+        if (sturdy(level, floor)) return Prep.READY;
+        return fill(level, floor) ? Prep.CHANGED : Prep.BLOCKED;
+    }
+
+    /** The cells that must be open for the move: the one it moves into, and the corner it passes through. */
+    private static List<BlockPos> clearFor(BlockPos feet, BlockPos next) {
+        if (next.equals(feet.below())) return List.of(next);
+        int dy = next.getY() - feet.getY();
+        if (dy > 0) return List.of(feet.above(), next); // head room to step up, then the spot
+        if (dy < 0) return List.of(next.above(), next); // through the spot at its level, then down into it
+        return List.of(next);
+    }
+
+    private record Node(BlockPos pos, double cost, double estimate, @Nullable Node from) {
+    }
+
+    /** The cheapest way, as cells for its feet, to a cell from which it can reach the goal; null if none is near. */
+    @Nullable
+    private List<BlockPos> findWay(ServerLevel level, BlockPos start, BlockPos goal, double arrive, boolean eyes, Job job) {
+        int minX = Math.min(start.getX(), goal.getX()) - 8, maxX = Math.max(start.getX(), goal.getX()) + 8;
+        int minY = Math.min(start.getY(), goal.getY()) - 6, maxY = Math.max(start.getY(), goal.getY()) + 6;
+        int minZ = Math.min(start.getZ(), goal.getZ()) - 8, maxZ = Math.max(start.getZ(), goal.getZ()) + 8;
+        Vec3 target = Vec3.atCenterOf(goal);
+        boolean filler = hasFiller();
+        java.util.PriorityQueue<Node> open = new java.util.PriorityQueue<>(Comparator.comparingDouble(n -> n.cost() + n.estimate()));
+        Map<BlockPos, Double> best = new java.util.HashMap<>();
+        open.add(new Node(start, 0, 0, null));
+        best.put(start, 0.0);
+        int seen = 0;
+        while (!open.isEmpty() && seen++ < MAX_NODES) {
+            Node node = open.poll();
+            BlockPos at = node.pos();
+            if (node.cost() > best.getOrDefault(at, Double.MAX_VALUE)) continue;
+            Vec3 from = eyes ? new Vec3(at.getX() + 0.5, at.getY() + 0.6, at.getZ() + 0.5) : Vec3.atBottomCenterOf(at);
+            if (from.distanceTo(target) <= arrive) {
+                List<BlockPos> way = new ArrayList<>();
+                for (Node n = node; n != null && n.from() != null; n = n.from()) way.add(0, n.pos());
+                return way;
+            }
+            List<BlockPos> moves = new ArrayList<>(13);
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                for (int dy = -1; dy <= 1; dy++) moves.add(at.relative(dir).above(dy));
+            }
+            moves.add(at.below());
+            for (BlockPos next : moves) {
+                if (next.getX() < minX || next.getX() > maxX || next.getY() < minY || next.getY() > maxY
+                        || next.getZ() < minZ || next.getZ() > maxZ) continue;
+                double step = moveCost(level, at, next, job, filler);
+                if (step < 0) continue;
+                double cost = node.cost() + step;
+                if (cost >= best.getOrDefault(next, Double.MAX_VALUE)) continue;
+                best.put(next, cost);
+                double left = Math.max(0, Vec3.atCenterOf(next).distanceTo(target) - arrive);
+                open.add(new Node(next, cost, left, node));
+            }
         }
-        if (dy > 1) {
-            // a step up toward the goal: room over its head, something to stand on ahead, room over that
-            Direction side = far ? toward : climbSide(level, feet);
-            if (side == null) return false;
-            BlockPos ahead = feet.relative(side);
-            if (passable(level, ahead) && sturdy(level, ahead.below())) return walk(ahead); // flat ground first: walk on
-            if (!passable(level, feet.above())) return dig(level, feet.above(), job);
-            if (!sturdy(level, ahead)) return fill(level, ahead);
-            if (!passable(level, ahead.above())) return dig(level, ahead.above(), job);
-            return walk(ahead.above());
+        return null;
+    }
+
+    /** What moving from {@code at} into {@code next} costs (digging and filling included), or -1 if it can't. */
+    private double moveCost(ServerLevel level, BlockPos at, BlockPos next, Job job, boolean filler) {
+        boolean down = next.equals(at.below());
+        double cost = next.getY() != at.getY() ? 1 + CLIMB : 1;
+        for (BlockPos clear : clearFor(at, next)) {
+            if (passable(level, clear)) continue;
+            if (job.isProtected(clear) || !breakable(level, clear)) return -1;
+            cost += BREAK;
         }
-        if (!far) return false;
-        // same height: tunnel through what is in the way, bridge a gap in the floor
-        BlockPos ahead = feet.relative(toward);
-        if (!passable(level, ahead)) return dig(level, ahead, job);
-        if (!sturdy(level, ahead.below())) {
-            BlockPos under = ahead.below();
-            if (sturdy(level, under.below()) && passable(level, under)) return walk(under); // a step down into it
-            if (!passable(level, under)) return false;
-            return fill(level, under);
-        }
-        return walk(ahead);
+        if (down) return safeDrop(level, next) ? cost : -1;
+        BlockPos floor = next.below();
+        if (sturdy(level, floor)) return cost;
+        if (!filler || !level.getBlockState(floor).canBeReplaced()) return -1;
+        return cost + FILL;
     }
 
     /** One block on, now that the way is open: straight there (pathfinding gives up in one-block tunnels). */
@@ -149,7 +267,6 @@ final class Access {
             return;
         }
         BlockPos feet = bubie.blockPosition();
-        int dx = to.getX() - feet.getX(), dz = to.getZ() - feet.getZ(), dy = to.getY() - feet.getY();
         BlockPos best = null;
         double bestDist = Vec3.atCenterOf(feet).distanceToSqr(Vec3.atCenterOf(to));
         // the open neighbour (level, a step up or a step down) that is closest to where it is going
@@ -166,24 +283,6 @@ final class Access {
             }
         }
         if (best != null) walk(best);
-    }
-
-    /** Which side to cut steps into when the goal is straight above: the first wall it can use. */
-    @Nullable
-    private Direction climbSide(ServerLevel level, BlockPos feet) {
-        for (Direction dir : Direction.Plane.HORIZONTAL) {
-            BlockPos ahead = feet.relative(dir);
-            if ((sturdy(level, ahead) || canFill(level, ahead)) && (passable(level, ahead.above()) || breakable(level, ahead.above()))) {
-                return dir;
-            }
-        }
-        return null;
-    }
-
-    private boolean digUnderFeet(ServerLevel level, BlockPos feet, Job job) {
-        BlockPos below = feet.below();
-        if (!safeDrop(level, below)) return false;
-        return dig(level, below, job);
     }
 
     /** Opening this block drops the Bubie onto a floor close below, not into a fluid or a deep hole. */
