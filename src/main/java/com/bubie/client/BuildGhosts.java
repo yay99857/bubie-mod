@@ -36,7 +36,8 @@ import java.util.Map;
 public final class BuildGhosts {
     private static final int REFRESH_TICKS = 10, MAX_GHOSTS = 3000;
     private static final double SEE = 64, DRAW = 48;
-    private static final float ALPHA = 0.3F;
+    /** A faint tint inside each ghost and a soft edge around it: enough to see the shape, not a solid wall. */
+    private static final float FILL_ALPHA = 0.08F, EDGE_ALPHA = 0.45F;
 
     /** One block still to place, and the Bubie building it. */
     private record Ghost(Block block, Component bubie) {
@@ -98,14 +99,14 @@ public final class BuildGhosts {
         Map<BlockPos, Ghost> all = ghosts;
         if (all.isEmpty() || mc.level == null) return;
         Vec3 eye = player.getEyePosition();
-        int alpha = Math.round(ALPHA * 255);
+        int fill = Math.round(FILL_ALPHA * 255), edge = Math.round(EDGE_ALPHA * 255);
         for (Map.Entry<BlockPos, Ghost> entry : all.entrySet()) {
             BlockPos pos = entry.getKey();
             if (pos.distToCenterSqr(eye) > DRAW * DRAW) continue;
             if (!mc.level.getBlockState(pos).canBeReplaced()) continue; // placed since the last look at the plan
             int rgb = entry.getValue().block().defaultMapColor().col;
             // a hair smaller than a block, so its faces don't fight the neighbours'
-            Gizmos.cuboid(new AABB(pos).deflate(0.002), GizmoStyle.fill(ARGB.color(alpha, rgb)));
+            Gizmos.cuboid(new AABB(pos).deflate(0.002), GizmoStyle.strokeAndFill(ARGB.color(edge, rgb), 1.0F, ARGB.color(fill, rgb)));
         }
         BlockPos aim = hovered;
         if (aim != null && all.containsKey(aim)) {
