@@ -26,7 +26,7 @@ import java.util.function.Consumer;
  * {@code bubie:<class>.<method>} in lower case (as the old annotation-based tests were).
  */
 public final class BubieTests {
-    static final List<Class<?>> CLASSES = List.of(AreaGameTests.class, BubieGameTests.class, BuilderGameTests.class,
+    static final List<Class<?>> CLASSES = List.of(AccessGameTests.class, AreaGameTests.class, BubieGameTests.class, BuilderGameTests.class,
             DjGameTests.class, GuardGameTests.class, PackCompatGameTests.class, PerfGameTests.class, TeamGameTests.class,
             TrackerGameTests.class);
 

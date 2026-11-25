@@ -872,6 +872,12 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         return false;
     }
 
+    /** It takes no fall damage, so it may drop into a pit a few blocks deep to get to work. */
+    @Override
+    public int getMaxFallDistance() {
+        return 4;
+    }
+
     @Override
     public boolean removeWhenFarAway(double distance) {
         return false;
