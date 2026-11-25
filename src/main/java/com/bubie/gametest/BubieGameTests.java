@@ -232,4 +232,22 @@ public class BubieGameTests {
             helper.assertTrue(bubie.extra().getItem(BubieEntity.FUEL_SLOT).getCount() == 1, "one redstone left");
         });
     }
+
+    /** A name from the menu: formatting stripped, cut to 32, empty back to "Bubie"; it stays on the item. */
+    @BubieTest(template = FIELD, timeoutTicks = 20)
+    public static void renameFromTheMenu(GameTestHelper helper) {
+        BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(7, 1, 7));
+        bubie.rename("  §cDigger  ");
+        helper.assertTrue(bubie.hasCustomName() && bubie.getCustomName().getString().equals("Digger"),
+                "formatting and spaces stripped, got " + bubie.getCustomName());
+        helper.assertTrue(!bubie.isCustomNameVisible(), "the name shows when looked at, like a name tag");
+        bubie.rename("A".repeat(60));
+        helper.assertTrue(bubie.getCustomName().getString().length() == BubieEntity.MAX_NAME, "cut to " + BubieEntity.MAX_NAME);
+        bubie.rename("Miner of the north");
+        ItemStack item = com.bubie.item.BubieItem.capture(bubie);
+        helper.assertTrue(item.getHoverName().getString().equals("Miner of the north"), "the item keeps the name, got " + item.getHoverName().getString());
+        bubie.rename("   ");
+        helper.assertTrue(!bubie.hasCustomName(), "an empty name clears it");
+        helper.succeed();
+    }
 }

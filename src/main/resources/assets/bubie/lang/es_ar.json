@@ -257,5 +257,7 @@
   "bubie.ui.dj.disc": "Disco",
   "bubie.ui.hint.disc": "Un disco de música para el DJ. Se queda aquí: nunca va al cofre con la carga.",
   "key.bubie.highlight": "Mostrar mis Bubies a través de las paredes",
-  "key.category.bubie.bubie": "Bubie"
+  "key.category.bubie.bubie": "Bubie",
+  "bubie.ui.rename": "Nombre",
+  "bubie.ui.rename.tip": "Haz clic para ponerle nombre (vacío vuelve a ser \"Bubie\")"
 }
