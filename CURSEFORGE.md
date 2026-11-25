@@ -55,10 +55,12 @@ Any Bubie can play music for everyone nearby, whatever job it has. Open its menu
 
 ## ⚡ Energy, home and chips
 - It is a robot: it runs on redstone (one dust = 5 minutes of work, a block = 45) or FE, not coal. The **Bubie Station** charges it with FE or redstone, stores what it brings back, and is where it rests at night. Its menu has a **tracker**: where each Bubie living there is and what it is doing, and the **Wireless Station** shows the same in your hand, from anywhere.
-- Four chip slots: Speed, Storage, Range, Magnet, Smelting and Efficiency.
+- **Drives:** what a Bubie carries lives on its drive. Every Bubie comes with a **Hard Drive** (18 slots); a **Solid-State Drive** gives it 36. Take the drive out and the cargo goes with it, into another Bubie or your pocket; its tooltip lists what is on it.
+- Four chip slots: Speed, Range, Magnet, Smelting and Efficiency.
 - At 0 health it **shuts down** into its item, keeping everything. It runs from monsters and never dies.
 - A balloon over its head says what's wrong when it stops.
 - Hold **Alt + B** to see your own Bubies through walls, outlined in amber (any key you like in Controls).
+- **Name it** from its menu: click its name over the storage (a name tag works too).
 
 ## 🎨 Edit my Bubie
 Casing, hoodie and screen-light colours, 18 eyes and 10 mouths, with a turning preview. Everyone on the server sees your look.
@@ -82,8 +84,8 @@ Settings in `serverconfig/bubie-server.toml`.
 ## 📦 Versions
 | Minecraft | Loader | Bubie | Notes |
 |---|---|---|---|
-| **26.3** | NeoForge | 1.8.0 | Newest |
-| **1.21.1** | NeoForge | 1.8.0 | Same features; the Bubie Pack's version |
+| **26.3** | NeoForge | 2.0.0 | Newest |
+| **1.21.1** | NeoForge | 2.0.0 | Same features; the Bubie Pack's version |
 | 1.20.1 | Forge | 1.5.3 | Older feature set, bug fixes only |
 
 The Builder needs **Base Blueprint** for the same Minecraft version.
@@ -105,6 +107,8 @@ Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele
 - Se a vida acaba, ele desliga e vira o item, sem perder nada.
 - Ele **abre o próprio caminho**: quando não tem como chegar, planeja e cava um poço, faz degraus, túnel ou ponte, sai do buraco no fim e tapa o que abriu. Preso de verdade, mostra um **?** na tela.
 - Segure **Alt + B** para ver seus Bubies através das paredes, com contorno âmbar.
+- **Discos:** o que o Bubie carrega fica gravado no disco dele. Todo Bubie vem com um **HD** (18 espaços); um **SSD** dá 36. Tirou o disco, a carga vai junto.
+- **Dê um nome** pelo menu: clique no nome dele, em cima do inventário.
 - Versões: **Minecraft 26.3** e **1.21.1** (NeoForge), e uma mais antiga para 1.20.1 (Forge).
 
 Made for the Bubie Pack. MIT license.
