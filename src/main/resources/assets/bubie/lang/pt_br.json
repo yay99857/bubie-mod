@@ -255,5 +255,7 @@
   "bubie.status.tool_no_energy": "A ferramenta está sem energia",
   "bubie.status.tool_no_energy.help": "A ferramenta elétrica no slot de ferramenta está com a bateria vazia. Carregue-a ou dê ao Bubie uma picareta, pá ou machado comum.",
   "bubie.ui.dj.disc": "Disco",
-  "bubie.ui.hint.disc": "Um disco de música para o DJ. Ele fica aqui: nunca vai para o baú junto com a carga."
+  "bubie.ui.hint.disc": "Um disco de música para o DJ. Ele fica aqui: nunca vai para o baú junto com a carga.",
+  "key.bubie.highlight": "Mostrar meus Bubies pelas paredes",
+  "key.category.bubie.bubie": "Bubie"
 }

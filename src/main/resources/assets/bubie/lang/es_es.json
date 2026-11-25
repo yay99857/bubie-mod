@@ -255,5 +255,7 @@
   "bubie.status.tool_no_energy": "Su herramienta no tiene energía",
   "bubie.status.tool_no_energy.help": "La herramienta eléctrica de su ranura de herramienta tiene la batería vacía. Cárgala o dale al Bubie un pico, una pala o un hacha normal.",
   "bubie.ui.dj.disc": "Disco",
-  "bubie.ui.hint.disc": "Un disco de música para el DJ. Se queda aquí: nunca va al cofre con la carga."
+  "bubie.ui.hint.disc": "Un disco de música para el DJ. Se queda aquí: nunca va al cofre con la carga.",
+  "key.bubie.highlight": "Mostrar mis Bubies a través de las paredes",
+  "key.category.bubie.bubie": "Bubie"
 }

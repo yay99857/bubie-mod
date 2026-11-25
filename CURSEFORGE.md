@@ -6,7 +6,7 @@
 
 ![Seven Bubies, each dressed up in the editor](https://media.forgecdn.net/attachments/2241/432/01-lineup-png.png)
 
-Bubie is a cream CRT monitor in a black hoodie, as a helper for Minecraft 1.21.1 (NeoForge). Craft one, click the ground to switch it on, and give it a job.
+Bubie is a cream CRT monitor in a black hoodie, as a helper for **Minecraft 26.3 and 1.21.1 (NeoForge)**, plus an older version for 1.20.1 (Forge). Craft one, click the ground to switch it on, and give it a job.
 
 ![The default Bubie up close](https://media.forgecdn.net/attachments/2241/433/02-portrait-png.png)
 
@@ -23,6 +23,8 @@ Bubie is a cream CRT monitor in a black hoodie, as a helper for Minecraft 1.21.1
 - **Courier:** empties the chests, hoppers and furnace outputs in its area into its own chest. Feeding a Builder, it carries only what the blueprint still needs.
 
 Several Bubies in one area split the work: each one claims the block (or, for lumberjacks, the whole tree) it is on.
+
+**Makes its own way:** when no path leads to where it must work or to its chest, it plans one and changes the terrain a block at a time, as a player would: digs down a narrow pit, cuts steps up or down a wall, tunnels, bridges a gap, and climbs out when the job is done. Only natural ground, never anything built, and every hole it had to open is filled back in afterwards. Truly stuck, it shows a **?** on its screen.
 
 ![A quarry with its staircase](https://media.forgecdn.net/attachments/2241/438/07-quarry-png.png)
 
@@ -56,6 +58,7 @@ Any Bubie can play music for everyone nearby, whatever job it has. Open its menu
 - Four chip slots: Speed, Storage, Range, Magnet, Smelting and Efficiency.
 - At 0 health it **shuts down** into its item, keeping everything. It runs from monsters and never dies.
 - A balloon over its head says what's wrong when it stops.
+- Hold **Alt + B** to see your own Bubies through walls, outlined in amber (any key you like in Controls).
 
 ## 🎨 Edit my Bubie
 Casing, hoodie and screen-light colours, 18 eyes and 10 mouths, with a turning preview. Everyone on the server sees your look.
@@ -76,6 +79,15 @@ Casing, hoodie and screen-light colours, 18 eyes and 10 mouths, with a turning p
 
 Settings in `serverconfig/bubie-server.toml`.
 
+## 📦 Versions
+| Minecraft | Loader | Bubie | Notes |
+|---|---|---|---|
+| **26.3** | NeoForge | 1.8.0 | Newest |
+| **1.21.1** | NeoForge | 1.8.0 | Same features; the Bubie Pack's version |
+| 1.20.1 | Forge | 1.5.3 | Older feature set, bug fixes only |
+
+The Builder needs **Base Blueprint** for the same Minecraft version.
+
 ---
 
 ## 🇧🇷 Português
@@ -91,5 +103,8 @@ Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele
 - **Bubie DJ:** na aba **DJ** do menu, ele toca o disco de música do slot da aba para todo mundo por perto. A tela vira um equalizador, ele dança e os Bubies em modo Ficar em volta dançam junto.
 - Guarda em Sophisticated Storage, Functional Storage, cofres do Create e bins do Mekanism; respeita as áreas do FTB Chunks; amigos do mesmo time do FTB Teams também dão ordens.
 - Se a vida acaba, ele desliga e vira o item, sem perder nada.
+- Ele **abre o próprio caminho**: quando não tem como chegar, planeja e cava um poço, faz degraus, túnel ou ponte, sai do buraco no fim e tapa o que abriu. Preso de verdade, mostra um **?** na tela.
+- Segure **Alt + B** para ver seus Bubies através das paredes, com contorno âmbar.
+- Versões: **Minecraft 26.3** e **1.21.1** (NeoForge), e uma mais antiga para 1.20.1 (Forge).
 
 Made for the Bubie Pack. MIT license.

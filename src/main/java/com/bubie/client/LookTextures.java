@@ -52,6 +52,7 @@ public final class LookTextures {
             case SLEEP -> new String[]{"closed", "dot"};
             case HURT -> new String[]{"xx", "open"};
             case MUSIC -> new String[]{"happy", "smile"}; // the mouth is an equalizer: see music()
+            case LOST -> new String[]{"question", "none"};
         };
     }
 

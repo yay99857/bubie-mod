@@ -4,7 +4,9 @@ package com.bubie.entity;
 public enum Face {
     IDLE, HAPPY, WORK, ERROR, SLEEP, HURT,
     /** Playing music: happy eyes over an equalizer. */
-    MUSIC;
+    MUSIC,
+    /** Stuck, lost its way: a question mark on the screen. */
+    LOST;
 
     public static Face byId(int id) {
         Face[] values = values();

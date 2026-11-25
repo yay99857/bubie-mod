@@ -255,5 +255,7 @@
   "bubie.status.tool_no_energy": "Its tool is out of energy",
   "bubie.status.tool_no_energy.help": "The electric tool in its tool slot has an empty battery. Charge it, or give the Bubie an ordinary pickaxe, shovel or axe.",
   "bubie.ui.dj.disc": "Disc",
-  "bubie.ui.hint.disc": "A music disc for the DJ. It stays here: it never goes to the chest with the cargo."
+  "bubie.ui.hint.disc": "A music disc for the DJ. It stays here: it never goes to the chest with the cargo.",
+  "key.bubie.highlight": "Show my Bubies through walls",
+  "key.category.bubie.bubie": "Bubie"
 }

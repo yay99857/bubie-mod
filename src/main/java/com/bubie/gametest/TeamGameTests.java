@@ -86,6 +86,7 @@ public class TeamGameTests {
             }
         }
         helper.setBlock(at.above(2), Blocks.GLASS);
+        helper.setBlock(at.below(), Blocks.GLASS); // a glass floor too: stone under it it could dig its way out through
         BubieEntity bubie = BubieGameTests.bubie(helper, at, JobType.DIGGER, new ItemStack(Items.IRON_SHOVEL),
                 new BlockPos(9, 1, 9), new BlockPos(14, 1, 14));
         helper.succeedWhen(() -> helper.assertTrue(bubie.getStatus() == Status.STUCK, "status " + bubie.getStatus()));
