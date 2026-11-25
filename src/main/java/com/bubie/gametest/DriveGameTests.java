@@ -89,6 +89,14 @@ public class DriveGameTests {
         helper.assertTrue(bubie.count(Items.DIAMOND) == 3 && bubie.count(Items.OAK_LOG) == 20, "the cargo came back");
         helper.assertTrue(bubie.count(Items.COBBLESTONE) == 2, "and what it carried meanwhile joined it");
         helper.assertTrue(count(DriveItem.contents(bubie.drive().getItem(0)), Items.COBBLESTONE) == 2, "on the drive too");
+
+        // Taking the very last item of a stack via takeOne flushes the empty slot onto the drive immediately
+        ItemStack one = bubie.takeOne(s -> s.is(Items.DIAMOND));
+        ItemStack two = bubie.takeOne(s -> s.is(Items.DIAMOND));
+        ItemStack three = bubie.takeOne(s -> s.is(Items.DIAMOND));
+        helper.assertTrue(one.getCount() == 1 && two.getCount() == 1 && three.getCount() == 1, "took all three diamonds");
+        ItemStack pulled = bubie.drive().removeItem(0, 1);
+        helper.assertTrue(count(DriveItem.contents(pulled), Items.DIAMOND) == 0, "no phantom diamond left on the drive");
         helper.succeed();
     }
 

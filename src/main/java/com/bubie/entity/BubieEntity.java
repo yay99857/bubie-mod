@@ -482,8 +482,11 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     }
 
     private WorkArea pitInFront(BlockPos c, int r, int down, int up) {
-        net.minecraft.core.Direction front = level().getBlockState(c)
+        BlockState chestState = level().getBlockState(c);
+        net.minecraft.core.Direction front = chestState
                 .getOptionalValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.HORIZONTAL_FACING)
+                .or(() -> chestState.getOptionalValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.FACING)
+                        .filter(d -> d.getAxis().isHorizontal()))
                 .orElse(net.minecraft.core.Direction.NORTH);
         net.minecraft.core.Direction side = front.getClockWise();
         BlockPos near = c.relative(front, 2).relative(side, -r), far = c.relative(front, 1 + 2 * r).relative(side, r);
@@ -688,8 +691,9 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         for (int i = 0; i < STORAGE_SLOTS; i++) {
             ItemStack in = storage.getItem(i);
             if (!in.isEmpty() && test.test(in)) {
+                ItemStack one = in.split(1);
                 storage.setChanged();
-                return in.split(1);
+                return one;
             }
         }
         return ItemStack.EMPTY;
@@ -719,8 +723,12 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         var battery = fuel.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
         if (battery != null && battery.canExtract()) {
             int need = Math.min(BATTERY_RATE, getMaxEnergy() - getEnergy());
-            int fePer = Math.max(1, BubieConfig.FE_PER_ENERGY.get());
+            int fePer = BubieConfig.FE_PER_ENERGY.get();
             if (need <= 0) return;
+            if (fePer <= 0) {
+                setEnergy(getEnergy() + need);
+                return;
+            }
             int fe = battery.extractEnergy(need * fePer, false);
             if (fe >= fePer) {
                 setEnergy(getEnergy() + fe / fePer);
@@ -1032,12 +1040,14 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
         writeBubieData(tag);
+        runner.saveScars(tag);
     }
 
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
         readBubieData(tag);
+        runner.loadScars(tag, registryAccess());
     }
 
     /** Settings and inventory: saved with the entity and carried by the Bubie item. */

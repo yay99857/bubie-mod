@@ -81,4 +81,42 @@ public class AccessGameTests {
                     + helper.relativePos(bubie.blockPosition()));
         });
     }
+
+    /** Scars opened to reach a job are saved with the entity and still closed after a save/load cycle. */
+    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 3600)
+    public static void scarsSurviveEntitySaveAndLoad(GameTestHelper helper) {
+        BubieGameTests.floor(helper, Blocks.GRASS_BLOCK);
+        fill(helper, 0, 1, 10, 15, 5, 15, Blocks.STONE);
+        BlockPos trunk = new BlockPos(8, 6, 13);
+        helper.setBlock(trunk.below(), Blocks.GRASS_BLOCK);
+        for (int y = 0; y < 3; y++) helper.setBlock(trunk.above(y), Blocks.OAK_LOG);
+        helper.setBlock(trunk.above(3), Blocks.OAK_LEAVES.defaultBlockState().setValue(LeavesBlock.DISTANCE, 1));
+        BubieEntity first = BubieGameTests.bubie(helper, new BlockPos(8, 1, 5), JobType.LUMBERJACK, new ItemStack(Items.IRON_PICKAXE),
+                new BlockPos(1, 1, 1), new BlockPos(14, 9, 14));
+
+        final boolean[] reloaded = {false};
+        final BubieEntity[] active = {first};
+        helper.succeedWhen(() -> {
+            if (!reloaded[0]) {
+                for (int y = 0; y < 3; y++) {
+                    helper.assertTrue(!helper.getBlockState(trunk.above(y)).is(Blocks.OAK_LOG), "waiting for tree to be felled");
+                }
+                int opened = holes(helper, 0, 1, 10, 15, 5, 15, java.util.Set.of());
+                helper.assertTrue(opened > 0, "expected open scars on the cliff before reload");
+                net.minecraft.nbt.CompoundTag saved = new net.minecraft.nbt.CompoundTag();
+                first.addAdditionalSaveData(saved);
+                net.minecraft.world.phys.Vec3 pos = first.position();
+                first.discard();
+                BubieEntity copy = helper.spawn(Bubie.BUBIE_ENTITY.get(), helper.relativePos(first.blockPosition()));
+                copy.readAdditionalSaveData(saved);
+                copy.moveTo(pos.x, pos.y, pos.z, first.getYRot(), first.getXRot());
+                active[0] = copy;
+                reloaded[0] = true;
+            }
+            helper.assertTrue(BubieGameTests.inChest(helper, Items.OAK_LOG) >= 3, "logs in the chest; " + active[0].getStatus());
+            int left = holes(helper, 0, 1, 10, 15, 5, 15, java.util.Set.of());
+            helper.assertTrue(left == 0, left + " scars still open after reload; " + active[0].getStatus() + " at "
+                    + helper.relativePos(active[0].blockPosition()));
+        });
+    }
 }

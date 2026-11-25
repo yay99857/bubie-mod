@@ -10,6 +10,8 @@ import com.bubie.entity.WorkArea;
 import com.bubie.item.ChipType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -135,6 +137,14 @@ public class JobRunner {
     public void release() {
         clearCrack();
         unclaim();
+    }
+
+    public void saveScars(CompoundTag tag) {
+        access.saveScars(tag);
+    }
+
+    public void loadScars(CompoundTag tag, HolderLookup.Provider registries) {
+        access.loadScars(tag, registries);
     }
 
     /** The job being done, or null before the first tick (a courier reads its builder's shopping list). */

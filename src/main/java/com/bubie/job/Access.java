@@ -3,9 +3,16 @@ package com.bubie.job;
 import com.bubie.entity.BubieEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -85,6 +92,30 @@ final class Access {
 
     int scarCount() {
         return scars.size();
+    }
+
+    void saveScars(CompoundTag tag) {
+        if (scars.isEmpty()) return;
+        ListTag list = new ListTag();
+        scars.forEach((pos, state) -> {
+            CompoundTag entry = new CompoundTag();
+            entry.putLong("Pos", pos.asLong());
+            entry.put("State", NbtUtils.writeBlockState(state));
+            list.add(entry);
+        });
+        tag.put("Scars", list);
+    }
+
+    void loadScars(CompoundTag tag, HolderLookup.Provider registries) {
+        scars.clear();
+        if (!tag.contains("Scars", Tag.TAG_LIST)) return;
+        HolderLookup<Block> blocks = registries.lookupOrThrow(Registries.BLOCK);
+        ListTag list = tag.getList("Scars", Tag.TAG_COMPOUND);
+        for (int i = 0; i < list.size(); i++) {
+            CompoundTag entry = list.getCompound(i);
+            BlockState state = NbtUtils.readBlockState(blocks, entry.getCompound("State"));
+            if (!state.isAir()) scars.put(BlockPos.of(entry.getLong("Pos")), state);
+        }
     }
 
     // ------------------------------------------------------------------ making a way
