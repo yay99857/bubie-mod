@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "bubie:chip_storage"
+    },
+    {
+      "item": "bubie:chip_storage"
+    },
+    {
+      "tag": "c:gems/diamond"
+    }
+  ],
+  "result": {
+    "id": "bubie:solid_state_drive",
+    "count": 1
+  }
+}

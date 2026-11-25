@@ -2,23 +2,23 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "NRN",
-    "RXR",
-    "NRN"
+    "IRI",
+    "RGR",
+    "IRI"
   ],
   "key": {
-    "N": {
-      "item": "minecraft:gold_nugget"
+    "I": {
+      "tag": "c:ingots/iron"
     },
     "R": {
       "item": "minecraft:redstone"
     },
-    "X": {
-      "tag": "c:chests/wooden"
+    "G": {
+      "tag": "c:ingots/gold"
     }
   },
   "result": {
-    "id": "bubie:chip_storage",
+    "id": "bubie:hard_drive",
     "count": 1
   }
 }

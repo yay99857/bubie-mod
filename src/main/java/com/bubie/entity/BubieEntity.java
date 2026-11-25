@@ -103,7 +103,26 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         return SynchedEntityData.defineId(BubieEntity.class, serializer);
     }
 
-    private final SimpleContainer storage = new SimpleContainer(STORAGE_SLOTS);
+    /** What it carries. While a drive is in, every change is written onto the drive too (see {@link #flushDrive}). */
+    private final SimpleContainer storage = new SimpleContainer(STORAGE_SLOTS) {
+        @Override
+        public void setChanged() {
+            super.setChanged();
+            flushDrive();
+        }
+    };
+    /** The drive slot: a Hard Drive (18) or a Solid-State Drive (36), or nothing (one slot, item by item). */
+    private final SimpleContainer drive = new SimpleContainer(1) {
+        @Override
+        public void setChanged() {
+            super.setChanged();
+            onDriveChanged();
+        }
+    };
+    /** The drive whose contents are in storage now (by identity: a drive taken out and put back is a new stack). */
+    private ItemStack loadedDrive = ItemStack.EMPTY;
+    /** Whether a drive was in (a drive taken out leaves its old stack in the slot, shrunk to nothing). */
+    private boolean hadDrive;
     private final SimpleContainer extra = new SimpleContainer(1 + CHIP_SLOTS);
     /** The DJ's music disc, in a slot of its own: never stored away in a chest, never taking a storage slot. */
     private final SimpleContainer disc = new SimpleContainer(1);
@@ -131,6 +150,12 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         setCanPickUpLoot(false);
         setDropChance(EquipmentSlot.MAINHAND, 0);
         extra.addListener(container -> onChipsChanged());
+        // every Bubie comes with a Hard Drive (its recipe takes one)
+        loading = true;
+        drive.setItem(0, new ItemStack(Bubie.HARD_DRIVE.get()));
+        loadedDrive = drive.getItem(0);
+        hadDrive = true;
+        loading = false;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -533,6 +558,57 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         return disc;
     }
 
+    public SimpleContainer drive() {
+        return drive;
+    }
+
+    /** Storage slots it has: its drive's capacity, or one without a drive. */
+    private int capacity() {
+        int cap = com.bubie.item.DriveItem.capacity(drive.getItem(0));
+        return cap > 0 ? Math.min(STORAGE_SLOTS, cap) : 1;
+    }
+
+    /** Storage onto the drive, so the drive always holds what the Bubie carries. */
+    private void flushDrive() {
+        if (loading || level().isClientSide) return;
+        ItemStack d = drive.getItem(0);
+        if (!d.isEmpty() && d.getItem() instanceof com.bubie.item.DriveItem) com.bubie.item.DriveItem.store(d, storage);
+    }
+
+    /**
+     * A drive went in or out. One taken out already holds the cargo (every change was written onto it), so storage
+     * empties; one put in fills storage with what is on it. What it carried with no drive at all joins the new drive.
+     */
+    private void onDriveChanged() {
+        if (loading || level().isClientSide) return;
+        ItemStack now = drive.getItem(0);
+        boolean has = !now.isEmpty() && now.getItem() instanceof com.bubie.item.DriveItem;
+        if (now == loadedDrive && has == hadDrive) return;
+        List<ItemStack> loose = new java.util.ArrayList<>();
+        if (!hadDrive) {
+            for (int i = 0; i < STORAGE_SLOTS; i++) if (!storage.getItem(i).isEmpty()) loose.add(storage.getItem(i).copy());
+        }
+        loading = true;
+        try {
+            storage.clearContent();
+            if (now.getItem() instanceof com.bubie.item.DriveItem) {
+                var on = com.bubie.item.DriveItem.contents(now);
+                for (int i = 0; i < on.size() && i < STORAGE_SLOTS; i++) storage.setItem(i, on.get(i).copy());
+            }
+            loadedDrive = now;
+            hadDrive = has;
+        } finally {
+            loading = false;
+        }
+        entityData.set(DATA_UNLOCKED, (byte) capacity());
+        for (ItemStack stack : loose) {
+            ItemStack rest = insert(stack);
+            if (!rest.isEmpty()) spawnAtLocation(rest);
+        }
+        flushDrive();
+        runner.reset();
+    }
+
     public static boolean isDisc(ItemStack stack) {
         return stack.has(net.minecraft.core.component.DataComponents.JUKEBOX_PLAYABLE);
     }
@@ -556,7 +632,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             if (extra.getItem(i).getItem() instanceof ChipItem chip) chips.merge(chip.type(), 1, Integer::sum);
         }
         if (level().isClientSide) return;
-        int unlocked = Math.min(STORAGE_SLOTS, BASE_STORAGE + 9 * chipCount(ChipType.STORAGE));
+        int unlocked = capacity();
         entityData.set(DATA_UNLOCKED, (byte) unlocked);
         // Items left in slots that just got locked move to open slots, or drop.
         for (int i = unlocked; i < STORAGE_SLOTS; i++) {
@@ -982,6 +1058,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         tag.put("Storage", saveContainer(storage));
         tag.put("Extra", saveContainer(extra));
         tag.put("Disc", saveContainer(disc));
+        tag.put("Drive", saveContainer(drive));
         if (!getTool().isEmpty()) tag.put("Tool", getTool().save(registryAccess()));
         dj.save(tag);
         if (!buildPlan.isEmpty() && buildOrigin != null) {
@@ -1015,6 +1092,21 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             loadContainer(storage, tag.getList("Storage", 10));
             loadContainer(extra, tag.getList("Extra", 10));
             loadContainer(disc, tag.getList("Disc", 10));
+            if (tag.contains("Drive")) {
+                loadContainer(drive, tag.getList("Drive", 10));
+            } else {
+                // a Bubie from before drives: a Hard Drive, or a Solid-State Drive if it had Storage Chips (they go)
+                int storageChips = 0;
+                for (int i = 1; i <= CHIP_SLOTS; i++) {
+                    if (extra.getItem(i).getItem() instanceof ChipItem chip && chip.type() == ChipType.STORAGE) {
+                        extra.setItem(i, ItemStack.EMPTY);
+                        storageChips++;
+                    }
+                }
+                drive.setItem(0, new ItemStack(storageChips > 0 ? Bubie.SOLID_STATE_DRIVE.get() : Bubie.HARD_DRIVE.get()));
+            }
+            loadedDrive = drive.getItem(0);
+            hadDrive = !loadedDrive.isEmpty() && loadedDrive.getItem() instanceof com.bubie.item.DriveItem;
             if (!tag.contains("Disc")) {
                 // a Bubie from before the disc slot: its first disc in storage moves there
                 for (int i = 0; i < storage.getContainerSize() && disc.isEmpty(); i++) {
@@ -1041,6 +1133,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         dj.load(tag);
         setDjTrack(Dj.Track.NONE);
         onChipsChanged();
+        flushDrive(); // a Bubie from before drives: its cargo goes onto its new drive
         runner.reset();
     }
 

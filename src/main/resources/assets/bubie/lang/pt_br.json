@@ -13,7 +13,7 @@
   "item.bubie.chip_speed": "Chip de velocidade",
   "item.bubie.chip_speed.desc": "+50% de velocidade para minerar e +20% para andar.",
   "item.bubie.chip_storage": "Chip de armazenamento",
-  "item.bubie.chip_storage.desc": "+9 espaços no inventário do Bubie.",
+  "item.bubie.chip_storage.desc": "Peça antiga: dois deles e um diamante fazem um SSD.",
   "item.bubie.chip_range": "Chip de alcance",
   "item.bubie.chip_range.desc": "Permite áreas de trabalho maiores.",
   "item.bubie.chip_magnet": "Chip ímã",
@@ -118,7 +118,7 @@
   "bubie.ui.chips": "Chips",
   "bubie.ui.energy": "Energia",
   "bubie.ui.health": "Vida",
-  "bubie.ui.locked": "Chip de armazenamento",
+  "bubie.ui.locked": "SSD: mais espaço",
   "bubie.ui.charging": "Carregando",
   "bubie.ui.hint.tool": "Ferramenta: o Bubie usa e gasta. Machado, pá ou picareta, conforme a tarefa.",
   "bubie.ui.hint.fuel": "Combustível: pó ou bloco de redstone… ou uma bateria com FE (acumulador de bolso da Voltaic, tablet do Mekanism, bateria do Powah), que recarrega o Bubie sem se gastar. Carvão não funciona: ele é um robô.",
@@ -259,5 +259,12 @@
   "key.categories.bubie": "Bubie",
   "key.bubie.highlight": "Mostrar meus Bubies pelas paredes",
   "bubie.ui.rename": "Nome",
-  "bubie.ui.rename.tip": "Clique para dar um nome (vazio volta a ser \"Bubie\")"
+  "bubie.ui.rename.tip": "Clique para dar um nome (vazio volta a ser \"Bubie\")",
+  "item.bubie.hard_drive": "HD",
+  "item.bubie.solid_state_drive": "SSD",
+  "item.bubie.drive.capacity": "%s espaços para um Bubie",
+  "item.bubie.drive.empty": "Vazio",
+  "item.bubie.drive.more": "e mais %s…",
+  "bubie.ui.hint.drive": "O disco dele: o que ele carrega fica gravado aqui. HD: 18 espaços, SSD: 36. Tirou o disco, a carga vai junto.",
+  "bubie.ui.locked.no_drive": "Sem disco: coloque um HD"
 }

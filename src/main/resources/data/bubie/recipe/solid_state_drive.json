@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "QGQ",
+    "RDR",
+    "QGQ"
+  ],
+  "key": {
+    "Q": {
+      "tag": "c:gems/quartz"
+    },
+    "G": {
+      "tag": "c:ingots/gold"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "D": {
+      "tag": "c:gems/diamond"
+    }
+  },
+  "result": {
+    "id": "bubie:solid_state_drive",
+    "count": 1
+  }
+}
