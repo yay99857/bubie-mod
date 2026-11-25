@@ -198,6 +198,24 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         return player.getUUID().equals(getOwnerUUID());
     }
 
+    /** Longest name a Bubie takes (a name tag from an anvil allows 50; this fits its menu title). */
+    public static final int MAX_NAME = 32;
+
+    /**
+     * A name from its menu: formatting codes stripped, trimmed, cut to {@link #MAX_NAME}. Empty clears it (plain
+     * "Bubie" again). Shown over its head when you look at it, as a name tag does.
+     */
+    public void rename(String name) {
+        String clean = net.minecraft.ChatFormatting.stripFormatting(name == null ? "" : name);
+        clean = clean == null ? "" : clean.replaceAll("\\p{Cntrl}", "").trim();
+        if (clean.length() > MAX_NAME) clean = clean.substring(0, MAX_NAME).trim();
+        setCustomName(clean.isEmpty() ? null : Component.literal(clean));
+        if (!clean.isEmpty()) {
+            showMood(Face.HAPPY, 40);
+            playSound(SoundEvents.NOTE_BLOCK_BIT.value(), 0.7F, 1.8F);
+        }
+    }
+
     /** Owners, their FTB Teams teammates, and operators in creative may give orders. */
     public boolean canCommand(Player player) {
         return isOwnedBy(player) || (player.isCreative() && player.hasPermissions(2))

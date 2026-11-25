@@ -10,14 +10,18 @@ import com.bubie.entity.WorkArea;
 import com.bubie.item.ChipType;
 import com.bubie.menu.BubieMenu;
 import com.bubie.network.BubieCommandPayload;
+import com.bubie.network.RenamePayload;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.player.Inventory;
 import net.neoforged.neoforge.network.PacketDistributor;
+import org.lwjgl.glfw.GLFW;
 
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,9 +124,69 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         }
     }
 
+    // ------------------------------------------------------------- renaming (click the name over the storage)
+
+    /** The name being typed; hidden unless renaming. */
+    @Nullable
+    private EditBox nameBox;
+
+    @Override
+    protected void init() {
+        super.init();
+        nameBox = new EditBox(font, leftPos + BubieMenu.GRID_X - 2, topPos + 4, 140, 13, Component.translatable("bubie.ui.rename"));
+        nameBox.setMaxLength(BubieEntity.MAX_NAME);
+        nameBox.setVisible(false);
+        addRenderableWidget(nameBox);
+    }
+
+    private boolean renaming() {
+        return nameBox != null && nameBox.isVisible();
+    }
+
+    private void startRename() {
+        BubieEntity bubie = menu.bubie();
+        if (bubie == null || nameBox == null) return;
+        nameBox.setValue(bubie.hasCustomName() ? bubie.getCustomName().getString() : "");
+        nameBox.setVisible(true);
+        setFocused(nameBox);
+        nameBox.setFocused(true);
+    }
+
+    private void endRename(boolean save) {
+        if (!renaming()) return;
+        BubieEntity bubie = menu.bubie();
+        if (save && bubie != null) PacketDistributor.sendToServer(new RenamePayload(bubie.getId(), nameBox.getValue()));
+        nameBox.setFocused(false);
+        nameBox.setVisible(false);
+        setFocused(null);
+    }
+
+    @Override
+    public boolean keyPressed(int key, int scan, int modifiers) {
+        if (renaming()) {
+            // typing a name: Enter keeps it, Esc drops it, and no key closes the menu (E is the inventory key)
+            if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) endRename(true);
+            else if (key == GLFW.GLFW_KEY_ESCAPE) endRename(false);
+            else nameBox.keyPressed(key, scan, modifiers);
+            return true;
+        }
+        return super.keyPressed(key, scan, modifiers);
+    }
+
+    /** Its name now (it changes while the menu is open), with a pencil: click to rename. */
+    private void drawName(GuiGraphics g, @Nullable BubieEntity bubie) {
+        if (renaming()) return;
+        Component name = bubie != null ? bubie.getDisplayName() : title;
+        g.drawString(font, name, BubieMenu.GRID_X, 7, BubieUi.INK, false);
+        if (bubie == null) return;
+        int w = font.width(name);
+        boolean hover = hover(BubieMenu.GRID_X - 1, 5, w + 13, 11);
+        g.drawString(font, "✎", BubieMenu.GRID_X + w + 4, 7, hover ? BubieUi.AMBER_DARK : BubieUi.CREAM_DEEP, false);
+    }
+
     @Override
     protected void renderLabels(GuiGraphics g, int mx, int my) {
-        g.drawString(font, title, BubieMenu.GRID_X, 7, BubieUi.INK, false);
+        drawName(g, menu.bubie());
         g.drawString(font, Component.translatable("bubie.ui.tool"), BubieMenu.GRID_X, BubieMenu.EQUIP_Y - 10, BubieUi.INK_SOFT, false);
         g.drawString(font, Component.translatable("bubie.ui.chips"), BubieMenu.GRID_X + 72, BubieMenu.EQUIP_Y - 10, BubieUi.INK_SOFT, false);
         g.drawString(font, Component.translatable("bubie.ui.energy"), BubieMenu.GRID_X, 124, BubieUi.INK_SOFT, false);
@@ -140,6 +204,10 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         }
         hits.clear();
         if (bubie == null) return;
+        if (!renaming()) {
+            hits.add(new Hit(BubieMenu.GRID_X - 1, 5, font.width(bubie.getDisplayName()) + 13, 11, this::startRename,
+                    Component.translatable("bubie.ui.rename.tip")));
+        }
         drawTabs(g);
         int cx = PANEL_X + 4, cy = PANEL_Y + 22;
         switch (tab) {
@@ -417,6 +485,8 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
+        // a click anywhere but on the name being typed keeps that name
+        if (renaming() && !nameBox.isMouseOver(mx, my)) endRename(true);
         if (button == 0) {
             double rx = mx - leftPos, ry = my - topPos;
             for (Hit hit : List.copyOf(hits)) {

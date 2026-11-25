@@ -257,5 +257,7 @@
   "bubie.ui.dj.disc": "Disc",
   "bubie.ui.hint.disc": "A music disc for the DJ. It stays here: it never goes to the chest with the cargo.",
   "key.categories.bubie": "Bubie",
-  "key.bubie.highlight": "Show my Bubies through walls"
+  "key.bubie.highlight": "Show my Bubies through walls",
+  "bubie.ui.rename": "Name",
+  "bubie.ui.rename.tip": "Click to rename it (leave it empty for plain \"Bubie\")"
 }

@@ -123,6 +123,8 @@ public class Bubie {
         });
         modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
                 .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle)
+                .playToServer(com.bubie.network.RenamePayload.TYPE, com.bubie.network.RenamePayload.STREAM_CODEC,
+                        com.bubie.network.RenamePayload::handle)
                 .playToServer(com.bubie.network.TrackerRequestPayload.TYPE, com.bubie.network.TrackerRequestPayload.STREAM_CODEC,
                         com.bubie.network.TrackerRequestPayload::handle)
                 .playToClient(com.bubie.network.StationBubiesPayload.TYPE, com.bubie.network.StationBubiesPayload.STREAM_CODEC,
