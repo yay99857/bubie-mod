@@ -97,20 +97,30 @@ public class DriveGameTests {
     public static void bubieRecipeTakesAnEmptyHardDrive(GameTestHelper helper) {
         var holder = helper.getLevel().getRecipeManager().byKey(Bubie.id("bubie")).orElse(null);
         helper.assertTrue(holder != null && holder.value() instanceof CraftingRecipe, "the Bubie recipe is loaded");
-        CraftingRecipe recipe = (CraftingRecipe) holder.value();
-        ItemStack copper = new ItemStack(Items.COPPER_INGOT), glass = new ItemStack(Items.GLASS_PANE),
-                redstone = new ItemStack(Items.REDSTONE), wool = new ItemStack(Items.BLACK_WOOL);
+        // the grid built from the recipe itself, so it holds for the pack's recipe (voltaic ingots) too
+        helper.assertTrue(holder.value() instanceof net.minecraft.world.item.crafting.ShapedRecipe, "a shaped recipe");
+        var shaped = (net.minecraft.world.item.crafting.ShapedRecipe) holder.value();
         ItemStack empty = new ItemStack(Bubie.HARD_DRIVE.get());
         ItemStack full = new ItemStack(Bubie.HARD_DRIVE.get());
         net.minecraft.world.SimpleContainer cargo = new net.minecraft.world.SimpleContainer(18);
         cargo.setItem(0, new ItemStack(Items.DIAMOND));
         DriveItem.store(full, cargo);
+        boolean takesADrive = false;
         for (ItemStack drive : new ItemStack[]{empty, full}) {
-            List<ItemStack> grid = new ArrayList<>(List.of(copper, glass, copper, copper, drive, copper, redstone, wool, redstone));
-            boolean matches = recipe.matches(CraftingInput.of(3, 3, grid), helper.getLevel());
+            List<ItemStack> grid = new ArrayList<>();
+            for (var ingredient : shaped.getIngredients()) {
+                ItemStack[] options = ingredient.getItems();
+                if (ingredient.isEmpty() || options.length == 0) grid.add(ItemStack.EMPTY);
+                else if (options[0].is(Bubie.HARD_DRIVE.get())) {
+                    grid.add(drive);
+                    takesADrive = true;
+                } else grid.add(options[0]);
+            }
+            boolean matches = shaped.matches(CraftingInput.of(shaped.getWidth(), shaped.getHeight(), grid), helper.getLevel());
             helper.assertTrue(matches == (drive == empty), (drive == empty ? "an empty" : "a full") + " Hard Drive "
                     + (matches ? "fits" : "does not fit"));
         }
+        helper.assertTrue(takesADrive, "the Bubie recipe takes a Hard Drive");
         helper.succeed();
     }
 }
