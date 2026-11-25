@@ -6,7 +6,7 @@
 
 ![Seven Bubies, each dressed up in the editor](https://media.forgecdn.net/attachments/2241/432/01-lineup-png.png)
 
-Bubie is a cream CRT monitor in a black hoodie, as a helper for Minecraft 1.21.1 (NeoForge). Craft one, click the ground to switch it on, and give it a job.
+Bubie is a cream CRT monitor in a black hoodie, as a helper for **Minecraft 26.3 and 1.21.1 (NeoForge)**, plus an older version for 1.20.1 (Forge). Craft one, click the ground to switch it on, and give it a job.
 
 ![The default Bubie up close](https://media.forgecdn.net/attachments/2241/433/02-portrait-png.png)
 
@@ -23,6 +23,8 @@ Bubie is a cream CRT monitor in a black hoodie, as a helper for Minecraft 1.21.1
 - **Courier:** empties the chests, hoppers and furnace outputs in its area into its own chest. Feeding a Builder, it carries only what the blueprint still needs.
 
 Several Bubies in one area split the work: each one claims the block (or, for lumberjacks, the whole tree) it is on.
+
+**Makes its own way** (26.3): when no path leads to where it must work or to its chest, it changes the terrain a block at a time, as a player would: a narrow pit, steps up or down a wall, a tunnel, a bridge. Only natural ground, never anything built, and every hole is filled back in once the job is done.
 
 ![A quarry with its staircase](https://media.forgecdn.net/attachments/2241/438/07-quarry-png.png)
 
@@ -76,6 +78,15 @@ Casing, hoodie and screen-light colours, 18 eyes and 10 mouths, with a turning p
 
 Settings in `serverconfig/bubie-server.toml`.
 
+## 📦 Versions
+| Minecraft | Loader | Bubie | Notes |
+|---|---|---|---|
+| **26.3** | NeoForge | 1.7.0 | Newest: everything, plus making its own way |
+| **1.21.1** | NeoForge | 1.6.0 | The version in the Bubie Pack |
+| 1.20.1 | Forge | 1.5.3 | Older feature set, bug fixes only |
+
+The Builder needs **Base Blueprint** for the same Minecraft version.
+
 ---
 
 ## 🇧🇷 Português
@@ -91,5 +102,6 @@ Com o mod Base Blueprint, ele também é **Construtor**: entregue a planta e ele
 - **Bubie DJ:** na aba **DJ** do menu, ele toca o disco de música do slot da aba para todo mundo por perto. A tela vira um equalizador, ele dança e os Bubies em modo Ficar em volta dançam junto.
 - Guarda em Sophisticated Storage, Functional Storage, cofres do Create e bins do Mekanism; respeita as áreas do FTB Chunks; amigos do mesmo time do FTB Teams também dão ordens.
 - Se a vida acaba, ele desliga e vira o item, sem perder nada.
+- Versões: **Minecraft 26.3** e **1.21.1** (NeoForge), e uma mais antiga para 1.20.1 (Forge). Na 26.3 ele também **abre o próprio caminho** (cava, faz degraus, túnel ou ponte quando não tem como chegar) e tapa os buracos no fim.
 
 Made for the Bubie Pack. MIT license.
