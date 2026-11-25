@@ -64,8 +64,8 @@ public final class BlockBreaker {
     /** Mining progress per tick with this tool, as a player standing where the Bubie stands would get. */
     /** An electric tool (it holds Forge Energy) whose battery is empty. */
     public static boolean outOfEnergy(ItemStack tool) {
-        var energy = tool.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
-        return energy != null && energy.getEnergyStored() == 0;
+        var energy = com.bubie.data.Inv.energy(tool);
+        return energy != null && energy.getAmountAsLong() == 0;
     }
 
     public static float progressPerTick(BubieEntity bubie, BlockPos pos, BlockState state, ItemStack tool) {
@@ -124,7 +124,7 @@ public final class BlockBreaker {
             ItemStack left = player.getMainHandItem();
             if (!left.isEmpty()) {
                 ItemStack rest = bubie.insert(left);
-                if (!rest.isEmpty()) bubie.spawnAtLocation(rest);
+                if (!rest.isEmpty() && bubie.level() instanceof ServerLevel server) bubie.spawnAtLocation(server, rest);
             }
             return result.consumesAction();
         } finally {
@@ -145,11 +145,12 @@ public final class BlockBreaker {
     /** With a Smelting Chip, raw ores come out smelted (for extra energy). */
     public static ItemStack processed(BubieEntity bubie, ItemStack stack) {
         if (bubie.chipCount(ChipType.SMELTING) == 0) return stack;
-        if (!stack.is(Tags.Items.RAW_MATERIALS) && !stack.is(Tags.Items.ORES)) return stack;
+        if (!stack.is(Tags.Items.RAW_MATERIALS) && !stack.is(Tags.BlockItems.ORES.item())) return stack;
         ServerLevel level = (ServerLevel) bubie.level();
-        return level.getRecipeManager().getRecipeFor(RecipeType.SMELTING, new SingleRecipeInput(stack), level)
+        SingleRecipeInput input = new SingleRecipeInput(stack);
+        return level.recipeAccess().getRecipeFor(RecipeType.SMELTING, input, level)
                 .map(holder -> {
-                    ItemStack result = holder.value().getResultItem(level.registryAccess()).copy();
+                    ItemStack result = holder.value().assemble(input);
                     if (result.isEmpty()) return stack;
                     result.setCount(Math.min(result.getMaxStackSize(), result.getCount() * stack.getCount()));
                     bubie.spendEnergy(100.0 * stack.getCount());

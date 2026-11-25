@@ -7,21 +7,11 @@
     "III"
   ],
   "key": {
-    "C": {
-      "tag": "c:ingots/copper"
-    },
-    "G": {
-      "tag": "c:glass_panes"
-    },
-    "R": {
-      "item": "minecraft:redstone"
-    },
-    "H": {
-      "tag": "c:chests/wooden"
-    },
-    "I": {
-      "tag": "c:ingots/iron"
-    }
+    "C": "#c:ingots/copper",
+    "G": "#c:glass_panes",
+    "R": "minecraft:redstone",
+    "H": "#c:chests/wooden",
+    "I": "#c:ingots/iron"
   },
   "result": {
     "id": "bubie:bubie_station",

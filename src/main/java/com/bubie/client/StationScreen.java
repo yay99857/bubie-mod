@@ -1,7 +1,7 @@
 package com.bubie.client;
 
 import com.bubie.menu.StationMenu;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -14,24 +14,22 @@ public class StationScreen extends AbstractContainerScreen<StationMenu> {
     private int scroll;
 
     public StationScreen(StationMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title);
+        super(menu, inventory, title, LIST_X + LIST_W, 204);
         com.bubie.network.StationBubiesPayload.latest = java.util.List.of();
-        imageWidth = LIST_X + LIST_W;
-        imageHeight = 204;
         inventoryLabelY = StationMenu.INV_Y - 11;
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.render(g, mouseX, mouseY, partialTick);
-        renderTooltip(g, mouseX, mouseY);
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
         if (hoveredSlot != null && hoveredSlot.index == 27 && !hoveredSlot.hasItem() && menu.getCarried().isEmpty()) {
-            g.renderTooltip(font, font.split(Component.translatable("bubie.ui.hint.station_fuel"), 160), mouseX, mouseY);
+            g.setTooltipForNextFrame(font, font.split(Component.translatable("bubie.ui.hint.station_fuel"), 160), mouseX, mouseY);
         }
     }
 
     @Override
-    protected void renderBg(GuiGraphics g, float partialTick, int mx, int my) {
+    public void extractBackground(GuiGraphicsExtractor g, int mx, int my, float partialTick) {
+        super.extractBackground(g, mx, my, partialTick);
         int x = leftPos, y = topPos;
         BubieUi.casing(g, x, y, 176, imageHeight);
         BubieUi.casing(g, x + LIST_X, y, LIST_W, imageHeight);
@@ -65,16 +63,16 @@ public class StationScreen extends AbstractContainerScreen<StationMenu> {
     }
 
     @Override
-    protected void renderLabels(GuiGraphics g, int mx, int my) {
-        g.drawString(font, title, 8, 6, BubieUi.INK, false);
-        g.drawString(font, playerInventoryTitle, 8, inventoryLabelY, BubieUi.INK_SOFT, false);
+    protected void extractLabels(GuiGraphicsExtractor g, int mx, int my) {
+        g.text(font, title, 8, 6, BubieUi.INK, false);
+        g.text(font, playerInventoryTitle, 8, inventoryLabelY, BubieUi.INK_SOFT, false);
         NumberFormat nf = NumberFormat.getIntegerInstance();
         String fe = nf.format(menu.energy()) + " / " + nf.format(menu.capacity()) + " FE";
-        g.drawString(font, fe, 34, 91, BubieUi.AMBER, false);
-        g.drawString(font, Component.translatable("bubie.ui.tracker"), LIST_X + 6, 6, BubieUi.INK, false);
+        g.text(font, fe, 34, 91, BubieUi.AMBER, false);
+        g.text(font, Component.translatable("bubie.ui.tracker"), LIST_X + 6, 6, BubieUi.INK, false);
         if (menu.charging()) {
             Component c = Component.translatable("bubie.ui.charging");
-            g.drawString(font, c, 164 - font.width(c), 91, BubieUi.AMBER_LIGHT, false);
+            g.text(font, c, 164 - font.width(c), 91, BubieUi.AMBER_LIGHT, false);
         }
     }
 }

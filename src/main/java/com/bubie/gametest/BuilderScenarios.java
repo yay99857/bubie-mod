@@ -41,7 +41,7 @@ final class BuilderScenarios {
     /** A Bubie at `at` with a chest at CHEST holding `blocks`, handed the blueprint by a player standing south. */
     private static BubieEntity builder(GameTestHelper helper, BlockPos at, ItemStack plan, ItemStack blocks) {
         helper.setBlock(CHEST, Blocks.CHEST);
-        ChestBlockEntity chest = helper.getBlockEntity(CHEST);
+        ChestBlockEntity chest = helper.getBlockEntity(CHEST, ChestBlockEntity.class);
         if (!blocks.isEmpty()) chest.setItem(0, blocks);
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), at);
         bubie.setEnergy(40000);
@@ -83,7 +83,7 @@ final class BuilderScenarios {
         for (int i = 0; i < mine; i++) helper.getLevel().setBlockAndUpdate(plan.get(i).pos(), plan.get(i).block().defaultBlockState());
         helper.assertTrue(BlueprintCompat.plan(bubie).size() == total - mine, "what the player placed is off the plan");
         helper.assertTrue(BlueprintCompat.ghost(bubie).size() == total - mine, "and off the ghosts");
-        ChestBlockEntity chest = helper.getBlockEntity(CHEST);
+        ChestBlockEntity chest = helper.getBlockEntity(CHEST, ChestBlockEntity.class);
         chest.setItem(0, new ItemStack(Items.COBBLESTONE, total - mine)); // exactly the rest
         helper.succeedWhen(() -> {
             helper.assertTrue(BlueprintCompat.plan(bubie).isEmpty(), "still " + BlueprintCompat.plan(bubie).size()
@@ -119,7 +119,7 @@ final class BuilderScenarios {
                 helper.assertTrue(bubie.getNeed().is(Items.COBBLESTONE) && bubie.getNeed().getCount() == 5,
                         "says it misses 5 cobblestone, says " + bubie.getNeed());
                 // the owner (or another Bubie) brings more
-                ChestBlockEntity chest = helper.getBlockEntity(CHEST);
+                ChestBlockEntity chest = helper.getBlockEntity(CHEST, ChestBlockEntity.class);
                 chest.setItem(5, new ItemStack(Items.COBBLESTONE, 16));
                 refilled[0] = true;
             }
@@ -135,7 +135,7 @@ final class BuilderScenarios {
         BubieGameTests.floor(helper, Blocks.STONE);
         BlockPos store = new BlockPos(13, 1, 13);
         helper.setBlock(store, Blocks.CHEST);
-        ChestBlockEntity stock = helper.getBlockEntity(store);
+        ChestBlockEntity stock = helper.getBlockEntity(store, ChestBlockEntity.class);
         stock.setItem(0, new ItemStack(Items.COBBLESTONE, 64));
         stock.setItem(1, new ItemStack(Items.DIRT, 20));
         BubieEntity builder = builder(helper, new BlockPos(6, 1, 6), blueprint(3, 0, true, Blocks.COBBLESTONE), ItemStack.EMPTY);

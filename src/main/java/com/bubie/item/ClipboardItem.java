@@ -13,7 +13,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -47,12 +46,12 @@ public class ClipboardItem extends Item {
     public static Selection read(ItemStack stack) {
         CustomData custom = stack.get(DataComponents.CUSTOM_DATA);
         CompoundTag tag = custom == null ? new CompoundTag() : custom.copyTag();
-        return new Selection(pos(tag, "A"), pos(tag, "B"), pos(tag, "Chest"), pos(tag, "Home"), tag.getString("Dim"));
+        return new Selection(pos(tag, "A"), pos(tag, "B"), pos(tag, "Chest"), pos(tag, "Home"), tag.getStringOr("Dim", ""));
     }
 
     @Nullable
     private static BlockPos pos(CompoundTag tag, String key) {
-        return tag.contains(key) ? BlockPos.of(tag.getLong(key)) : null;
+        return tag.contains(key) ? BlockPos.of(tag.getLongOr(key, 0L)) : null;
     }
 
     private static void write(ItemStack stack, Selection s) {
@@ -71,10 +70,10 @@ public class ClipboardItem extends Item {
         Level level = context.getLevel();
         Player player = context.getPlayer();
         if (player == null) return InteractionResult.PASS;
-        if (level.isClientSide) return InteractionResult.SUCCESS;
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
         ItemStack stack = context.getItemInHand();
         BlockPos pos = context.getClickedPos();
-        String dim = level.dimension().location().toString();
+        String dim = level.dimension().identifier().toString();
         Selection s = read(stack);
         if (!dim.equals(s.dimension())) s = new Selection(null, null, null, null, dim);
 
@@ -82,7 +81,7 @@ public class ClipboardItem extends Item {
             if (level.getBlockState(pos).is(Bubie.STATION.get())) {
                 write(stack, new Selection(s.a(), s.b(), s.chest(), pos, dim));
                 say(player, Component.translatable("bubie.clipboard.home", pos.getX(), pos.getY(), pos.getZ()));
-            } else if (level.getCapability(Capabilities.ItemHandler.BLOCK, pos, context.getClickedFace()) != null) {
+            } else if (com.bubie.data.Inv.at(level, pos, context.getClickedFace()) != null) {
                 write(stack, new Selection(s.a(), s.b(), pos, s.home(), dim));
                 say(player, Component.translatable("bubie.clipboard.chest", pos.getX(), pos.getY(), pos.getZ()));
             } else {
@@ -103,22 +102,22 @@ public class ClipboardItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (player.isShiftKeyDown()) {
-            if (!level.isClientSide) {
+            if (!level.isClientSide()) {
                 stack.remove(DataComponents.CUSTOM_DATA);
                 say(player, Component.translatable("bubie.clipboard.cleared"));
             }
-            return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+            return InteractionResult.SUCCESS;
         }
-        return InteractionResultHolder.pass(stack);
+        return InteractionResult.PASS;
     }
 
     /** Right-click on a Bubie: it takes the area, chest and home on the clipboard (and starts working). */
     public static void applyTo(ItemStack stack, BubieEntity bubie, Player player) {
         Selection s = read(stack);
-        String dim = bubie.level().dimension().location().toString();
+        String dim = bubie.level().dimension().identifier().toString();
         if (!dim.equals(s.dimension()) || (s.area() == null && s.chest() == null && s.home() == null)) {
             say(player, Component.translatable("bubie.clipboard.empty"));
             return;
@@ -139,24 +138,25 @@ public class ClipboardItem extends Item {
     }
 
     private static void say(Player player, Component message) {
-        player.displayClientMessage(message, true);
+        player.sendOverlayMessage(message);
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display,
+            java.util.function.Consumer<Component> tooltip, TooltipFlag flag) {
         Selection s = read(stack);
         WorkArea area = s.area();
         if (area != null) {
-            tooltip.add(Component.translatable("bubie.clipboard.tip_area", area.describe()).withStyle(ChatFormatting.GOLD));
+            tooltip.accept(Component.translatable("bubie.clipboard.tip_area", area.describe()).withStyle(ChatFormatting.GOLD));
         } else if (s.a() != null) {
-            tooltip.add(Component.translatable("bubie.clipboard.tip_half").withStyle(ChatFormatting.GOLD));
+            tooltip.accept(Component.translatable("bubie.clipboard.tip_half").withStyle(ChatFormatting.GOLD));
         }
-        if (s.chest() != null) tooltip.add(Component.translatable("bubie.clipboard.tip_chest",
+        if (s.chest() != null) tooltip.accept(Component.translatable("bubie.clipboard.tip_chest",
                 s.chest().getX(), s.chest().getY(), s.chest().getZ()).withStyle(ChatFormatting.GRAY));
-        if (s.home() != null) tooltip.add(Component.translatable("bubie.clipboard.tip_home",
+        if (s.home() != null) tooltip.accept(Component.translatable("bubie.clipboard.tip_home",
                 s.home().getX(), s.home().getY(), s.home().getZ()).withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("item.bubie.bubie_clipboard.how1").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.translatable("item.bubie.bubie_clipboard.how2").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.translatable("item.bubie.bubie_clipboard.how3").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.accept(Component.translatable("item.bubie.bubie_clipboard.how1").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.accept(Component.translatable("item.bubie.bubie_clipboard.how2").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.accept(Component.translatable("item.bubie.bubie_clipboard.how3").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

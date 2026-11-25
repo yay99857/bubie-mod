@@ -23,8 +23,9 @@ public final class ClientSetup {
     }
 
     @SubscribeEvent
-    static void reload(net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener((net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> LookTextures.clear());
+    static void reload(net.neoforged.neoforge.client.event.AddClientReloadListenersEvent event) {
+        event.addListener(com.bubie.Bubie.id("look_textures"),
+                (net.minecraft.server.packs.resources.ResourceManagerReloadListener) manager -> LookTextures.clear());
     }
 
     @SubscribeEvent

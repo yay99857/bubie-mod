@@ -4,7 +4,7 @@ import com.bubie.entity.BubieEntity;
 import com.bubie.entity.Dj;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 
@@ -17,7 +17,7 @@ public final class DjSound extends AbstractTickableSoundInstance {
     private final Dj.Track track;
 
     DjSound(BubieEntity bubie, Dj.Track track) {
-        super(SoundEvent.createVariableRangeEvent(ResourceLocation.parse(track.ref())), SoundSource.RECORDS,
+        super(SoundEvent.createVariableRangeEvent(Identifier.parse(track.ref())), SoundSource.RECORDS,
                 SoundInstance.createUnseededRandom());
         this.bubie = bubie;
         this.track = track;

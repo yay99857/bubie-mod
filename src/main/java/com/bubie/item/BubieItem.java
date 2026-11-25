@@ -55,7 +55,7 @@ public class BubieItem extends Item {
         CustomData custom = stack.get(DataComponents.CUSTOM_DATA);
         if (custom == null) return null;
         CompoundTag root = custom.copyTag();
-        return root.contains(KEY) ? root.getCompound(KEY) : null;
+        return root.contains(KEY) ? root.getCompoundOrEmpty(KEY) : null;
     }
 
     @Override
@@ -68,10 +68,10 @@ public class BubieItem extends Item {
         BubieRegistry registry = BubieRegistry.get(server.getServer());
         int max = BubieConfig.maxPerPlayer(server.getServer());
         if (registry.count(player.getUUID()) >= max && !player.isCreative()) {
-            player.displayClientMessage(Component.translatable("bubie.message.limit", max), true);
+            player.sendOverlayMessage(Component.translatable("bubie.message.limit", max));
             return InteractionResult.FAIL;
         }
-        BubieEntity bubie = Bubie.BUBIE_ENTITY.get().create(server);
+        BubieEntity bubie = Bubie.BUBIE_ENTITY.get().create(server, net.minecraft.world.entity.EntitySpawnReason.SPAWN_ITEM_USE);
         if (bubie == null) return InteractionResult.FAIL;
 
         ItemStack stack = context.getItemInHand();
@@ -87,11 +87,11 @@ public class BubieItem extends Item {
 
         BlockPos pos = context.getClickedPos();
         if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) pos = pos.relative(context.getClickedFace());
-        bubie.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, player.getYRot() + 180.0F, 0.0F);
+        bubie.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, player.getYRot() + 180.0F, 0.0F);
         bubie.yHeadRot = bubie.getYRot();
         bubie.yBodyRot = bubie.getYRot();
         if (!level.noCollision(bubie)) {
-            player.displayClientMessage(Component.translatable("bubie.message.no_room"), true);
+            player.sendOverlayMessage(Component.translatable("bubie.message.no_room"));
             return InteractionResult.FAIL;
         }
         server.addFreshEntity(bubie);
@@ -103,25 +103,26 @@ public class BubieItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display,
+            java.util.function.Consumer<Component> tooltip, TooltipFlag flag) {
         CompoundTag data = data(stack);
         if (data == null) {
-            tooltip.add(Component.translatable("item.bubie.bubie.new").withStyle(ChatFormatting.GRAY));
+            tooltip.accept(Component.translatable("item.bubie.bubie.new").withStyle(ChatFormatting.GRAY));
             return;
         }
-        tooltip.add(Component.translatable("item.bubie.bubie.off").withStyle(ChatFormatting.GOLD));
-        tooltip.add(Component.translatable("bubie.tooltip.job",
-                Component.translatable(JobType.byId(data.getByte("Job")).key())).withStyle(ChatFormatting.GRAY));
+        tooltip.accept(Component.translatable("item.bubie.bubie.off").withStyle(ChatFormatting.GOLD));
+        tooltip.accept(Component.translatable("bubie.tooltip.job",
+                Component.translatable(JobType.byId(data.getByteOr("Job", (byte) 0)).key())).withStyle(ChatFormatting.GRAY));
         int max = BubieConfig.SPEC.isLoaded() ? BubieConfig.MAX_ENERGY.get() : 48000;
-        tooltip.add(Component.translatable("bubie.tooltip.energy",
-                Math.round(100.0F * data.getInt("Energy") / max)).withStyle(ChatFormatting.GRAY));
+        tooltip.accept(Component.translatable("bubie.tooltip.energy",
+                Math.round(100.0F * data.getIntOr("Energy", 0) / max)).withStyle(ChatFormatting.GRAY));
         int items = 0;
-        for (Tag t : data.getList("Storage", Tag.TAG_COMPOUND)) items += ((CompoundTag) t).getInt("count");
-        if (items > 0) tooltip.add(Component.translatable("bubie.tooltip.items", items).withStyle(ChatFormatting.GRAY));
-        ListTag extra = data.getList("Extra", Tag.TAG_COMPOUND);
+        for (Tag t : data.getListOrEmpty("Storage")) items += ((CompoundTag) t).getIntOr("count", 0);
+        if (items > 0) tooltip.accept(Component.translatable("bubie.tooltip.items", items).withStyle(ChatFormatting.GRAY));
+        ListTag extra = data.getListOrEmpty("Extra");
         int chips = 0;
-        for (Tag t : extra) if (((CompoundTag) t).getByte("Slot") > 0) chips++;
-        if (chips > 0) tooltip.add(Component.translatable("bubie.tooltip.chips", chips).withStyle(ChatFormatting.GRAY));
+        for (Tag t : extra) if (((CompoundTag) t).getByteOr("Slot", (byte) 0) > 0) chips++;
+        if (chips > 0) tooltip.accept(Component.translatable("bubie.tooltip.chips", chips).withStyle(ChatFormatting.GRAY));
     }
 
     @Override

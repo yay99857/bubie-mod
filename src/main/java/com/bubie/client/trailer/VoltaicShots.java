@@ -7,7 +7,7 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -30,7 +30,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.items.IItemHandler;
+import com.bubie.data.Inv;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -58,11 +60,11 @@ public final class VoltaicShots {
     }
 
     private static Block block(String id) {
-        return BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("voltaicdynamics", id));
+        return BuiltInRegistries.BLOCK.getValue(Identifier.fromNamespaceAndPath("voltaicdynamics", id));
     }
 
     private static Item item(String ns, String id) {
-        return BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath(ns, id));
+        return BuiltInRegistries.ITEM.getValue(Identifier.fromNamespaceAndPath(ns, id));
     }
 
     private static BlockPos at(int x, int y, int z) {
@@ -76,7 +78,7 @@ public final class VoltaicShots {
     }
 
     private static void cmd(ServerPlayer p, String c) {
-        p.server.getCommands().performPrefixedCommand(p.createCommandSourceStack().withPermission(4).withSuppressedOutput(), c);
+        p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack().withPermission(net.minecraft.server.permissions.LevelBasedPermissionSet.OWNER).withSuppressedOutput(), c);
     }
 
     private static void look(ServerPlayer p, double x, double y, double z, double tx, double ty, double tz) {
@@ -85,7 +87,7 @@ public final class VoltaicShots {
         float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
         p.getAbilities().flying = true;
         p.onUpdateAbilities();
-        p.teleportTo(p.serverLevel(), x, y, z, yaw, pitch);
+        p.teleportTo(p.level(), x, y, z, yaw, pitch);
     }
 
     private static void shot(String name) {
@@ -101,17 +103,17 @@ public final class VoltaicShots {
     }
 
     private static void insert(ServerLevel level, BlockPos pos, ItemStack... stacks) {
-        IItemHandler h = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, Direction.UP);
-        if (h == null) h = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+        ResourceHandler<ItemResource> h = Inv.at(level, pos, Direction.UP);
+        if (h == null) h = Inv.at(level, pos, null);
         if (h == null) return;
         for (ItemStack stack : stacks) {
             ItemStack rest = stack;
-            for (int slot = 0; slot < h.getSlots() && !rest.isEmpty(); slot++) rest = h.insertItem(slot, rest, false);
+            for (int slot = 0; slot < h.size() && !rest.isEmpty(); slot++) rest = Inv.insert(h, slot, rest, false);
         }
     }
 
     private static void build(ServerPlayer p) {
-        ServerLevel level = p.serverLevel();
+        ServerLevel level = p.level();
         g = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int x = -30; x <= 30; x++) {
@@ -164,8 +166,8 @@ public final class VoltaicShots {
         insert(level, at(1, 0, -2), new ItemStack(Items.RAW_GOLD, 16));
         insert(level, at(3, 0, -2), new ItemStack(Items.IRON_INGOT, 16), new ItemStack(Items.COPPER_INGOT, 16), new ItemStack(Items.REDSTONE, 16));
         insert(level, at(5, 0, -2), new ItemStack(Items.RAW_IRON, 16));
-        IItemHandler fluidGen = level.getCapability(Capabilities.ItemHandler.BLOCK, at(-5, 0, -2), null);
-        if (fluidGen != null) fluidGen.insertItem(0, new ItemStack(Items.LAVA_BUCKET), false);
+        ResourceHandler<ItemResource> fluidGen = Inv.at(level, at(-5, 0, -2), null);
+        if (fluidGen != null) Inv.insert(fluidGen, 0, new ItemStack(Items.LAVA_BUCKET), false);
         // blocks set by code skip the step a player's placement runs: let every cable work out its arms now
         for (BlockPos pos : BlockPos.betweenClosed(at(-9, 0, -4), at(9, 1, 4))) {
             BlockState state = level.getBlockState(pos);
@@ -189,10 +191,10 @@ public final class VoltaicShots {
                     "time set 2000", "weather clear", "gamemode creative", "difficulty peaceful"))
                 cmd(p, c);
             cmd(p, "forceload add " + (cx - 32) + " " + (cz - 32) + " " + (cx + 32) + " " + (cz + 32));
-            p.teleportTo(p.serverLevel(), cx, 150, cz, 0, 0);
+            p.teleportTo(p.level(), cx, 150, cz, 0, 0);
         }));
         add(160, () -> server(VoltaicShots::build));
-        add(200, () -> mc.options.hideGui = true); // let the generators fill the network and the machines start
+        add(200, () -> BubieUi.hideHud(mc, true)); // let the generators fill the network and the machines start
         add(20, () -> server(p -> look(p, cx + 0.5, g + 3.2, cz + 9.5, cx + 0.5, g + 0.5, cz - 2)));
         add(60, () -> shot("workshop"));
         add(5, () -> server(p -> look(p, cx - 4.5, g + 1.8, cz + 3.0, cx - 6.5, g + 0.5, cz - 1.5)));
@@ -202,20 +204,20 @@ public final class VoltaicShots {
         add(5, () -> server(p -> look(p, cx + 7.5, g + 2.2, cz + 3.5, cx + 5.5, g + 0.3, cz)));
         add(50, () -> shot("cables"));
         // the alloy smelter's screen
-        add(5, () -> mc.options.hideGui = false);
+        add(5, () -> BubieUi.hideHud(mc, false));
         add(5, () -> server(p -> {
             BlockPos smelter = at(3, 0, -2);
             look(p, cx + 3.5, g, cz + 0.5, cx + 3.5, g + 0.5, cz - 1.5);
             p.getAbilities().flying = false;
             p.onUpdateAbilities();
-            BlockState s = p.serverLevel().getBlockState(smelter);
-            s.useWithoutItem(p.serverLevel(), p, new BlockHitResult(Vec3.atCenterOf(smelter), Direction.SOUTH, smelter, false));
+            BlockState s = p.level().getBlockState(smelter);
+            s.useWithoutItem(p.level(), p, new BlockHitResult(Vec3.atCenterOf(smelter), Direction.SOUTH, smelter, false));
         }));
         add(40, () -> shot("alloy_smelter"));
-        add(5, () -> mc.setScreen(null));
+        add(5, () -> mc.gui.setScreen(null));
         // night: the lit machines and the lantern
         add(5, () -> {
-            mc.options.hideGui = true;
+            BubieUi.hideHud(mc, true);
             server(p -> cmd(p, "time set 18000"));
         });
         add(10, () -> server(p -> look(p, cx + 0.5, g + 2.6, cz + 8.5, cx + 0.5, g + 0.5, cz - 2)));

@@ -17,7 +17,12 @@ import java.util.UUID;
 
 /** Which Bubies each player has placed, for the per-player limit; counts unloaded ones too. */
 public class BubieRegistry extends SavedData {
-    private static final String NAME = "bubie_registry";
+    /** Kept as one tag in the layout the old SavedData used. */
+    private static final com.mojang.serialization.Codec<BubieRegistry> CODEC =
+            CompoundTag.CODEC.xmap(BubieRegistry::load, r -> r.save(new CompoundTag()));
+    private static final net.minecraft.world.level.saveddata.SavedDataType<BubieRegistry> TYPE =
+            new net.minecraft.world.level.saveddata.SavedDataType<>(
+                    net.minecraft.resources.Identifier.fromNamespaceAndPath(com.bubie.Bubie.MOD_ID, "registry"), BubieRegistry::new, CODEC);
     private final Map<UUID, Set<UUID>> byOwner = new HashMap<>();
     private final Map<UUID, Sighting> sightings = new HashMap<>();
 
@@ -44,8 +49,8 @@ public class BubieRegistry extends SavedData {
         }
 
         static Sighting load(CompoundTag tag) {
-            return new Sighting(tag.getString("Name"), tag.getString("Dim"), tag.getLong("Pos"), tag.getLong("Home"),
-                    tag.getInt("Doing"), tag.getInt("Status"), tag.getInt("Face"), tag.getInt("Energy"), tag.getInt("Look"));
+            return new Sighting(tag.getStringOr("Name", ""), tag.getStringOr("Dim", ""), tag.getLongOr("Pos", 0L), tag.getLongOr("Home", 0L),
+                    tag.getIntOr("Doing", 0), tag.getIntOr("Status", 0), tag.getIntOr("Face", 0), tag.getIntOr("Energy", 0), tag.getIntOr("Look", 0));
         }
     }
 
@@ -69,8 +74,7 @@ public class BubieRegistry extends SavedData {
     }
 
     public static BubieRegistry get(MinecraftServer server) {
-        return server.overworld().getDataStorage().computeIfAbsent(
-                new SavedData.Factory<>(BubieRegistry::new, BubieRegistry::load), NAME);
+        return server.getDataStorage().computeIfAbsent(TYPE);
     }
 
     public int count(UUID owner) {
@@ -90,14 +94,13 @@ public class BubieRegistry extends SavedData {
         }
     }
 
-    @Override
-    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+    private CompoundTag save(CompoundTag tag) {
         ListTag owners = new ListTag();
         byOwner.forEach((owner, bubies) -> {
             CompoundTag entry = new CompoundTag();
-            entry.putUUID("Owner", owner);
+            entry.store("Owner", net.minecraft.core.UUIDUtil.CODEC, owner);
             ListTag list = new ListTag();
-            for (UUID id : bubies) list.add(NbtUtils.createUUID(id));
+            for (UUID id : bubies) list.add(new net.minecraft.nbt.IntArrayTag(net.minecraft.core.UUIDUtil.uuidToIntArray(id)));
             entry.put("Bubies", list);
             owners.add(entry);
         });
@@ -105,24 +108,26 @@ public class BubieRegistry extends SavedData {
         ListTag seen = new ListTag();
         sightings.forEach((bubie, sighting) -> {
             CompoundTag entry = sighting.save();
-            entry.putUUID("Bubie", bubie);
+            entry.store("Bubie", net.minecraft.core.UUIDUtil.CODEC, bubie);
             seen.add(entry);
         });
         tag.put("Sightings", seen);
         return tag;
     }
 
-    private static BubieRegistry load(CompoundTag tag, HolderLookup.Provider registries) {
+    private static BubieRegistry load(CompoundTag tag) {
         BubieRegistry registry = new BubieRegistry();
-        for (Tag t : tag.getList("Owners", Tag.TAG_COMPOUND)) {
+        for (Tag t : tag.getListOrEmpty("Owners")) {
             CompoundTag entry = (CompoundTag) t;
             Set<UUID> set = new HashSet<>();
-            for (Tag id : entry.getList("Bubies", Tag.TAG_INT_ARRAY)) set.add(NbtUtils.loadUUID(id));
-            registry.byOwner.put(entry.getUUID("Owner"), set);
+            for (Tag id : entry.getListOrEmpty("Bubies")) {
+                if (id instanceof net.minecraft.nbt.IntArrayTag ints && ints.size() == 4) set.add(net.minecraft.core.UUIDUtil.uuidFromIntArray(ints.getAsIntArray()));
+            }
+            registry.byOwner.put(entry.read("Owner", net.minecraft.core.UUIDUtil.CODEC).orElseThrow(), set);
         }
-        for (Tag t : tag.getList("Sightings", Tag.TAG_COMPOUND)) {
+        for (Tag t : tag.getListOrEmpty("Sightings")) {
             CompoundTag entry = (CompoundTag) t;
-            if (entry.hasUUID("Bubie")) registry.sightings.put(entry.getUUID("Bubie"), Sighting.load(entry));
+            entry.read("Bubie", net.minecraft.core.UUIDUtil.CODEC).ifPresent(id -> registry.sightings.put(id, Sighting.load(entry)));
         }
         return registry;
     }

@@ -59,8 +59,8 @@ public record StationBubiesPayload(List<Entry> bubies) implements CustomPacketPa
     public static StationBubiesPayload of(MinecraftServer server, ResourceKey<Level> dimension, BlockPos station,
                                           ResourceKey<Level> viewer) {
         List<Entry> list = new ArrayList<>();
-        String here = viewer.location().toString();
-        for (BubieRegistry.Sighting s : BubieRegistry.get(server).livingAt(dimension.location().toString(), station)) {
+        String here = viewer.identifier().toString();
+        for (BubieRegistry.Sighting s : BubieRegistry.get(server).livingAt(dimension.identifier().toString(), station)) {
             if (list.size() >= MAX) break;
             String name = s.name().length() > MAX_NAME ? s.name().substring(0, MAX_NAME) : s.name();
             list.add(new Entry(name, s.doing(), s.status(), s.face(), s.energy(), s.look(), s.pos(), !s.dimension().equals(here)));

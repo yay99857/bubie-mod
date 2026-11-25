@@ -7,7 +7,6 @@ import com.bubie.entity.Mode;
 import com.bubie.entity.Status;
 import com.bubie.job.Claims;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -17,23 +16,19 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /** Bubies working together: the courier, shared targets, and getting stuck. */
-@GameTestHolder(Bubie.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class TeamGameTests {
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 1200)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 1200)
     public static void courierEmptiesChestsAndFurnaceOutputs(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.STONE);
         BlockPos store = new BlockPos(12, 1, 12), furnace = new BlockPos(12, 1, 8);
         helper.setBlock(store, Blocks.CHEST);
-        ChestBlockEntity chest = helper.getBlockEntity(store);
+        ChestBlockEntity chest = helper.getBlockEntity(store, ChestBlockEntity.class);
         chest.setItem(0, new ItemStack(Items.COBBLESTONE, 30));
         chest.setItem(7, new ItemStack(Items.OAK_LOG, 12));
         helper.setBlock(furnace, Blocks.FURNACE);
-        AbstractFurnaceBlockEntity oven = helper.getBlockEntity(furnace);
+        AbstractFurnaceBlockEntity oven = helper.getBlockEntity(furnace, AbstractFurnaceBlockEntity.class);
         oven.setItem(1, new ItemStack(Items.COAL, 8)); // fuel stays
         oven.setItem(2, new ItemStack(Items.IRON_INGOT, 5)); // output goes
         BubieEntity bubie = BubieGameTests.bubie(helper, new BlockPos(6, 1, 6), JobType.COURIER, ItemStack.EMPTY,
@@ -47,7 +42,7 @@ public class TeamGameTests {
         });
     }
 
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 2400)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 2400)
     public static void twoLumberjacksNeverShareATree(GameTestHelper helper) {
         Claims.clear();
         BubieGameTests.floor(helper, Blocks.GRASS_BLOCK);
@@ -79,7 +74,7 @@ public class TeamGameTests {
         });
     }
 
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 600)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 600)
     public static void boxedInBubieSaysItIsStuck(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.STONE);
         for (int x = 9; x <= 14; x++) for (int z = 9; z <= 14; z++) helper.setBlock(new BlockPos(x, 1, z), Blocks.SAND);

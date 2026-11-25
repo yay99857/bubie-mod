@@ -12,9 +12,9 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
+import net.neoforged.neoforge.transfer.item.ResourceHandlerSlot;
 
 public class StationMenu extends AbstractContainerMenu {
     public static final int FUEL_X = 8, FUEL_Y = 92, INV_Y = 122;
@@ -32,20 +32,20 @@ public class StationMenu extends AbstractContainerMenu {
 
     public static StationMenu fromNetwork(int id, Inventory inventory, RegistryFriendlyByteBuf buf) {
         BlockPos pos = buf.readBlockPos();
-        return new StationMenu(id, inventory, new ItemStackHandler(STORAGE + 1) {
+        return new StationMenu(id, inventory, new ItemStacksResourceHandler(STORAGE + 1) {
             @Override
-            public boolean isItemValid(int slot, ItemStack stack) {
-                return slot != FUEL || StationBlockEntity.isStationFuel(stack);
+            public boolean isValid(int slot, ItemResource resource) {
+                return slot != FUEL || StationBlockEntity.isStationFuel(resource.toStack());
             }
         }, new SimpleContainerData(4), pos);
     }
 
-    private StationMenu(int id, Inventory inventory, IItemHandler items, ContainerData data, BlockPos pos) {
+    private StationMenu(int id, Inventory inventory, ItemStacksResourceHandler items, ContainerData data, BlockPos pos) {
         super(Bubie.STATION_MENU.get(), id);
         this.data = data;
         this.pos = pos;
         this.player = inventory.player;
-        for (int i = 0; i < STORAGE; i++) addSlot(new SlotItemHandler(items, i, 8 + (i % 9) * 18, 18 + (i / 9) * 18));
+        for (int i = 0; i < STORAGE; i++) addSlot(new ResourceHandlerSlot(items, items::set, i, 8 + (i % 9) * 18, 18 + (i / 9) * 18));
         addSlot(new FixedSlot(items, FUEL, FUEL_X, FUEL_Y));
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) addSlot(new Slot(inventory, col + row * 9 + 9, 8 + col * 18, INV_Y + row * 18));
@@ -71,7 +71,7 @@ public class StationMenu extends AbstractContainerMenu {
     public void broadcastChanges() {
         super.broadcastChanges();
         if (!(player instanceof net.minecraft.server.level.ServerPlayer server) || ticks++ % 20 != 0) return;
-        com.bubie.network.StationBubiesPayload now = com.bubie.network.StationBubiesPayload.of(server.server,
+        com.bubie.network.StationBubiesPayload now = com.bubie.network.StationBubiesPayload.of(server.level().getServer(),
                 server.level().dimension(), pos, server.level().dimension());
         if (now.bubies().equals(sent)) return;
         sent = now.bubies();
@@ -80,7 +80,7 @@ public class StationMenu extends AbstractContainerMenu {
 
     @Override
     public boolean stillValid(Player player) {
-        return player.level().getBlockState(pos).is(Bubie.STATION.get()) && player.distanceToSqr(pos.getCenter()) < 64;
+        return player.level().getBlockState(pos).is(Bubie.STATION.get()) && player.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(pos)) < 64;
     }
 
     @Override

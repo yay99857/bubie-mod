@@ -27,7 +27,7 @@ public record TrackerRequestPayload() implements CustomPacketPayload {
             if (!(context.player() instanceof ServerPlayer player)) return;
             WirelessStationItem.Link link = WirelessStationItem.held(player);
             if (link == null) return;
-            PacketDistributor.sendToPlayer(player, StationBubiesPayload.of(player.server, link.dimension(), link.pos(),
+            PacketDistributor.sendToPlayer(player, StationBubiesPayload.of(player.level().getServer(), link.dimension(), link.pos(),
                     player.level().dimension()));
         });
     }

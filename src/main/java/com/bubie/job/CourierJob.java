@@ -15,7 +15,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.ChestType;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
+import com.bubie.data.Inv;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 
 import javax.annotation.Nullable;
 import java.util.HashMap;
@@ -54,10 +56,10 @@ public class CourierJob extends Job {
         if (isDestination(level, pos, state)) return false;
         BlockEntity be = level.getBlockEntity(pos);
         if (be == null || be instanceof StationBlockEntity) return false;
-        IItemHandler source = source(level, pos);
+        ResourceHandler<ItemResource> source = source(level, pos);
         if (source == null) return false;
-        for (int slot = 0; slot < source.getSlots(); slot++) {
-            ItemStack stack = source.extractItem(slot, 64, true);
+        for (int slot = 0; slot < source.size(); slot++) {
+            ItemStack stack = Inv.extract(source, slot, 64, true);
             if (!stack.isEmpty() && amountWanted(level, stack.getItem()) > 0) return true;
         }
         return false;
@@ -74,29 +76,29 @@ public class CourierJob extends Job {
     }
 
     @Nullable
-    static IItemHandler source(ServerLevel level, BlockPos pos) {
-        IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, pos, Direction.DOWN);
-        return handler != null ? handler : level.getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+    static ResourceHandler<ItemResource> source(ServerLevel level, BlockPos pos) {
+        ResourceHandler<ItemResource> handler = Inv.at(level, pos, Direction.DOWN);
+        return handler != null ? handler : Inv.at(level, pos, null);
     }
 
     /** Takes as much as it can carry (and the builder needs) from the container. */
     @Override
     public boolean perform(ServerLevel level, BlockPos pos, BlockState state, ItemStack tool) {
-        IItemHandler source = source(level, pos);
+        ResourceHandler<ItemResource> source = source(level, pos);
         if (source == null) return false;
         wantedAt = -RECHECK; // count again from scratch
         boolean took = false;
-        for (int slot = 0; slot < source.getSlots(); slot++) {
-            ItemStack peek = source.extractItem(slot, 64, true);
+        for (int slot = 0; slot < source.size(); slot++) {
+            ItemStack peek = Inv.extract(source, slot, 64, true);
             if (peek.isEmpty()) continue;
             int want = Math.min(peek.getCount(), amountWanted(level, peek.getItem()));
             if (want <= 0) continue;
-            ItemStack got = source.extractItem(slot, want, false);
+            ItemStack got = Inv.extract(source, slot, want, false);
             if (got.isEmpty()) continue;
             ItemStack rest = bubie.insert(got);
             if (rest.getCount() < got.getCount()) took = true;
             if (!rest.isEmpty()) {
-                source.insertItem(slot, rest, false); // its storage is full: put the rest back
+                Inv.insert(source, slot, rest, false); // its storage is full: put the rest back
                 break;
             }
             if (wanted != null) wanted.merge(got.getItem(), -got.getCount(), Integer::sum);
@@ -134,10 +136,10 @@ public class CourierJob extends Job {
             }
         }
         if (need == null) return null;
-        IItemHandler dest = level.getCapability(Capabilities.ItemHandler.BLOCK, chest, null);
+        ResourceHandler<ItemResource> dest = Inv.at(level, chest, null);
         if (dest != null) {
-            for (int slot = 0; slot < dest.getSlots(); slot++) {
-                ItemStack s = dest.getStackInSlot(slot);
+            for (int slot = 0; slot < dest.size(); slot++) {
+                ItemStack s = Inv.get(dest, slot);
                 if (!s.isEmpty() && need.containsKey(s.getItem())) need.merge(s.getItem(), -s.getCount(), Integer::sum);
             }
         }

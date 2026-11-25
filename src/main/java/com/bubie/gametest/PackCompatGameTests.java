@@ -9,9 +9,8 @@ import com.bubie.entity.WorkArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -21,10 +20,10 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.energy.IEnergyStorage;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.transfer.energy.EnergyHandler;
+import com.bubie.data.Inv;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 
 import static com.bubie.gametest.BubieGameTests.FIELD;
 import static com.bubie.gametest.BubieGameTests.floor;
@@ -34,17 +33,15 @@ import static com.bubie.gametest.BubieGameTests.floor;
  * mines, power for its station. A test whose mod is missing passes at once, so these run in any setup; to really
  * exercise them, run tools/prepare-pack-test.sh and ./gradlew runPackGameTest.
  */
-@GameTestHolder(Bubie.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class PackCompatGameTests {
     private static final BlockPos BOX = new BlockPos(2, 1, 2);
 
     private static Block block(String id) {
-        return BuiltInRegistries.BLOCK.get(ResourceLocation.parse(id));
+        return BuiltInRegistries.BLOCK.getValue(Identifier.parse(id));
     }
 
     private static Item item(String id) {
-        return BuiltInRegistries.ITEM.get(ResourceLocation.parse(id));
+        return BuiltInRegistries.ITEM.getValue(Identifier.parse(id));
     }
 
     private static boolean skip(GameTestHelper helper, String mod) {
@@ -54,10 +51,10 @@ public class PackCompatGameTests {
     }
 
     private static int count(GameTestHelper helper, BlockPos rel, Item item) {
-        IItemHandler handler = helper.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, helper.absolutePos(rel), null);
+        ResourceHandler<ItemResource> handler = Inv.at(helper.getLevel(), helper.absolutePos(rel), null);
         int n = 0;
         if (handler != null) {
-            for (int i = 0; i < handler.getSlots(); i++) if (handler.getStackInSlot(i).is(item)) n += handler.getStackInSlot(i).getCount();
+            for (int i = 0; i < handler.size(); i++) if (Inv.get(handler, i).is(item)) n += Inv.get(handler, i).getCount();
         }
         return n;
     }
@@ -66,7 +63,7 @@ public class PackCompatGameTests {
      * Inventory Tweaks sorts the open menu's slots that are not the player's (middle click): the Bubie's storage, never
      * its tool, fuel and chips. Runs the mod's own sort on a Bubie menu.
      */
-    @GameTest(template = FIELD)
+    @BubieTest(template = FIELD)
     public static void inventoryTweaksLeavesTheEquipmentAlone(GameTestHelper helper) throws Exception {
         if (skip(helper, "invtweaks")) return;
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(5, 1, 5));
@@ -99,15 +96,15 @@ public class PackCompatGameTests {
     }
 
     /** A Quarry holding an Atomic Disassembler with an empty battery says so, instead of "working" and skipping blocks. */
-    @GameTest(template = FIELD, timeoutTicks = 200)
+    @BubieTest(template = FIELD, timeoutTicks = 200)
     public static void emptyAtomicDisassemblerIsReported(GameTestHelper helper) {
         if (skip(helper, "mekanism")) return;
         floor(helper, Blocks.DIRT);
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(5, 1, 5));
         bubie.setEnergy(40000);
         ItemStack tool = new ItemStack(item("mekanism:atomic_disassembler"));
-        IEnergyStorage energy = tool.getCapability(Capabilities.EnergyStorage.ITEM);
-        helper.assertTrue(energy != null && energy.getEnergyStored() == 0, "a new disassembler starts empty");
+        EnergyHandler energy = Inv.energy(tool);
+        helper.assertTrue(energy != null && energy.getAmountAsLong() == 0, "a new disassembler starts empty");
         bubie.setItemSlot(net.minecraft.world.entity.EquipmentSlot.MAINHAND, tool);
         bubie.setJob(JobType.QUARRY);
         bubie.setArea(WorkArea.of(helper.absolutePos(new BlockPos(3, 0, 3)), helper.absolutePos(new BlockPos(7, 0, 7))));
@@ -132,27 +129,27 @@ public class PackCompatGameTests {
                 storage + " should hold 10 diamonds, has " + count(helper, BOX, Items.DIAMOND) + "; status " + bubie.getStatus()));
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 400)
+    @BubieTest(template = FIELD, timeoutTicks = 400)
     public static void unloadsIntoSophisticatedBarrel(GameTestHelper helper) {
         unloadsInto(helper, "sophisticatedstorage", "sophisticatedstorage:barrel");
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 400)
+    @BubieTest(template = FIELD, timeoutTicks = 400)
     public static void unloadsIntoSophisticatedChest(GameTestHelper helper) {
         unloadsInto(helper, "sophisticatedstorage", "sophisticatedstorage:chest");
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 400)
+    @BubieTest(template = FIELD, timeoutTicks = 400)
     public static void unloadsIntoFunctionalStorageDrawer(GameTestHelper helper) {
         unloadsInto(helper, "functionalstorage", "functionalstorage:oak_1");
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 400)
+    @BubieTest(template = FIELD, timeoutTicks = 400)
     public static void unloadsIntoCreateVault(GameTestHelper helper) {
         unloadsInto(helper, "create", "create:item_vault");
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 400)
+    @BubieTest(template = FIELD, timeoutTicks = 400)
     public static void unloadsIntoMekanismBin(GameTestHelper helper) {
         unloadsInto(helper, "mekanism", "mekanism:basic_bin");
     }
@@ -180,17 +177,17 @@ public class PackCompatGameTests {
         });
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 800)
+    @BubieTest(template = FIELD, timeoutTicks = 800)
     public static void farmsMysticalAgriculture(GameTestHelper helper) {
         farms(helper, "mysticalagriculture", "mysticalagriculture:inferium_crop", "mysticalagriculture:inferium_essence");
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 800)
+    @BubieTest(template = FIELD, timeoutTicks = 800)
     public static void farmsFarmersDelightCabbage(GameTestHelper helper) {
         farms(helper, "farmersdelight", "farmersdelight:cabbages", "farmersdelight:cabbage");
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 800)
+    @BubieTest(template = FIELD, timeoutTicks = 800)
     public static void minesAllTheOres(GameTestHelper helper) {
         if (skip(helper, "alltheores")) return;
         floor(helper, Blocks.STONE);
@@ -200,7 +197,7 @@ public class PackCompatGameTests {
         helper.succeedWhen(() -> helper.assertTrue(BubieGameTests.inChest(helper, item("alltheores:raw_tin")) >= 1, "raw tin in the chest"));
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 400)
+    @BubieTest(template = FIELD, timeoutTicks = 400)
     public static void minesWithAMekanismPickaxe(GameTestHelper helper) {
         if (skip(helper, "mekanismtools")) return;
         floor(helper, Blocks.STONE);
@@ -211,15 +208,15 @@ public class PackCompatGameTests {
     }
 
     /** Any FE cable (Mekanism, Flux Networks, Powah, Pipez, Voltaic) fills the station the same way: its energy capability. */
-    @GameTest(template = FIELD, timeoutTicks = 200)
+    @BubieTest(template = FIELD, timeoutTicks = 200)
     public static void stationChargesFromFE(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         BlockPos station = new BlockPos(7, 1, 7);
         helper.setBlock(station, Bubie.STATION.get());
-        IEnergyStorage energy = helper.getLevel().getCapability(Capabilities.EnergyStorage.BLOCK, helper.absolutePos(station), Direction.UP);
-        helper.assertTrue(energy != null && energy.canReceive(), "the station takes FE");
+        EnergyHandler energy = helper.getLevel().getCapability(Capabilities.Energy.BLOCK, helper.absolutePos(station), Direction.UP);
+        helper.assertTrue(energy != null && Inv.insertEnergy(energy, 1, true) > 0, "the station takes FE");
         int got = 0;
-        for (int i = 0; i < 50; i++) got += energy.receiveEnergy(100_000, false); // a cable pushes every tick
+        for (int i = 0; i < 50; i++) got += Inv.insertEnergy(energy, 100_000, false); // a cable pushes every tick
         helper.assertTrue(got > 0, "the station took some FE");
         final int stored = got;
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(7, 1, 5));
@@ -228,33 +225,33 @@ public class PackCompatGameTests {
         bubie.setEnergy(0);
         helper.succeedWhen(() -> {
             helper.assertTrue(bubie.getEnergy() >= 2000, "charged from FE, energy " + bubie.getEnergy());
-            helper.assertTrue(energy.getEnergyStored() < stored, "the station spent FE");
+            helper.assertTrue(energy.getAmountAsLong() < stored, "the station spent FE");
         });
     }
 
     /** Pipes and hoppers: redstone goes to the fuel slot first; coal and logs never do. */
-    @GameTest(template = FIELD, timeoutTicks = 40)
+    @BubieTest(template = FIELD, timeoutTicks = 40)
     public static void stationTakesFuelFromPipes(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         BlockPos pos = new BlockPos(7, 1, 7);
         helper.setBlock(pos, Bubie.STATION.get());
-        IItemHandler handler = helper.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, helper.absolutePos(pos), Direction.UP);
+        ResourceHandler<ItemResource> handler = Inv.at(helper.getLevel(), helper.absolutePos(pos), Direction.UP);
         helper.assertTrue(handler != null, "the station has an item handler");
-        net.neoforged.neoforge.items.ItemHandlerHelper.insertItemStacked(handler, new ItemStack(Items.REDSTONE, 10), false);
-        net.neoforged.neoforge.items.ItemHandlerHelper.insertItemStacked(handler, new ItemStack(Items.OAK_LOG, 10), false);
-        StationBlockEntity station = helper.getBlockEntity(pos);
-        helper.assertTrue(station.items().getStackInSlot(StationBlockEntity.FUEL).is(Items.REDSTONE), "redstone in the fuel slot");
-        helper.assertTrue(handler.extractItem(0, 1, true).isEmpty(), "fuel can't be pulled out by pipes");
+        Inv.insert(handler, new ItemStack(Items.REDSTONE, 10), false);
+        Inv.insert(handler, new ItemStack(Items.OAK_LOG, 10), false);
+        StationBlockEntity station = helper.getBlockEntity(pos, StationBlockEntity.class);
+        helper.assertTrue(station.stackIn(StationBlockEntity.FUEL).is(Items.REDSTONE), "redstone in the fuel slot");
+        helper.assertTrue(Inv.extract(handler, 0, 1, true).isEmpty(), "fuel can't be pulled out by pipes");
         int logs = 0;
-        for (int i = 0; i < StationBlockEntity.STORAGE; i++) if (station.items().getStackInSlot(i).is(Items.OAK_LOG)) logs += station.items().getStackInSlot(i).getCount();
+        for (int i = 0; i < StationBlockEntity.STORAGE; i++) if (station.stackIn(i).is(Items.OAK_LOG)) logs += station.stackIn(i).getCount();
         helper.assertTrue(logs == 10, "logs in storage, not burnt");
         helper.succeed();
     }
 
     /** Mods that capture mobs (Ender IO soul vials and others) must leave Bubies alone. */
-    @GameTest(template = FIELD, timeoutTicks = 20)
+    @BubieTest(template = FIELD, timeoutTicks = 20)
     public static void cannotBeCaptured(GameTestHelper helper) {
-        helper.assertTrue(Bubie.BUBIE_ENTITY.get().is(net.neoforged.neoforge.common.Tags.EntityTypes.CAPTURING_NOT_SUPPORTED),
+        helper.assertTrue(Bubie.BUBIE_ENTITY.get().builtInRegistryHolder().is(net.neoforged.neoforge.common.Tags.EntityTypes.CAPTURING_NOT_SUPPORTED),
                 "bubie:bubie is in #c:capturing_not_supported");
         helper.succeed();
     }
@@ -264,10 +261,10 @@ public class PackCompatGameTests {
         if (skip(helper, mod)) return;
         floor(helper, Blocks.STONE);
         ItemStack stack = new ItemStack(item(battery));
-        IEnergyStorage cell = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+        EnergyHandler cell = Inv.energy(stack);
         helper.assertTrue(cell != null, battery + " stores FE");
-        for (int i = 0; i < 200 && cell.getEnergyStored() < cell.getMaxEnergyStored(); i++) cell.receiveEnergy(Integer.MAX_VALUE, false);
-        int full = cell.getEnergyStored();
+        for (int i = 0; i < 200 && cell.getAmountAsLong() < cell.getCapacityAsLong(); i++) Inv.insertEnergy(cell, Integer.MAX_VALUE, false);
+        long full = cell.getAmountAsLong();
         helper.assertTrue(full > 0, battery + " took a charge");
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(7, 1, 7));
         bubie.setMode(Mode.STAY);
@@ -276,25 +273,25 @@ public class PackCompatGameTests {
         helper.assertTrue(BubieEntity.isFuel(stack), "the fuel slot takes " + battery);
         helper.succeedWhen(() -> {
             ItemStack in = bubie.extra().getItem(BubieEntity.FUEL_SLOT);
-            IEnergyStorage now = in.getCapability(Capabilities.EnergyStorage.ITEM);
+            EnergyHandler now = Inv.energy(in);
             helper.assertTrue(in.is(item(battery)), "the battery stays in the slot");
             helper.assertTrue(bubie.getEnergy() > 0, "charged from the battery, energy " + bubie.getEnergy());
-            helper.assertTrue(now != null && now.getEnergyStored() < full, "the battery gave FE");
+            helper.assertTrue(now != null && now.getAmountAsLong() < full, "the battery gave FE");
         });
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 100)
+    @BubieTest(template = FIELD, timeoutTicks = 100)
     public static void chargesFromVoltaicPocketAccumulator(GameTestHelper helper) {
         chargesFromBattery(helper, "voltaicdynamics", "voltaicdynamics:pocket_accumulator");
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 100)
+    @BubieTest(template = FIELD, timeoutTicks = 100)
     public static void chargesFromMekanismEnergyTablet(GameTestHelper helper) {
         chargesFromBattery(helper, "mekanism", "mekanism:energy_tablet");
     }
 
     /** Mark a Voltaic pulverizer as the drop-off and the miner feeds it raw ore directly. */
-    @GameTest(template = FIELD, timeoutTicks = 400)
+    @BubieTest(template = FIELD, timeoutTicks = 400)
     public static void unloadsOreIntoVoltaicPulverizer(GameTestHelper helper) {
         if (skip(helper, "voltaicdynamics")) return;
         floor(helper, Blocks.STONE);
@@ -311,16 +308,15 @@ public class PackCompatGameTests {
     }
 
     /** The Bubie, Clipboard and Station recipes load (packs may replace them, the Bubie Pack does with Voltaic items). */
-    @GameTest(template = FIELD, timeoutTicks = 20)
+    @BubieTest(template = FIELD, timeoutTicks = 20)
     public static void recipesLoad(GameTestHelper helper) {
-        var recipes = helper.getLevel().getRecipeManager();
+        var recipes = helper.getLevel().recipeAccess();
         for (String id : new String[]{"bubie", "bubie_clipboard", "bubie_station"}) {
-            var holder = recipes.byKey(Bubie.id(id));
+            var holder = recipes.byKey(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, Bubie.id(id)));
             helper.assertTrue(holder.isPresent(), "recipe bubie:" + id + " is loaded");
             StringBuilder items = new StringBuilder();
-            for (var ingredient : holder.get().value().getIngredients()) {
-                ItemStack[] options = ingredient.getItems();
-                if (options.length > 0) items.append(BuiltInRegistries.ITEM.getKey(options[0].getItem())).append(' ');
+            for (var ingredient : holder.get().value().placementInfo().ingredients()) {
+                ingredient.items().findFirst().ifPresent(item -> items.append(item.getRegisteredName()).append(' '));
             }
             com.mojang.logging.LogUtils.getLogger().info("Bubie recipe bubie:{} uses {}", id, items.toString().trim());
             helper.assertTrue(!items.isEmpty(), "recipe bubie:" + id + " has ingredients");
@@ -328,7 +324,7 @@ public class PackCompatGameTests {
         // the chips: crafted, or in the Bubie Pack alloyed in Voltaic's Alloy Smelter
         for (com.bubie.item.ChipType chip : com.bubie.item.ChipType.values()) {
             String id = "chip_" + chip.name().toLowerCase();
-            var holder = recipes.byKey(Bubie.id(id));
+            var holder = recipes.byKey(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, Bubie.id(id)));
             helper.assertTrue(holder.isPresent(), "recipe bubie:" + id + " is loaded");
             com.mojang.logging.LogUtils.getLogger().info("Bubie recipe bubie:{} is {}", id,
                     BuiltInRegistries.RECIPE_TYPE.getKey(holder.get().value().getType()));

@@ -7,15 +7,9 @@
     "NRN"
   ],
   "key": {
-    "N": {
-      "item": "minecraft:gold_nugget"
-    },
-    "R": {
-      "item": "minecraft:redstone"
-    },
-    "X": {
-      "item": "minecraft:hopper"
-    }
+    "N": "minecraft:gold_nugget",
+    "R": "minecraft:redstone",
+    "X": "minecraft:hopper"
   },
   "result": {
     "id": "bubie:chip_magnet",

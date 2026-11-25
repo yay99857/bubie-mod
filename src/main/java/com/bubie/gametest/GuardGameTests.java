@@ -7,29 +7,24 @@ import com.bubie.entity.JobType;
 import com.bubie.entity.Status;
 import com.bubie.item.ChipType;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.monster.Creeper;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /** The Guard job and the Program Chip that the advanced jobs may need. */
-@GameTestHolder(Bubie.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class GuardGameTests {
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 600)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 600)
     public static void guardFightsTheZombieButNotTheCreeper(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.STONE);
         BubieEntity guard = BubieGameTests.bubie(helper, new BlockPos(4, 1, 4), JobType.GUARD, new ItemStack(Items.IRON_SWORD),
                 new BlockPos(1, 1, 1), new BlockPos(14, 3, 14));
-        Zombie zombie = helper.spawn(EntityType.ZOMBIE, new BlockPos(11, 1, 11));
+        Zombie zombie = helper.spawn(net.minecraft.world.entity.EntityTypes.ZOMBIE, new BlockPos(11, 1, 11));
         zombie.setNoAi(true); // stands there: the test is about the Bubie going to it
-        Creeper creeper = helper.spawn(EntityType.CREEPER, new BlockPos(3, 1, 12));
+        Creeper creeper = helper.spawn(net.minecraft.world.entity.EntityTypes.CREEPER, new BlockPos(3, 1, 12));
         creeper.setNoAi(true);
         helper.succeedWhen(() -> {
             helper.assertTrue(!zombie.isAlive(), "the zombie is down; guard " + guard.getStatus() + ", zombie hp " + zombie.getHealth());
@@ -39,7 +34,7 @@ public class GuardGameTests {
         });
     }
 
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 200)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 200)
     public static void advancedJobsWaitForAProgramChip(GameTestHelper helper) {
         BubieConfig.ADVANCED_JOBS_NEED_CHIP.set(true);
         try {

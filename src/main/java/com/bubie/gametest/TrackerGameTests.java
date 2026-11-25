@@ -8,7 +8,6 @@ import com.bubie.item.WirelessStationItem;
 import com.bubie.network.StationBubiesPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,23 +18,19 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 import java.util.List;
 
 /** The Station's tracker (where its Bubies are, kept in the world's registry) and the Wireless Station linked to it. */
-@GameTestHolder(Bubie.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class TrackerGameTests {
     private static final BlockPos STATION = new BlockPos(7, 1, 7);
 
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 200)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 200)
     public static void stationTracksTheBubiesLivingThere(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.STONE);
         helper.setBlock(STATION, Bubie.STATION.get());
         BlockPos station = helper.absolutePos(STATION);
-        String dimension = helper.getLevel().dimension().location().toString();
+        String dimension = helper.getLevel().dimension().identifier().toString();
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(4, 1, 4));
         bubie.setEnergy(40000);
         bubie.setCustomName(Component.literal("Tracked"));
@@ -61,7 +56,7 @@ public class TrackerGameTests {
         ).thenSucceed();
     }
 
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 40)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 40)
     public static void wirelessStationLinksWithAShiftClick(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.STONE);
         helper.setBlock(STATION, Bubie.STATION.get());

@@ -4,9 +4,8 @@ import com.bubie.entity.BubieEntity;
 import com.bubie.entity.Face;
 import com.bubie.entity.Look;
 import com.bubie.network.BubieCommandPayload;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -68,30 +67,30 @@ public class LookScreen extends Screen {
     @Override
     public void onClose() {
         bubie.previewLook = null;
-        minecraft.setScreen(parent);
+        minecraft.gui.setScreen(parent);
     }
 
     @Override
     public void removed() {
-        if (minecraft.screen != this) bubie.previewLook = null;
+        if (minecraft.gui.screen() != this) bubie.previewLook = null;
     }
 
     private void save() {
-        PacketDistributor.sendToServer(new BubieCommandPayload(bubie.getId(), BubieCommandPayload.SET_LOOK, look.pack()));
+        net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new BubieCommandPayload(bubie.getId(), BubieCommandPayload.SET_LOOK, look.pack()));
         onClose();
     }
 
     // ------------------------------------------------------------------ drawing
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.render(g, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
         hits.clear();
         int mx = mouseX - left, my = mouseY - top;
-        g.pose().pushPose();
-        g.pose().translate(left, top, 0);
+        g.pose().pushMatrix();
+        g.pose().translate(left, top);
         BubieUi.casing(g, 0, 0, W, H);
-        g.drawString(font, title, 8, 7, BubieUi.INK, false);
+        g.text(font, title, 8, 7, BubieUi.INK, false);
 
         // stage
         BubieUi.screen(g, STAGE_X, STAGE_Y, STAGE_W, STAGE_H);
@@ -99,13 +98,13 @@ public class LookScreen extends Screen {
             int y = STAGE_Y + STAGE_H - 34 + i * 6;
             g.fill(STAGE_X + 2, y, STAGE_X + STAGE_W, y + 1, 0x22F4BF69);
         }
-        g.pose().popPose();
+        g.pose().popMatrix();
         if (!dragging && System.currentTimeMillis() > spinPause) yaw += partialTick * 0.8F;
         drawBubie(g, left + STAGE_X, top + STAGE_Y, STAGE_W, STAGE_H);
-        g.pose().pushPose();
-        g.pose().translate(left, top, 0);
+        g.pose().pushMatrix();
+        g.pose().translate(left, top);
         Component hint = Component.translatable("bubie.look.drag");
-        g.drawString(font, hint, STAGE_X + (STAGE_W - font.width(hint)) / 2, STAGE_Y + STAGE_H - 11, BubieUi.DIM, false);
+        g.text(font, hint, STAGE_X + (STAGE_W - font.width(hint)) / 2, STAGE_Y + STAGE_H - 11, BubieUi.DIM, false);
 
         int y = 20;
         y = swatches(g, mx, my, y, "bubie.look.shell", Look.SHELLS, look.shell(), i -> set(look.withShell(i)));
@@ -123,46 +122,39 @@ public class LookScreen extends Screen {
         button(g, mx, my, STAGE_X + 58, by, 54, Component.translatable("bubie.look.default"), false, () -> set(Look.DEFAULT));
         button(g, mx, my, W - 8 - bw * 2 - 4, by, bw, Component.translatable("gui.cancel"), false, this::onClose);
         button(g, mx, my, W - 8 - bw, by, bw, Component.translatable("bubie.look.save"), true, this::save);
-        g.pose().popPose();
+        g.pose().popMatrix();
 
         for (Hit hit : hits) {
-            if (hit.tip() != null && hit.contains(mx, my)) g.renderTooltip(font, hit.tip(), mouseX, mouseY);
+            if (hit.tip() != null && hit.contains(mx, my)) g.setTooltipForNextFrame(font, hit.tip(), mouseX, mouseY);
         }
     }
 
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderTransparentBackground(g);
+    public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        extractTransparentBackground(g);
     }
 
-    private void drawBubie(GuiGraphics g, int x, int y, int w, int h) {
-        g.enableScissor(x, y, x + w, y + h);
-        float bodyRot = bubie.yBodyRot, yRot = bubie.getYRot(), xRot = bubie.getXRot();
-        float headO = bubie.yHeadRotO, head = bubie.yHeadRot, bodyO = bubie.yBodyRotO;
-        float angle = 180.0F + yaw;
-        bubie.yBodyRot = angle;
-        bubie.yBodyRotO = angle;
-        bubie.setYRot(angle);
-        bubie.setXRot(0);
-        bubie.yHeadRot = angle;
-        bubie.yHeadRotO = angle;
+    private void drawBubie(GuiGraphicsExtractor g, int x, int y, int w, int h) {
         float scale = 92.0F;
+        var renderer = minecraft.getEntityRenderDispatcher().getRenderer(bubie);
+        var state = renderer.createRenderState(bubie, 1.0F);
+        state.shadowPieces.clear();
+        state.outlineColor = 0;
+        if (state instanceof net.minecraft.client.renderer.entity.state.LivingEntityRenderState living) {
+            living.bodyRot = 180.0F + yaw;
+            living.yRot = 0.0F;
+            living.xRot = 0.0F;
+        }
         Quaternionf pose = new Quaternionf().rotateZ(Mth.PI).rotateX(-0.18F);
         Quaternionf camera = new Quaternionf().rotateX(-0.18F);
-        InventoryScreen.renderEntityInInventory(g, x + w / 2.0F, y + h - 30, scale,
-                new Vector3f(0, 0, 0), pose, camera, bubie);
-        bubie.yBodyRot = bodyRot;
-        bubie.yBodyRotO = bodyO;
-        bubie.setYRot(yRot);
-        bubie.setXRot(xRot);
-        bubie.yHeadRot = head;
-        bubie.yHeadRotO = headO;
-        g.disableScissor();
+        // feet 30 px above the bottom of the stage (the picture's origin is its centre)
+        Vector3f feet = new Vector3f(0, (h / 2.0F - 30.0F) / scale, 0);
+        g.entity(state, scale, feet, pose, camera, x, y, x + w, y + h);
     }
 
-    private int swatches(GuiGraphics g, int mx, int my, int y, String label, List<Look.Swatch> list, int selected,
+    private int swatches(GuiGraphicsExtractor g, int mx, int my, int y, String label, List<Look.Swatch> list, int selected,
                          java.util.function.IntConsumer pick) {
-        g.drawString(font, Component.translatable(label), RIGHT, y, BubieUi.INK_SOFT, false);
+        g.text(font, Component.translatable(label), RIGHT, y, BubieUi.INK_SOFT, false);
         y += 11;
         int size = 13, step = 15;
         for (int i = 0; i < list.size(); i++) {
@@ -182,8 +174,8 @@ public class LookScreen extends Screen {
         return y + size + 6;
     }
 
-    private int picker(GuiGraphics g, int mx, int my, int y, String label, String nameKey, Runnable prev, Runnable next) {
-        g.drawString(font, Component.translatable(label), RIGHT, y, BubieUi.INK_SOFT, false);
+    private int picker(GuiGraphicsExtractor g, int mx, int my, int y, String label, String nameKey, Runnable prev, Runnable next) {
+        g.text(font, Component.translatable(label), RIGHT, y, BubieUi.INK_SOFT, false);
         y += 11;
         int w = W - 8 - RIGHT;
         BubieUi.screen(g, RIGHT, y, w, 20);
@@ -191,18 +183,18 @@ public class LookScreen extends Screen {
         button(g, mx, my, RIGHT + w - 17, y + 3, 14, Component.literal("▶"), false, next);
         BubieUi.face(g, look, Face.IDLE, RIGHT + 22, y + 3, 1);
         Component name = Component.translatable(nameKey);
-        g.drawString(font, name, RIGHT + 56 + (w - 76 - font.width(name)) / 2, y + 6, BubieUi.AMBER, false);
+        g.text(font, name, RIGHT + 56 + (w - 76 - font.width(name)) / 2, y + 6, BubieUi.AMBER, false);
         return y + 26;
     }
 
-    private void button(GuiGraphics g, int mx, int my, int x, int y, int w, Component text, boolean active, Runnable action) {
+    private void button(GuiGraphicsExtractor g, int mx, int my, int x, int y, int w, Component text, boolean active, Runnable action) {
         boolean hover = mx >= x && mx < x + w && my >= y && my < y + 14;
         if (active) {
             BubieUi.button(g, font, x, y, w, 14, text, true, hover);
         } else {
             g.fill(x, y, x + w, y + 14, hover ? BubieUi.CREAM_HI : BubieUi.CREAM_SHADE);
             g.fill(x, y + 13, x + w, y + 14, BubieUi.CREAM_DEEP);
-            g.drawString(font, text, x + (w - font.width(text)) / 2, y + 3, BubieUi.INK, false);
+            g.text(font, text, x + (w - font.width(text)) / 2, y + 3, BubieUi.INK, false);
         }
         hits.add(new Hit(x, y, w, 14, action, null));
     }
@@ -210,9 +202,11 @@ public class LookScreen extends Screen {
     // ------------------------------------------------------------------ input
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean doubleClick) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
         double mx = mouseX - left, my = mouseY - top;
-        if (button == 0) {
+        if (button == com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT) {
             for (Hit hit : List.copyOf(hits)) {
                 if (hit.contains(mx, my)) {
                     hit.action().run();
@@ -226,27 +220,31 @@ public class LookScreen extends Screen {
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, doubleClick);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dx, double dy) {
+    public boolean mouseDragged(net.minecraft.client.input.MouseButtonEvent event, double dx, double dy) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
         if (dragging) {
             yaw -= (float) (mouseX - lastX) * 2.0F;
             lastX = mouseX;
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, dx, dy);
+        return super.mouseDragged(event, dx, dy);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        double mouseX = event.x(), mouseY = event.y();
+        int button = event.button();
         if (dragging) {
             dragging = false;
             spinPause = System.currentTimeMillis() + 3000;
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(event);
     }
 
     /** For the screenshot director. */

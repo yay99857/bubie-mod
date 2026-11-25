@@ -56,7 +56,7 @@ public final class ShotDirector {
     }
 
     private static void cmd(ServerPlayer p, String c) {
-        p.server.getCommands().performPrefixedCommand(p.createCommandSourceStack().withPermission(4).withSuppressedOutput(), c);
+        p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack().withPermission(net.minecraft.server.permissions.LevelBasedPermissionSet.OWNER).withSuppressedOutput(), c);
     }
 
     private static void look(ServerPlayer p, double x, double y, double z, double tx, double ty, double tz) {
@@ -65,7 +65,7 @@ public final class ShotDirector {
         float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
         p.getAbilities().flying = true;
         p.onUpdateAbilities();
-        p.teleportTo(p.serverLevel(), x, y, z, yaw, pitch);
+        p.teleportTo(p.level(), x, y, z, yaw, pitch);
         p.setDeltaMovement(0, 0, 0);
     }
 
@@ -79,9 +79,9 @@ public final class ShotDirector {
     }
 
     private static BubieEntity spawn(ServerPlayer p, int x, int z, float yaw) {
-        ServerLevel level = p.serverLevel();
-        BubieEntity b = Bubie.BUBIE_ENTITY.get().create(level);
-        b.moveTo(cx + x + 0.5, g, cz + z + 0.5, yaw, 0);
+        ServerLevel level = p.level();
+        BubieEntity b = Bubie.BUBIE_ENTITY.get().create(level, net.minecraft.world.entity.EntitySpawnReason.SPAWN_ITEM_USE);
+        b.snapTo(cx + x + 0.5, g, cz + z + 0.5, yaw, 0);
         b.yHeadRot = yaw;
         b.yBodyRot = yaw;
         b.setOwnerUUID(p.getUUID());
@@ -95,13 +95,13 @@ public final class ShotDirector {
         bubie.setItemSlot(EquipmentSlot.MAINHAND, tool);
         bubie.setJob(job);
         bubie.setArea(WorkArea.of(a, b));
-        p.serverLevel().setBlockAndUpdate(chest, Blocks.CHEST.defaultBlockState());
+        p.level().setBlockAndUpdate(chest, Blocks.CHEST.defaultBlockState());
         bubie.setChest(chest);
         bubie.setMode(Mode.WORK);
     }
 
     private static void flatten(ServerPlayer p) {
-        ServerLevel level = p.serverLevel();
+        ServerLevel level = p.level();
         g = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int x = -40; x <= 40; x++) {
@@ -118,7 +118,7 @@ public final class ShotDirector {
     }
 
     private static void scenes(ServerPlayer p) {
-        ServerLevel level = p.serverLevel();
+        ServerLevel level = p.level();
         // portrait: three Bubies by the camera
         BubieEntity a = spawn(p, -1, 0, 0);
         a.setMode(Mode.STAY);
@@ -224,23 +224,23 @@ public final class ShotDirector {
     private static void djSteps(Minecraft mc) {
         add(200, () -> server(ShotDirector::flatten));
         add(40, () -> server(ShotDirector::djScene));
-        add(20, () -> mc.options.hideGui = true);
+        add(20, () -> BubieUi.hideHud(mc, true));
         add(20, () -> server(p -> look(p, cx + 1.2, g + 0.4, cz + 3.4, cx + 1.0, g + 0.55, cz + 0.5)));
         add(40, () -> shot("dj_face"));
         add(7, () -> shot("dj_face2"));
-        add(5, () -> mc.options.hideGui = false);
+        add(5, () -> BubieUi.hideHud(mc, false));
         add(5, () -> server(p -> look(p, cx + 0.5, g + 0.6, cz + 2.4, cx + 0.5, g + 0.5, cz + 0.5)));
         add(20, () -> shot("dj_title"));
         add(5, () -> server(p -> {
             p.getAbilities().flying = false;
             p.onUpdateAbilities();
             p.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
-            BubieEntity b = p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6)).stream().findFirst().orElse(null);
+            BubieEntity b = p.level().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6)).stream().findFirst().orElse(null);
             if (b != null) b.interact(p, InteractionHand.MAIN_HAND);
         }));
         add(20, () -> BubieScreen.selectTab(3));
         add(20, () -> shot("menu_dj"));
-        add(5, () -> mc.setScreen(null));
+        add(5, () -> mc.gui.setScreen(null));
         add(20, () -> LOG.info("dj shots done"));
         add(20, () -> Minecraft.getInstance().stop());
     }
@@ -248,10 +248,10 @@ public final class ShotDirector {
     private static void build() {
         Minecraft mc = Minecraft.getInstance();
         if (LOGOS) {
-            add(20, () -> mc.options.hideGui = true);
-            add(10, () -> mc.setScreen(new LogoScreen(LogoScreen.Kind.MOD)));
+            add(20, () -> BubieUi.hideHud(mc, true));
+            add(10, () -> mc.gui.setScreen(new LogoScreen(LogoScreen.Kind.MOD)));
             add(30, () -> shot("logo_mod"));
-            add(10, () -> mc.setScreen(new LogoScreen(LogoScreen.Kind.PACK)));
+            add(10, () -> mc.gui.setScreen(new LogoScreen(LogoScreen.Kind.PACK)));
             add(30, () -> shot("logo_pack"));
             add(20, () -> Minecraft.getInstance().stop());
             return;
@@ -260,14 +260,14 @@ public final class ShotDirector {
             for (String c : List.of("gamerule doDaylightCycle false", "gamerule doWeatherCycle false", "gamerule doMobSpawning false",
                     "time set 6000", "weather clear", "gamemode creative", "kill @e[type=bubie:bubie]"))
                 cmd(p, c);
-            var found = p.serverLevel().findClosestBiome3d(bio -> bio.is(net.minecraft.world.level.biome.Biomes.PLAINS),
+            var found = p.level().findClosestBiome3d(bio -> bio.is(net.minecraft.world.level.biome.Biomes.PLAINS),
                     new BlockPos(6000, 64, 6000), 6400, 32, 64);
             if (found != null) {
                 cx = found.getFirst().getX();
                 cz = found.getFirst().getZ();
             }
             cmd(p, "forceload add " + (cx - 48) + " " + (cz - 48) + " " + (cx + 48) + " " + (cz + 48));
-            p.teleportTo(p.serverLevel(), cx, 200, cz, 0, 0);
+            p.teleportTo(p.level(), cx, 200, cz, 0, 0);
         }));
         if (DJ_ONLY) {
             djSteps(mc);
@@ -275,7 +275,7 @@ public final class ShotDirector {
         }
         add(200, () -> server(ShotDirector::flatten));
         add(40, () -> server(ShotDirector::scenes));
-        add(20, () -> mc.options.hideGui = true);
+        add(20, () -> BubieUi.hideHud(mc, true));
         // portrait, close up
         add(20, () -> server(p -> look(p, cx + 0.5, g + 0.3, cz + 3.6, cx + 0.5, g + 0.55, cz + 0.5)));
         add(60, () -> shot("portrait"));
@@ -293,13 +293,13 @@ public final class ShotDirector {
         add(5, () -> server(p -> look(p, cx - 7, g + 5, cz - 5, cx - 14, g + 1, cz - 14)));
         add(60, () -> shot("builder"));
         // the menu, one shot per tab
-        add(5, () -> mc.options.hideGui = false);
+        add(5, () -> BubieUi.hideHud(mc, false));
         add(5, () -> server(p -> {
             look(p, cx + 0.5, g, cz + 2.5, cx + 0.5, g + 0.5, cz + 0.5);
             p.getAbilities().flying = false;
             p.onUpdateAbilities();
             p.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
-            BubieEntity b = p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.5)).stream().findFirst().orElse(null);
+            BubieEntity b = p.level().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.5)).stream().findFirst().orElse(null);
             if (b != null) {
                 b.insert(new ItemStack(Items.OAK_LOG, 37));
                 b.insert(new ItemStack(Items.WHEAT_SEEDS, 12));
@@ -314,41 +314,41 @@ public final class ShotDirector {
         add(5, () -> BubieScreen.selectTab(2));
         add(10, () -> shot("menu_status"));
         add(5, () -> {
-            if (mc.screen instanceof BubieScreen screen && screen.getMenu().bubie() != null) {
+            if (mc.gui.screen() instanceof BubieScreen screen && screen.getMenu().bubie() != null) {
                 LookScreen editor = new LookScreen(screen, screen.getMenu().bubie());
-                mc.setScreen(editor);
+                mc.gui.setScreen(editor);
                 editor.setLook(new com.bubie.entity.Look(1, 3, 2, 6, 1));
             }
         });
         add(40, () -> shot("editor"));
         add(5, () -> {
-            if (mc.screen instanceof LookScreen editor) editor.setLook(new com.bubie.entity.Look(4, 10, 3, 7, 7));
+            if (mc.gui.screen() instanceof LookScreen editor) editor.setLook(new com.bubie.entity.Look(4, 10, 3, 7, 7));
         });
         add(30, () -> shot("editor_mint"));
         add(5, () -> {
-            if (mc.screen != null) mc.screen.onClose();
+            if (mc.gui.screen() != null) mc.gui.screen().onClose();
         });
         add(5, () -> BubieScreen.selectTab(0));
-        add(5, () -> mc.setScreen(null));
+        add(5, () -> mc.gui.setScreen(null));
         // the station's menu, with the Bubie that lives there
         add(5, () -> server(p -> {
             BlockPos st = at(4, 0, -6);
             look(p, cx + 4.5, g, cz - 3.5, cx + 4.5, g + 0.5, cz - 5.5);
-            if (p.serverLevel().getBlockEntity(st) instanceof net.minecraft.world.MenuProvider provider) {
+            if (p.level().getBlockEntity(st) instanceof net.minecraft.world.MenuProvider provider) {
                 p.openMenu(provider, buf -> buf.writeBlockPos(st));
             }
         }));
         add(40, () -> shot("menu_station"));
-        add(5, () -> mc.setScreen(null));
+        add(5, () -> mc.gui.setScreen(null));
         // the line-up
         add(10, () -> {
-            mc.options.hideGui = true;
+            BubieUi.hideHud(mc, true);
             server(p -> look(p, cx + 0.5, g + 0.9, cz - 14.5, cx + 0.5, g + 0.5, cz - 19.5));
         });
         add(60, () -> shot("lineup"));
         // night: the faces glow
         add(10, () -> {
-            mc.options.hideGui = true;
+            BubieUi.hideHud(mc, true);
             server(p -> cmd(p, "time set 18000"));
         });
         add(10, () -> server(p -> look(p, cx + 0.5, g + 0.4, cz + 3.4, cx + 0.5, g + 0.6, cz + 0.5)));

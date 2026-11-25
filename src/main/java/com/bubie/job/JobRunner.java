@@ -28,8 +28,9 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.entity.LivingEntity;
 import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import com.bubie.data.Inv;
+import net.neoforged.neoforge.transfer.ResourceHandler;
+import net.neoforged.neoforge.transfer.item.ItemResource;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -173,7 +174,7 @@ public class JobRunner {
     // ------------------------------------------------------------------ tick
 
     public void tick() {
-        if (bubie.level().isClientSide) return;
+        if (bubie.level().isClientSide()) return;
         tickChestLid();
         if (bubie.getJob() == JobType.BUILDER
                 && (!com.bubie.compat.BlueprintCompat.loaded() || bubie.getBuildPlan().isEmpty())) {
@@ -486,8 +487,8 @@ public class JobRunner {
         if (bubie.distanceToSqr(enemy) <= reach * reach) {
             bubie.getNavigation().stop();
             if (attackCooldown <= 0) {
-                bubie.swing(InteractionHand.MAIN_HAND);
-                if (bubie.doHurtTarget(enemy)) {
+                bubie.swingForAttack(InteractionHand.MAIN_HAND);
+                if (bubie.doHurtTarget(level(), enemy)) {
                     ItemStack weapon = bubie.getTool();
                     if (weapon.isDamageableItem()) weapon.hurtAndBreak(1, bubie, net.minecraft.world.entity.EquipmentSlot.MAINHAND);
                 }
@@ -630,7 +631,7 @@ public class JobRunner {
         progress += (float) (perTick * speed / effort);
         bubie.spendEnergy(1.0);
         if (stateTicks % 6 == 1) {
-            bubie.swing(InteractionHand.MAIN_HAND);
+            bubie.swingForAttack(InteractionHand.MAIN_HAND);
             if (!harvest) {
                 var sound = state.getSoundType(level, target, bubie);
                 level.playSound(null, target, sound.getHitSound(), SoundSource.NEUTRAL, sound.getVolume() * 0.4F, sound.getPitch() * 0.6F);
@@ -709,7 +710,7 @@ public class JobRunner {
         bubie.setStatus(Status.WORKING);
         progress += (float) ((1 + 0.5 * bubie.chipCount(ChipType.SPEED)) / 6.0);
         bubie.spendEnergy(1.0);
-        if (stateTicks % 6 == 1) bubie.swing(InteractionHand.MAIN_HAND);
+        if (stateTicks % 6 == 1) bubie.swingForAttack(InteractionHand.MAIN_HAND);
         if (progress < 1.0F) return;
         BlockPos done = target;
         progress = 0;
@@ -741,7 +742,7 @@ public class JobRunner {
         if (stateTicks < 8) return; // a moment at the container, so it reads as work
         BlockPos done = target;
         target = null;
-        bubie.swing(InteractionHand.MAIN_HAND);
+        bubie.swingForAttack(InteractionHand.MAIN_HAND);
         if (!job.perform(level, done, state, ItemStack.EMPTY)) {
             fail(done, 200);
             return;
@@ -794,7 +795,7 @@ public class JobRunner {
             return;
         }
         if (!approach(depositPos)) return;
-        IItemHandler source = handler(depositPos);
+        ResourceHandler<ItemResource> source = handler(depositPos);
         if (source == null) {
             rest(Status.NO_CHEST, 100);
             return;
@@ -802,16 +803,16 @@ public class JobRunner {
         boolean took = false;
         for (Map.Entry<Item, Integer> want : job.shoppingList().entrySet()) {
             int need = want.getValue() - bubie.count(want.getKey());
-            for (int slot = 0; slot < source.getSlots() && need > 0; slot++) {
-                if (!source.getStackInSlot(slot).is(want.getKey())) continue;
-                ItemStack got = source.extractItem(slot, Math.min(need, 64), false);
+            for (int slot = 0; slot < source.size() && need > 0; slot++) {
+                if (!Inv.get(source, slot).is(want.getKey())) continue;
+                ItemStack got = Inv.extract(source, slot, Math.min(need, 64), false);
                 if (got.isEmpty()) continue;
                 ItemStack rest = bubie.insert(got);
                 int taken = got.getCount() - rest.getCount();
                 need -= taken;
                 if (taken > 0) took = true;
                 if (!rest.isEmpty()) {
-                    ItemHandlerHelper.insertItemStacked(source, rest, false); // full: put the rest back
+                    Inv.insert(source, rest, false); // full: put the rest back
                     need = 0;
                 }
             }
@@ -840,15 +841,15 @@ public class JobRunner {
     }
 
     @Nullable
-    private IItemHandler handler(BlockPos pos) {
+    private ResourceHandler<ItemResource> handler(BlockPos pos) {
         // The face toward the Bubie first: some blocks (Mekanism bins, sided machines) give nothing for "no side".
         Vec3 from = bubie.position().subtract(Vec3.atCenterOf(pos));
-        Direction facing = Direction.getNearest(from.x, from.y, from.z);
-        IItemHandler handler = level().getCapability(Capabilities.ItemHandler.BLOCK, pos, facing);
-        if (handler == null) handler = level().getCapability(Capabilities.ItemHandler.BLOCK, pos, null);
+        Direction facing = Direction.getApproximateNearest(from.x, from.y, from.z);
+        ResourceHandler<ItemResource> handler = Inv.at(level(), pos, facing);
+        if (handler == null) handler = Inv.at(level(), pos, null);
         for (Direction dir : Direction.values()) {
             if (handler != null) break;
-            handler = level().getCapability(Capabilities.ItemHandler.BLOCK, pos, dir);
+            handler = Inv.at(level(), pos, dir);
         }
         return handler;
     }
@@ -898,7 +899,7 @@ public class JobRunner {
         }
         bubie.getNavigation().stop();
         bubie.lookAtBlock(depositPos);
-        IItemHandler target = handler(depositPos);
+        ResourceHandler<ItemResource> target = handler(depositPos);
         if (target == null) {
             rest(Status.NO_CHEST, 100);
             return;
@@ -925,7 +926,7 @@ public class JobRunner {
             kept.merge(stack.getItem(), keepHere, Integer::sum);
             if (stack.getCount() <= keepHere) continue;
             ItemStack out = stack.copyWithCount(stack.getCount() - keepHere);
-            ItemStack rest = ItemHandlerHelper.insertItemStacked(target, out, false);
+            ItemStack rest = Inv.insert(target, out, false);
             int sent = out.getCount() - rest.getCount();
             if (sent > 0) {
                 stack.shrink(sent);

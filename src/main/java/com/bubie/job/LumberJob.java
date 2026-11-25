@@ -5,7 +5,7 @@ import com.bubie.entity.WorkArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.ItemTags;
@@ -52,7 +52,8 @@ public class LumberJob extends Job {
         if (!state.is(BlockTags.LOGS)) return false;
         BlockState below = level.getBlockState(pos.below());
         if (below.is(BlockTags.LOGS)) return false;
-        if (!below.is(BlockTags.DIRT) && !below.is(Tags.Blocks.STONES) && !below.is(BlockTags.SAND)) return false;
+        // the ground a tree grows on: dirt, grass, podzol, mycelium, moss, mud (what #dirt held before 26.1)
+        if (!below.is(BlockTags.SUBSTRATE_OVERWORLD) && !below.is(Tags.BlockItems.STONES.block()) && !below.is(BlockTags.SAND)) return false;
         return tree(level, pos) != null;
     }
 
@@ -90,7 +91,7 @@ public class LumberJob extends Job {
             for (Direction dir : Direction.values()) {
                 BlockPos n = pos.relative(dir);
                 BlockState s = level.getBlockState(n);
-                if (s.is(BlockTags.PLANKS) || s.is(Tags.Blocks.GLASS_BLOCKS) || s.is(BlockTags.DOORS)
+                if (s.is(BlockTags.PLANKS) || s.is(Tags.BlockItems.GLASS_BLOCKS.block()) || s.is(BlockTags.DOORS)
                         || level.getBlockEntity(n) != null) {
                     return null; // built by someone
                 }
@@ -108,7 +109,7 @@ public class LumberJob extends Job {
         Item sapling = saplingFor(state.getBlock());
         List<BlockPos> ground = new ArrayList<>();
         for (BlockPos log : logs) {
-            if (log.getY() == base.getY() && level.getBlockState(log.below()).is(BlockTags.DIRT)) ground.add(log);
+            if (log.getY() == base.getY() && level.getBlockState(log.below()).is(BlockTags.SUBSTRATE_OVERWORLD)) ground.add(log);
         }
         boolean any = false;
         for (BlockPos log : logs) {
@@ -135,14 +136,14 @@ public class LumberJob extends Job {
 
     /** oak_log → oak_sapling, crimson_stem → crimson_fungus; works for most modded woods too. */
     static Item saplingFor(Block log) {
-        ResourceLocation id = BuiltInRegistries.BLOCK.getKey(log);
+        Identifier id = BuiltInRegistries.BLOCK.getKey(log);
         String path = id.getPath().replace("stripped_", "");
         String[][] swaps = {{"_log", "_sapling"}, {"_wood", "_sapling"}, {"_stem", "_fungus"}, {"_hyphae", "_fungus"}};
         for (String[] swap : swaps) {
             if (!path.endsWith(swap[0])) continue;
             String name = path.substring(0, path.length() - swap[0].length()) + swap[1];
-            ResourceLocation saplingId = ResourceLocation.fromNamespaceAndPath(id.getNamespace(), name);
-            Item item = BuiltInRegistries.ITEM.get(saplingId);
+            Identifier saplingId = Identifier.fromNamespaceAndPath(id.getNamespace(), name);
+            Item item = BuiltInRegistries.ITEM.getValue(saplingId);
             if (item != Items.AIR) return item;
             if (name.startsWith("mangrove")) return Items.MANGROVE_PROPAGULE;
         }

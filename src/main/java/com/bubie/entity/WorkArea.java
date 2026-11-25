@@ -54,7 +54,7 @@ public record WorkArea(BlockPos min, BlockPos max) {
     }
 
     public static WorkArea load(CompoundTag tag) {
-        return of(BlockPos.of(tag.getLong("Min")), BlockPos.of(tag.getLong("Max")));
+        return of(BlockPos.of(tag.getLongOr("Min", 0L)), BlockPos.of(tag.getLongOr("Max", 0L)));
     }
 
     public String describe() {

@@ -7,18 +7,10 @@
     "CKC"
   ],
   "key": {
-    "T": {
-      "item": "minecraft:redstone_torch"
-    },
-    "C": {
-      "tag": "c:ingots/copper"
-    },
-    "G": {
-      "tag": "c:glass_panes"
-    },
-    "K": {
-      "item": "minecraft:compass"
-    }
+    "T": "minecraft:redstone_torch",
+    "C": "#c:ingots/copper",
+    "G": "#c:glass_panes",
+    "K": "minecraft:compass"
   },
   "result": {
     "id": "bubie:wireless_station",

@@ -78,7 +78,7 @@ public class MinerJob extends Job {
     }
 
     private static boolean isOre(BlockState state) {
-        return state.is(Tags.Blocks.ORES);
+        return state.is(Tags.BlockItems.ORES.block());
     }
 
     private boolean exposed(ServerLevel level, BlockPos pos) {

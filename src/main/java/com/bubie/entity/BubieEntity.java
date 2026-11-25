@@ -20,7 +20,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -68,7 +68,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     public static final int FUEL_SLOT = 0;
     public static final int CHIP_SLOTS = 4;
 
-    private static final EntityDataAccessor<Optional<UUID>> DATA_OWNER = define(EntityDataSerializers.OPTIONAL_UUID);
+    private static final EntityDataAccessor<Optional<net.minecraft.world.entity.EntityReference<LivingEntity>>> DATA_OWNER =
+            define(EntityDataSerializers.OPTIONAL_LIVING_ENTITY_REFERENCE);
     private static final EntityDataAccessor<Byte> DATA_MODE = define(EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Byte> DATA_JOB = define(EntityDataSerializers.BYTE);
     private static final EntityDataAccessor<Byte> DATA_MINE_MODE = define(EntityDataSerializers.BYTE);
@@ -97,14 +98,20 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     /** How far around its chest (or Station) it works when no area is marked. */
     private static final EntityDataAccessor<Byte> DATA_RADIUS = define(EntityDataSerializers.BYTE);
 
-    private static final ResourceLocation SPEED_CHIP_ID = Bubie.id("speed_chip");
+    private static final Identifier SPEED_CHIP_ID = Bubie.id("speed_chip");
 
     private static <T> EntityDataAccessor<T> define(net.minecraft.network.syncher.EntityDataSerializer<T> serializer) {
         return SynchedEntityData.defineId(BubieEntity.class, serializer);
     }
 
     private final SimpleContainer storage = new SimpleContainer(STORAGE_SLOTS);
-    private final SimpleContainer extra = new SimpleContainer(1 + CHIP_SLOTS);
+    private final SimpleContainer extra = new SimpleContainer(1 + CHIP_SLOTS) {
+        @Override
+        public void setChanged() {
+            super.setChanged();
+            onChipsChanged();
+        }
+    };
     /** The DJ's music disc, in a slot of its own: never stored away in a chest, never taking a storage slot. */
     private final SimpleContainer disc = new SimpleContainer(1);
     private final Map<ChipType, Integer> chips = new EnumMap<>(ChipType.class);
@@ -130,7 +137,6 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         setPersistenceRequired();
         setCanPickUpLoot(false);
         setDropChance(EquipmentSlot.MAINHAND, 0);
-        extra.addListener(container -> onChipsChanged());
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -186,12 +192,17 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     @Nullable
     @Override
-    public UUID getOwnerUUID() {
+    public net.minecraft.world.entity.EntityReference<LivingEntity> getOwnerReference() {
         return entityData.get(DATA_OWNER).orElse(null);
     }
 
+    @Nullable
+    public UUID getOwnerUUID() {
+        return entityData.get(DATA_OWNER).map(net.minecraft.world.entity.EntityReference::getUUID).orElse(null);
+    }
+
     public void setOwnerUUID(@Nullable UUID owner) {
-        entityData.set(DATA_OWNER, Optional.ofNullable(owner));
+        entityData.set(DATA_OWNER, Optional.ofNullable(owner).map(net.minecraft.world.entity.EntityReference::<LivingEntity>of));
     }
 
     public boolean isOwnedBy(Player player) {
@@ -200,8 +211,8 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     /** Owners, their FTB Teams teammates, and operators in creative may give orders. */
     public boolean canCommand(Player player) {
-        return isOwnedBy(player) || (player.isCreative() && player.hasPermissions(2))
-                || (!level().isClientSide && com.bubie.compat.Teams.sameTeam(getOwnerUUID(), player.getUUID()));
+        return isOwnedBy(player) || (player.isCreative() && player.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_GAMEMASTER))
+                || (!level().isClientSide() && com.bubie.compat.Teams.sameTeam(getOwnerUUID(), player.getUUID()));
     }
 
     public Mode getMode() {
@@ -384,16 +395,16 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     }
 
     public ItemStack getBuildPlan() {
-        return level().isClientSide ? entityData.get(DATA_PLAN) : buildPlan;
+        return level().isClientSide() ? entityData.get(DATA_PLAN) : buildPlan;
     }
 
     @Nullable
     public BlockPos getBuildOrigin() {
-        return level().isClientSide ? entityData.get(DATA_PLAN_AT).orElse(null) : buildOrigin;
+        return level().isClientSide() ? entityData.get(DATA_PLAN_AT).orElse(null) : buildOrigin;
     }
 
     public net.minecraft.core.Direction getBuildDoor() {
-        return level().isClientSide ? net.minecraft.core.Direction.from3DDataValue(entityData.get(DATA_PLAN_DOOR)) : buildDoor;
+        return level().isClientSide() ? net.minecraft.core.Direction.from3DDataValue(entityData.get(DATA_PLAN_DOOR)) : buildDoor;
     }
 
     /** How many of an item the Bubie carries. */
@@ -537,7 +548,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         for (int i = 1; i <= CHIP_SLOTS; i++) {
             if (extra.getItem(i).getItem() instanceof ChipItem chip) chips.merge(chip.type(), 1, Integer::sum);
         }
-        if (level().isClientSide) return;
+        if (level().isClientSide()) return;
         int unlocked = Math.min(STORAGE_SLOTS, BASE_STORAGE + 9 * chipCount(ChipType.STORAGE));
         entityData.set(DATA_UNLOCKED, (byte) unlocked);
         // Items left in slots that just got locked move to open slots, or drop.
@@ -545,7 +556,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             ItemStack stack = storage.removeItemNoUpdate(i);
             if (stack.isEmpty()) continue;
             ItemStack rest = insert(stack);
-            if (!rest.isEmpty()) spawnAtLocation(rest);
+            if (!rest.isEmpty() && level() instanceof ServerLevel server) spawnAtLocation(server, rest);
         }
         var speed = getAttribute(Attributes.MOVEMENT_SPEED);
         if (speed != null) {
@@ -605,15 +616,20 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     public static int fuelValue(ItemStack stack) {
         int dust = BubieConfig.REDSTONE_ENERGY.get();
         if (stack.is(net.neoforged.neoforge.common.Tags.Items.DUSTS_REDSTONE)) return dust;
-        if (stack.is(net.neoforged.neoforge.common.Tags.Items.STORAGE_BLOCKS_REDSTONE)) return dust * 9;
+        if (stack.is(net.neoforged.neoforge.common.Tags.BlockItems.STORAGE_BLOCKS_REDSTONE.item())) return dust * 9;
         return 0;
     }
 
-    /** What the fuel slot takes: anything that burns, or any item that stores FE (batteries, pocket accumulators). */
+    /** What the fuel slot takes: anything that burns, or any item that gives FE (batteries, pocket accumulators). */
     public static boolean isFuel(ItemStack stack) {
         if (fuelValue(stack) > 0) return true;
-        var energy = stack.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
-        return energy != null && energy.canExtract();
+        return com.bubie.data.Inv.canGive(com.bubie.data.Inv.energy(stack));
+    }
+
+    /** What is left of a fuel item once burnt (a bucket for lava, for example). */
+    public static ItemStack remainder(ItemStack stack) {
+        var template = stack.getCraftingRemainder();
+        return template == null ? ItemStack.EMPTY : template.create();
     }
 
     /** Bubie energy per second a battery in the fuel slot can give (as fast as the station). */
@@ -622,12 +638,12 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private void burnFuel() {
         if (!BubieConfig.REQUIRE_ENERGY.get()) return;
         ItemStack fuel = extra.getItem(FUEL_SLOT);
-        var battery = fuel.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.ITEM);
-        if (battery != null && battery.canExtract()) {
+        var battery = com.bubie.data.Inv.energy(fuel);
+        if (com.bubie.data.Inv.canGive(battery)) {
             int need = Math.min(BATTERY_RATE, getMaxEnergy() - getEnergy());
             int fePer = Math.max(1, BubieConfig.FE_PER_ENERGY.get());
             if (need <= 0) return;
-            int fe = battery.extractEnergy(need * fePer, false);
+            int fe = com.bubie.data.Inv.extractEnergy(battery, need * fePer, false);
             if (fe >= fePer) {
                 setEnergy(getEnergy() + fe / fePer);
                 extra.setChanged();
@@ -637,7 +653,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         int value = fuelValue(fuel);
         // a block of redstone holds more than a full battery: it goes in once half of it fits
         if (value > 0 && getMaxEnergy() - getEnergy() >= Math.min(value, getMaxEnergy() / 2)) {
-            ItemStack remainder = fuel.getCraftingRemainingItem();
+            ItemStack remainder = remainder(fuel);
             fuel.shrink(1);
             if (fuel.isEmpty() && !remainder.isEmpty()) extra.setItem(FUEL_SLOT, remainder);
             extra.setChanged();
@@ -685,7 +701,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     @Override
     public void tick() {
-        if (level().isClientSide) {
+        if (level().isClientSide()) {
             super.tick();
             return;
         }
@@ -704,7 +720,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     @Override
     public void aiStep() {
         super.aiStep();
-        if (level().isClientSide) return;
+        if (level().isClientSide()) return;
         setAirSupply(getMaxAirSupply()); // no lungs
         if (moodTicks > 0) moodTicks--;
         dj.tick();
@@ -737,7 +753,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             registry.forget(getUUID());
             return;
         }
-        registry.sight(getUUID(), new BubieRegistry.Sighting(getName().getString(), level().dimension().location().toString(),
+        registry.sight(getUUID(), new BubieRegistry.Sighting(getName().getString(), level().dimension().identifier().toString(),
                 blockPosition().asLong(), home.asLong(), getMode() == Mode.WORK ? getJob().ordinal() : -1 - getMode().ordinal(),
                 getStatus().ordinal(), getFace().ordinal(), Math.round(energyFraction() * 100), getLook().pack()));
     }
@@ -762,11 +778,11 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
-        if (!level().isClientSide && !canCommand(player)) {
-            player.displayClientMessage(Component.translatable("bubie.message.not_yours"), true);
+        if (!level().isClientSide() && !canCommand(player)) {
+            player.sendOverlayMessage(Component.translatable("bubie.message.not_yours"));
             return InteractionResult.CONSUME;
         }
-        if (level().isClientSide) return InteractionResult.SUCCESS;
+        if (level().isClientSide()) return InteractionResult.SUCCESS;
 
         if (held.getItem() instanceof ClipboardItem) {
             ClipboardItem.applyTo(held, this, player);
@@ -785,7 +801,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
                     return InteractionResult.CONSUME;
                 }
             }
-            player.displayClientMessage(Component.translatable("bubie.message.chips_full"), true);
+            player.sendOverlayMessage(Component.translatable("bubie.message.chips_full"));
             return InteractionResult.CONSUME;
         }
         if (player.isShiftKeyDown() && held.isEmpty()) {
@@ -802,7 +818,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     /** Shift + right-click with an empty hand: the Bubie folds into its item, keeping everything. */
     public void packUp(Player player) {
         ItemStack stack = BubieItem.capture(this);
-        if (!player.getInventory().add(stack)) spawnAtLocation(stack);
+        if (!player.getInventory().add(stack) && level() instanceof ServerLevel server) spawnAtLocation(server, stack);
         playSound(SoundEvents.NOTE_BLOCK_BIT.value(), 0.8F, 0.7F);
         discard();
     }
@@ -814,16 +830,16 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     public void die(DamageSource source) {
         if (!isRemoved() && !dead && level() instanceof ServerLevel server) {
             ItemStack stack = BubieItem.capture(this);
-            ItemEntity drop = spawnAtLocation(stack, 0.5F);
+            ItemEntity drop = spawnAtLocation(server, stack, 0.5F);
             if (drop != null) {
                 drop.setUnlimitedLifetime();
-                drop.setInvulnerable(true);
+                drop.setPermanentlyInvulnerable(true);
             }
             server.playSound(null, blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.NEUTRAL, 0.8F, 1.6F);
             LivingEntity owner = getOwner();
             if (owner instanceof Player player) {
-                player.displayClientMessage(Component.translatable("bubie.message.shut_down", getDisplayName(),
-                        blockPosition().getX(), blockPosition().getY(), blockPosition().getZ()), false);
+                player.sendSystemMessage(Component.translatable("bubie.message.shut_down", getDisplayName(),
+                        blockPosition().getX(), blockPosition().getY(), blockPosition().getZ()));
             }
         }
         super.die(source);
@@ -836,7 +852,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     @Override
     public void remove(RemovalReason reason) {
-        if (!level().isClientSide && reason.shouldDestroy() && level() instanceof ServerLevel server) {
+        if (!level().isClientSide() && reason.shouldDestroy() && level() instanceof ServerLevel server) {
             BubieRegistry.get(server.getServer()).remove(getOwnerUUID(), getUUID());
             BubieRegistry.get(server.getServer()).forget(getUUID());
             runner.release();
@@ -846,23 +862,18 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     /** Machines that attack as fake players (mob crushers, deployers, turrets) leave Bubies alone. */
     @Override
-    public boolean hurt(DamageSource source, float amount) {
+    public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
         if (source.getEntity() instanceof net.neoforged.neoforge.common.util.FakePlayer) return false;
-        return super.hurt(source, amount);
+        return super.hurtServer(level, source, amount);
     }
 
     @Override
-    public boolean causeFallDamage(float distance, float multiplier, DamageSource source) {
+    public boolean causeFallDamage(double distance, float multiplier, DamageSource source) {
         return false;
     }
 
     @Override
     public boolean removeWhenFarAway(double distance) {
-        return false;
-    }
-
-    @Override
-    protected boolean shouldDespawnInPeaceful() {
         return false;
     }
 
@@ -902,21 +913,23 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     // ---------------------------------------------------------------- save
 
     @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
+    protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput out) {
+        super.addAdditionalSaveData(out);
+        CompoundTag tag = new CompoundTag();
         writeBubieData(tag);
+        com.bubie.data.Nbt.write(out, tag);
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
-        readBubieData(tag);
+    protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput in) {
+        super.readAdditionalSaveData(in);
+        readBubieData(com.bubie.data.Nbt.read(in));
     }
 
     /** Settings and inventory: saved with the entity and carried by the Bubie item. */
     public void writeBubieData(CompoundTag tag) {
         UUID owner = getOwnerUUID();
-        if (owner != null) tag.putUUID("Owner", owner);
+        if (owner != null) tag.store("Owner", net.minecraft.core.UUIDUtil.CODEC, owner);
         tag.putByte("Mode", (byte) getMode().ordinal());
         tag.putByte("Job", (byte) getJob().ordinal());
         tag.putByte("MineMode", (byte) getMineMode().ordinal());
@@ -931,11 +944,11 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
         tag.put("Storage", saveContainer(storage));
         tag.put("Extra", saveContainer(extra));
         tag.put("Disc", saveContainer(disc));
-        if (!getTool().isEmpty()) tag.put("Tool", getTool().save(registryAccess()));
+        if (!getTool().isEmpty()) tag.put("Tool", com.bubie.data.Nbt.saveStack(registryAccess(), getTool()));
         dj.save(tag);
         if (!buildPlan.isEmpty() && buildOrigin != null) {
             CompoundTag build = new CompoundTag();
-            build.put("Blueprint", buildPlan.save(registryAccess()));
+            build.put("Blueprint", com.bubie.data.Nbt.saveStack(registryAccess(), buildPlan));
             build.putLong("Origin", buildOrigin.asLong());
             build.putByte("Door", (byte) buildDoor.get3DDataValue());
             build.putInt("Progress", entityData.get(DATA_BUILD));
@@ -944,26 +957,26 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     }
 
     public void readBubieData(CompoundTag tag) {
-        setOwnerUUID(tag.hasUUID("Owner") ? tag.getUUID("Owner") : null);
-        entityData.set(DATA_MODE, tag.getByte("Mode"));
-        entityData.set(DATA_JOB, tag.getByte("Job"));
-        entityData.set(DATA_MINE_MODE, tag.getByte("MineMode"));
-        entityData.set(DATA_FILTER, tag.contains("DigFilter") ? tag.getByte("DigFilter") : (byte) DigFilter.ALL);
-        entityData.set(DATA_RADIUS, tag.contains("Radius") ? tag.getByte("Radius")
+        setOwnerUUID(tag.read("Owner", net.minecraft.core.UUIDUtil.CODEC).orElse(null));
+        entityData.set(DATA_MODE, tag.getByteOr("Mode", (byte) 0));
+        entityData.set(DATA_JOB, tag.getByteOr("Job", (byte) 0));
+        entityData.set(DATA_MINE_MODE, tag.getByteOr("MineMode", (byte) 0));
+        entityData.set(DATA_FILTER, tag.contains("DigFilter") ? tag.getByteOr("DigFilter", (byte) 0) : (byte) DigFilter.ALL);
+        entityData.set(DATA_RADIUS, tag.contains("Radius") ? tag.getByteOr("Radius", (byte) 0)
                 : (byte) (BubieConfig.SPEC.isLoaded() ? BubieConfig.HOME_RADIUS.get() : 8));
-        entityData.set(DATA_ENERGY, tag.getInt("Energy"));
-        setLook(tag.contains("Look") ? Look.load(tag.getCompound("Look")) : Look.DEFAULT);
+        entityData.set(DATA_ENERGY, tag.getIntOr("Energy", 0));
+        setLook(tag.contains("Look") ? Look.load(tag.getCompoundOrEmpty("Look")) : Look.DEFAULT);
         entityData.set(DATA_MAX_ENERGY, BubieConfig.SPEC.isLoaded() ? BubieConfig.MAX_ENERGY.get() : 48000);
-        WorkArea area = tag.contains("Area") ? WorkArea.load(tag.getCompound("Area")) : null;
+        WorkArea area = tag.contains("Area") ? WorkArea.load(tag.getCompoundOrEmpty("Area")) : null;
         entityData.set(DATA_AREA_MIN, area == null ? Optional.empty() : Optional.of(area.min()));
         entityData.set(DATA_AREA_MAX, area == null ? Optional.empty() : Optional.of(area.max()));
-        setChest(tag.contains("Chest") ? BlockPos.of(tag.getLong("Chest")) : null);
-        setHome(tag.contains("Home") ? BlockPos.of(tag.getLong("Home")) : null);
+        setChest(tag.contains("Chest") ? BlockPos.of(tag.getLongOr("Chest", 0L)) : null);
+        setHome(tag.contains("Home") ? BlockPos.of(tag.getLongOr("Home", 0L)) : null);
         loading = true;
         try {
-            loadContainer(storage, tag.getList("Storage", 10));
-            loadContainer(extra, tag.getList("Extra", 10));
-            loadContainer(disc, tag.getList("Disc", 10));
+            loadContainer(storage, tag.getListOrEmpty("Storage"));
+            loadContainer(extra, tag.getListOrEmpty("Extra"));
+            loadContainer(disc, tag.getListOrEmpty("Disc"));
             if (!tag.contains("Disc")) {
                 // a Bubie from before the disc slot: its first disc in storage moves there
                 for (int i = 0; i < storage.getContainerSize() && disc.isEmpty(); i++) {
@@ -974,14 +987,14 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             loading = false;
         }
         if (tag.contains("Tool")) {
-            setItemSlot(EquipmentSlot.MAINHAND, ItemStack.parseOptional(registryAccess(), tag.getCompound("Tool")));
+            setItemSlot(EquipmentSlot.MAINHAND, com.bubie.data.Nbt.parseStack(registryAccess(), tag.getCompoundOrEmpty("Tool")));
         }
         if (tag.contains("Build")) {
-            CompoundTag build = tag.getCompound("Build");
-            buildPlan = ItemStack.parseOptional(registryAccess(), build.getCompound("Blueprint"));
-            buildOrigin = BlockPos.of(build.getLong("Origin"));
-            buildDoor = net.minecraft.core.Direction.from3DDataValue(build.getByte("Door"));
-            entityData.set(DATA_BUILD, build.getInt("Progress"));
+            CompoundTag build = tag.getCompoundOrEmpty("Build");
+            buildPlan = com.bubie.data.Nbt.parseStack(registryAccess(), build.getCompoundOrEmpty("Blueprint"));
+            buildOrigin = BlockPos.of(build.getLongOr("Origin", 0L));
+            buildDoor = net.minecraft.core.Direction.from3DDataValue(build.getByteOr("Door", (byte) 0));
+            entityData.set(DATA_BUILD, build.getIntOr("Progress", 0));
         } else {
             buildPlan = ItemStack.EMPTY;
             buildOrigin = null;
@@ -1001,7 +1014,7 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
             if (stack.isEmpty()) continue;
             CompoundTag entry = new CompoundTag();
             entry.putByte("Slot", (byte) i);
-            list.add(stack.save(registryAccess(), entry));
+            list.add(com.bubie.data.Nbt.saveStack(registryAccess(), stack, entry));
         }
         return list;
     }
@@ -1009,10 +1022,10 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
     private void loadContainer(SimpleContainer container, net.minecraft.nbt.ListTag list) {
         container.clearContent();
         for (int i = 0; i < list.size(); i++) {
-            CompoundTag entry = list.getCompound(i);
-            int slot = entry.getByte("Slot") & 255;
+            CompoundTag entry = list.getCompoundOrEmpty(i);
+            int slot = entry.getByteOr("Slot", (byte) 0) & 255;
             if (slot < container.getContainerSize()) {
-                container.setItem(slot, ItemStack.parseOptional(registryAccess(), entry));
+                container.setItem(slot, com.bubie.data.Nbt.parseStack(registryAccess(), entry));
             }
         }
     }

@@ -3,7 +3,7 @@ package com.bubie.client;
 import com.bubie.item.WirelessStationItem;
 import com.bubie.network.StationBubiesPayload;
 import com.bubie.network.TrackerRequestPayload;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -32,7 +32,7 @@ public class TrackerScreen extends Screen {
     protected void init() {
         left = (width - W) / 2;
         top = (height - H) / 2;
-        PacketDistributor.sendToServer(new TrackerRequestPayload());
+        net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new TrackerRequestPayload());
     }
 
     @Override
@@ -41,7 +41,7 @@ public class TrackerScreen extends Screen {
             onClose();
             return;
         }
-        if (++ticks % 20 == 0) PacketDistributor.sendToServer(new TrackerRequestPayload());
+        if (++ticks % 20 == 0) net.neoforged.neoforge.client.network.ClientPacketDistributor.sendToServer(new TrackerRequestPayload());
     }
 
     private int listHeight() {
@@ -49,14 +49,14 @@ public class TrackerScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        super.render(g, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(g, mouseX, mouseY, partialTick);
         BubieUi.casing(g, left, top, W, H);
-        g.drawString(font, title, left + PAD, top + 7, BubieUi.INK, false);
+        g.text(font, title, left + PAD, top + 7, BubieUi.INK, false);
         WirelessStationItem.Link link = minecraft == null || minecraft.player == null ? null
                 : WirelessStationItem.link(minecraft.player.getItemInHand(hand));
         if (link != null) {
-            g.drawString(font, Component.translatable("bubie.ui.tracker.station", link.pos().getX(), link.pos().getY(),
+            g.text(font, Component.translatable("bubie.ui.tracker.station", link.pos().getX(), link.pos().getY(),
                     link.pos().getZ()), left + PAD, top + 17, BubieUi.INK_SOFT, false);
         }
         BubieUi.screen(g, left + PAD - 3, top + TOP - 3, W - PAD * 2 + 6, listHeight() + 6);

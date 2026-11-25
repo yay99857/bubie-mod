@@ -6,12 +6,12 @@ import com.bubie.entity.Face;
 import com.bubie.entity.Look;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -29,7 +29,7 @@ public class LogoScreen extends Screen {
 
     public static final int SIZE_PX = 1024;
     private final Kind kind;
-    private ResourceLocation background;
+    private Identifier background;
 
     public LogoScreen(Kind kind) {
         super(Component.literal("logo"));
@@ -46,7 +46,7 @@ public class LogoScreen extends Screen {
     }
 
     /** A radial gradient, painted once into a texture the size of the square. */
-    private ResourceLocation gradient(int inner, int outer, float cx, float cy, float radius) {
+    private Identifier gradient(int inner, int outer, float cx, float cy, float radius) {
         NativeImage img = new NativeImage(SIZE_PX, SIZE_PX, false);
         for (int y = 0; y < SIZE_PX; y++) {
             for (int x = 0; x < SIZE_PX; x++) {
@@ -58,7 +58,7 @@ public class LogoScreen extends Screen {
                 img.setPixelRGBA(x, y, 0xFF000000 | bl << 16 | g << 8 | r);
             }
         }
-        ResourceLocation id = Bubie.id("logo/" + kind.name().toLowerCase());
+        Identifier id = Bubie.id("logo/" + kind.name().toLowerCase());
         Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(img));
         return id;
     }
@@ -73,20 +73,20 @@ public class LogoScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         g.fill(0, 0, width, height, 0xFF000000);
     }
 
     @Override
-    public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+    public void render(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         renderBackground(g, mouseX, mouseY, partialTick);
         double scale = minecraft.getWindow().getGuiScale();
         float side = (float) (SIZE_PX / scale);
         float x0 = (width - side) / 2F, y0 = (height - side) / 2F;
-        g.pose().pushPose();
-        g.pose().translate(x0, y0, 0);
+        g.pose().pushMatrix();
+        g.pose().translate(x0, y0);
         g.blit(background, 0, 0, (int) side, (int) side, 0, 0, SIZE_PX, SIZE_PX, SIZE_PX, SIZE_PX);
-        g.pose().popPose();
+        g.pose().popMatrix();
         g.enableScissor((int) x0, (int) y0, (int) (x0 + side), (int) (y0 + side));
         if (kind == Kind.MOD) {
             BubieEntity hero = bubie(Look.DEFAULT, Face.HAPPY, ItemStack.EMPTY, 7);
@@ -107,22 +107,22 @@ public class LogoScreen extends Screen {
     }
 
     /** A grass block item drawn big: centre x, top y, width. */
-    private static void grass(GuiGraphics g, float cx, float top, float size) {
-        g.pose().pushPose();
+    private static void grass(GuiGraphicsExtractor g, float cx, float top, float size) {
+        g.pose().pushMatrix();
         g.pose().translate(cx - size / 2F, top, 100);
         g.pose().scale(size / 16F, size / 16F, size / 16F);
-        g.renderItem(new ItemStack(Items.GRASS_BLOCK), 0, 0);
-        g.pose().popPose();
+        g.item(new ItemStack(Items.GRASS_BLOCK), 0, 0);
+        g.pose().popMatrix();
         clearDepth(g);
     }
 
-    private static void clearDepth(GuiGraphics g) {
+    private static void clearDepth(GuiGraphicsExtractor g) {
         g.flush();
-        com.mojang.blaze3d.systems.RenderSystem.clear(256, Minecraft.ON_OSX);
+        com.mojang.blaze3d.systems.RenderSystem.clear(256, net.minecraft.client.input.InputQuirks.ON_OSX);
     }
 
     /** One Bubie: feet at (x, y), height h, turned yaw degrees, camera looking down pitch degrees. */
-    private static void draw(GuiGraphics g, BubieEntity b, float x, float y, float h, float yaw, float pitch) {
+    private static void draw(GuiGraphicsExtractor g, BubieEntity b, float x, float y, float h, float yaw, float pitch) {
         float angle = 180F + yaw;
         b.yBodyRot = angle;
         b.yBodyRotO = angle;

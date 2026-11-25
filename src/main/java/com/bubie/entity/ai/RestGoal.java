@@ -30,7 +30,7 @@ public class RestGoal extends Goal {
 
     private boolean night() {
         // the Guard's work is the night
-        return BubieConfig.REST_AT_NIGHT.get() && bubie.level().isNight() && bubie.getJob() != com.bubie.entity.JobType.GUARD;
+        return BubieConfig.REST_AT_NIGHT.get() && bubie.level().isDarkOutside() && bubie.getJob() != com.bubie.entity.JobType.GUARD;
     }
 
     private boolean homeExists() {

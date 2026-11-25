@@ -7,18 +7,10 @@
     " W "
   ],
   "key": {
-    "C": {
-      "tag": "c:ingots/copper"
-    },
-    "G": {
-      "tag": "c:glass_panes"
-    },
-    "R": {
-      "item": "minecraft:redstone"
-    },
-    "W": {
-      "item": "minecraft:black_wool"
-    }
+    "C": "#c:ingots/copper",
+    "G": "#c:glass_panes",
+    "R": "minecraft:redstone",
+    "W": "minecraft:black_wool"
   },
   "result": {
     "id": "bubie:bubie",

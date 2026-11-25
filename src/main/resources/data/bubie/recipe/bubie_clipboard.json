@@ -7,15 +7,9 @@
     "PPP"
   ],
   "key": {
-    "R": {
-      "item": "minecraft:redstone"
-    },
-    "P": {
-      "item": "minecraft:paper"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    }
+    "R": "minecraft:redstone",
+    "P": "minecraft:paper",
+    "S": "minecraft:stick"
   },
   "result": {
     "id": "bubie:bubie_clipboard",

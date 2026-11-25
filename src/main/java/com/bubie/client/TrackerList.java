@@ -8,7 +8,7 @@ import com.bubie.entity.Status;
 import com.bubie.network.StationBubiesPayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
@@ -33,11 +33,11 @@ public final class TrackerList {
         return Math.max(0, list.size() * ROW - h);
     }
 
-    public static void draw(GuiGraphics g, Font font, int x, int y, int w, int h, List<StationBubiesPayload.Entry> list, int scroll) {
+    public static void draw(GuiGraphicsExtractor g, Font font, int x, int y, int w, int h, List<StationBubiesPayload.Entry> list, int scroll) {
         if (list.isEmpty()) {
             int ty = y;
             for (FormattedCharSequence line : font.split(Component.translatable("bubie.ui.station.none"), w)) {
-                g.drawString(font, line, x, ty, BubieUi.DIM, false);
+                g.text(font, line, x, ty, BubieUi.DIM, false);
                 ty += 10;
             }
             return;
@@ -60,7 +60,7 @@ public final class TrackerList {
         }
     }
 
-    private static void row(GuiGraphics g, Font font, int x, int y, int w, StationBubiesPayload.Entry e, Player player) {
+    private static void row(GuiGraphicsExtractor g, Font font, int x, int y, int w, StationBubiesPayload.Entry e, Player player) {
         Status status = Status.byId(e.status());
         BubieUi.face(g, Look.unpack(e.look()), Face.byId(e.face()), x, y + 2, 1);
         int tx = x + LookTextures.SCREEN_W + 4, tw = w - LookTextures.SCREEN_W - 4;
@@ -77,16 +77,16 @@ public final class TrackerList {
             far = Component.literal(arrow + " ").append(Component.translatable("bubie.ui.tracker.distance", blocks));
         }
         int fw = e.elsewhere() ? 0 : font.width(far);
-        g.drawString(font, font.plainSubstrByWidth(e.name(), tw - fw - 3), tx, y, BubieUi.AMBER_LIGHT, false);
-        if (!e.elsewhere()) g.drawString(font, far, x + w - fw, y, BubieUi.AMBER, false);
+        g.text(font, font.plainSubstrByWidth(e.name(), tw - fw - 3), tx, y, BubieUi.AMBER_LIGHT, false);
+        if (!e.elsewhere()) g.text(font, far, x + w - fw, y, BubieUi.AMBER, false);
 
         Component doing = e.job() >= 0 ? Component.translatable(JobType.byId(e.job()).key())
                 : Component.translatable(Mode.byId(-1 - e.job()).key());
-        g.drawString(font, font.plainSubstrByWidth(doing.getString(), tw), tx, y + 9, BubieUi.AMBER, false);
-        g.drawString(font, font.plainSubstrByWidth(Component.translatable(status.key()).getString(), w), x, y + 19,
+        g.text(font, font.plainSubstrByWidth(doing.getString(), tw), tx, y + 9, BubieUi.AMBER, false);
+        g.text(font, font.plainSubstrByWidth(Component.translatable(status.key()).getString(), w), x, y + 19,
                 status.problem ? BubieUi.RED : BubieUi.DIM, false);
         String where = pos.getX() + " " + pos.getY() + " " + pos.getZ();
-        g.drawString(font, e.elsewhere() ? where + " (" + far.getString() + ")" : where, x, y + 29, BubieUi.DIM, false);
+        g.text(font, e.elsewhere() ? where + " (" + far.getString() + ")" : where, x, y + 29, BubieUi.DIM, false);
         BubieUi.bar(g, x, y + 40, w, 2, e.energy() / 100F, e.energy() < 10 ? BubieUi.RED : BubieUi.AMBER);
     }
 }

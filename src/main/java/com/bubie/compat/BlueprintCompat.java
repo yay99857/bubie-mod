@@ -47,7 +47,7 @@ public final class BlueprintCompat {
 
     /** The player hands a blueprint to the Bubie: it will build that base around where it stands. */
     public static void handOver(BubieEntity bubie, Player player, ItemStack stack) {
-        player.displayClientMessage(handOver(bubie, player, stack, bubie.blockPosition()), true);
+        player.sendOverlayMessage(handOver(bubie, player, stack, bubie.blockPosition()));
     }
 
     /** Hands the blueprint over to build at `origin`; returns the message for the player. */

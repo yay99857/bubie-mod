@@ -5,9 +5,8 @@ import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.wrapper.InvWrapper;
+import net.neoforged.neoforge.transfer.item.ItemResource;
+import net.neoforged.neoforge.transfer.item.ItemStacksResourceHandler;
 
 import javax.annotation.Nullable;
 
@@ -20,59 +19,65 @@ import javax.annotation.Nullable;
  * shift-clicking, hoppers and the screen see the items as before, while sorters skip it.
  */
 public class FixedSlot extends Slot {
-    private final IItemHandler handler;
+    @Nullable
+    private final ItemStacksResourceHandler handler;
     @Nullable
     private final Container backing;
 
-    public FixedSlot(IItemHandler handler, int index, int x, int y) {
-        this(handler, null, index, x, y);
+    public FixedSlot(ItemStacksResourceHandler handler, int index, int x, int y) {
+        super(new SimpleContainer(0), index, x, y);
+        this.handler = handler;
+        this.backing = null;
     }
 
     public FixedSlot(Container container, int index, int x, int y) {
-        this(new InvWrapper(container), container, index, x, y);
-    }
-
-    private FixedSlot(IItemHandler handler, @Nullable Container backing, int index, int x, int y) {
         super(new SimpleContainer(0), index, x, y);
-        this.handler = handler;
-        this.backing = backing;
+        this.handler = null;
+        this.backing = container;
     }
 
     @Override
     public ItemStack getItem() {
-        return handler.getStackInSlot(getContainerSlot());
+        int slot = getContainerSlot();
+        return handler != null ? com.bubie.data.Inv.get(handler, slot) : backing.getItem(slot);
     }
 
     @Override
     public void set(ItemStack stack) {
         int slot = getContainerSlot();
-        if (handler instanceof IItemHandlerModifiable modifiable) {
-            modifiable.setStackInSlot(slot, stack);
-        } else {
-            handler.extractItem(slot, Integer.MAX_VALUE, false);
-            if (!stack.isEmpty()) handler.insertItem(slot, stack, false);
-        }
+        if (handler != null) handler.set(slot, ItemResource.of(stack), stack.getCount());
+        else backing.setItem(slot, stack);
         setChanged();
     }
 
     @Override
     public ItemStack remove(int amount) {
-        return handler.extractItem(getContainerSlot(), amount, false);
+        int slot = getContainerSlot();
+        if (handler != null) {
+            ItemStack stack = getItem();
+            ItemStack taken = stack.split(amount);
+            set(stack);
+            return taken;
+        }
+        ItemStack taken = backing.removeItem(slot, amount);
+        setChanged();
+        return taken;
     }
 
     @Override
     public boolean mayPlace(ItemStack stack) {
-        return handler.isItemValid(getContainerSlot(), stack);
+        int slot = getContainerSlot();
+        return handler != null ? handler.isValid(slot, ItemResource.of(stack)) : backing.canPlaceItem(slot, stack);
     }
 
     @Override
     public boolean mayPickup(Player player) {
-        return !handler.extractItem(getContainerSlot(), 1, true).isEmpty();
+        return !getItem().isEmpty();
     }
 
     @Override
     public int getMaxStackSize() {
-        return handler.getSlotLimit(getContainerSlot());
+        return handler != null ? 99 : backing.getMaxStackSize();
     }
 
     @Override

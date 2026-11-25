@@ -9,7 +9,6 @@ import com.bubie.entity.Status;
 import com.bubie.entity.WorkArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -23,12 +22,8 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /** Run with ./gradlew runGameTestServer (exits non-zero when a test fails). Template "field": 16×10×16 of air over stone. */
-@GameTestHolder(Bubie.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class BubieGameTests {
     static final String FIELD = "field";
     static final BlockPos CHEST = new BlockPos(2, 1, 2);
@@ -50,7 +45,7 @@ public class BubieGameTests {
     }
 
     static int inChest(GameTestHelper helper, Item item) {
-        ChestBlockEntity chest = helper.getBlockEntity(CHEST);
+        ChestBlockEntity chest = helper.getBlockEntity(CHEST, ChestBlockEntity.class);
         int n = 0;
         for (int i = 0; i < chest.getContainerSize(); i++) {
             if (chest.getItem(i).is(item)) n += chest.getItem(i).getCount();
@@ -58,7 +53,7 @@ public class BubieGameTests {
         return n;
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 1600)
+    @BubieTest(template = FIELD, timeoutTicks = 1600)
     public static void lumberjackFellsTheTreeAndReplants(GameTestHelper helper) {
         floor(helper, Blocks.GRASS_BLOCK);
         BlockPos trunk = new BlockPos(8, 1, 8);
@@ -79,12 +74,12 @@ public class BubieGameTests {
             for (int y = 1; y < 5; y++) helper.assertBlockNotPresent(Blocks.OAK_LOG, trunk.above(y));
             helper.assertBlockPresent(Blocks.OAK_SAPLING, trunk);
             helper.assertTrue(inChest(helper, Items.OAK_LOG) >= 5, "5 logs in the chest; status " + bubie.getStatus()
-                    + ", carrying " + bubie.storage().getItems() + ", chest " + ((ChestBlockEntity) helper.getBlockEntity(CHEST)).getItem(0) + "," + ((ChestBlockEntity) helper.getBlockEntity(CHEST)).getItem(1) + ", loose items " + helper.getLevel().getEntitiesOfClass(
+                    + ", carrying " + bubie.storage().getItems() + ", chest " + helper.getBlockEntity(CHEST, ChestBlockEntity.class).getItem(0) + "," + helper.getBlockEntity(CHEST, ChestBlockEntity.class).getItem(1) + ", loose items " + helper.getLevel().getEntitiesOfClass(
                     ItemEntity.class, new AABB(helper.absolutePos(trunk)).inflate(8)).size());
         });
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 800)
+    @BubieTest(template = FIELD, timeoutTicks = 800)
     public static void farmerHarvestsAndReplants(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         for (int x = 6; x <= 8; x++) {
@@ -101,7 +96,7 @@ public class BubieGameTests {
         });
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 1200)
+    @BubieTest(template = FIELD, timeoutTicks = 1200)
     public static void diggerTakesSandLayerByLayer(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         for (int x = 6; x <= 8; x++) for (int z = 6; z <= 8; z++) for (int y = 1; y <= 2; y++) {
@@ -112,7 +107,7 @@ public class BubieGameTests {
         helper.succeedWhen(() -> helper.assertTrue(inChest(helper, Items.SAND) == 18, "18 sand in the chest"));
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 1600)
+    @BubieTest(template = FIELD, timeoutTicks = 1600)
     public static void quarryPlugsWaterAndLeavesStairs(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         for (int x = 6; x <= 8; x++) for (int z = 6; z <= 8; z++) for (int y = 1; y <= 2; y++) {
@@ -140,7 +135,7 @@ public class BubieGameTests {
         });
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 800)
+    @BubieTest(template = FIELD, timeoutTicks = 800)
     public static void minerTakesExposedOre(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         helper.setBlock(new BlockPos(7, 1, 7), Blocks.IRON_ORE);
@@ -152,7 +147,7 @@ public class BubieGameTests {
         });
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 400)
+    @BubieTest(template = FIELD, timeoutTicks = 400)
     public static void minerWaitsForABetterPickaxe(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         helper.setBlock(new BlockPos(7, 1, 7), Blocks.IRON_ORE);
@@ -164,7 +159,7 @@ public class BubieGameTests {
         });
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 1600)
+    @BubieTest(template = FIELD, timeoutTicks = 1600)
     public static void tunnelMinerDigsBranchesAndTakesOre(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         for (int x = 3; x <= 13; x++) for (int z = 4; z <= 10; z++) for (int y = 1; y <= 3; y++) {
@@ -189,29 +184,29 @@ public class BubieGameTests {
         });
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 100)
+    @BubieTest(template = FIELD, timeoutTicks = 100)
     public static void shutsDownIntoItsItemKeepingItsThings(GameTestHelper helper) {
         floor(helper, Blocks.STONE);
         BubieEntity bubie = helper.spawn(Bubie.BUBIE_ENTITY.get(), new BlockPos(7, 1, 7));
         bubie.insert(new ItemStack(Items.DIAMOND, 3));
         bubie.setLook(new com.bubie.entity.Look(1, 3, 2, 6, 1));
-        bubie.kill();
+        bubie.kill(helper.getLevel());
         helper.succeedWhen(() -> {
             AABB box = new AABB(helper.absolutePos(new BlockPos(7, 1, 7))).inflate(3);
             ItemEntity drop = helper.getLevel().getEntitiesOfClass(ItemEntity.class, box).stream()
                     .filter(e -> e.getItem().is(Bubie.BUBIE_ITEM.get())).findFirst().orElse(null);
             helper.assertTrue(drop != null, "the Bubie item dropped");
             var data = drop.getItem().get(DataComponents.CUSTOM_DATA);
-            helper.assertTrue(data != null && data.copyTag().getCompound("Bubie").getList("Storage", 10).size() == 1,
+            helper.assertTrue(data != null && data.copyTag().getCompoundOrEmpty("Bubie").getListOrEmpty("Storage").size() == 1,
                     "the item keeps the diamonds");
-            var saved = com.bubie.entity.Look.load(data.copyTag().getCompound("Bubie").getCompound("Look"));
+            var saved = com.bubie.entity.Look.load(data.copyTag().getCompoundOrEmpty("Bubie").getCompoundOrEmpty("Look"));
             helper.assertTrue(saved.equals(new com.bubie.entity.Look(1, 3, 2, 6, 1)), "the item keeps the look, got " + saved);
             helper.assertTrue(com.bubie.entity.Look.unpack(saved.pack()).equals(saved), "look packs and unpacks");
         });
     }
 
     /** Coal is not fuel any more: the fuel slot refuses it and only redstone (or FE) charges the Bubie. */
-    @GameTest(template = FIELD)
+    @BubieTest(template = FIELD)
     public static void runsOnRedstoneNotCoal(GameTestHelper helper) {
         helper.assertTrue(!BubieEntity.isFuel(new ItemStack(Items.COAL)), "coal is not fuel");
         helper.assertTrue(!BubieEntity.isFuel(new ItemStack(Items.OAK_LOG)), "wood is not fuel");
@@ -222,7 +217,7 @@ public class BubieGameTests {
         helper.succeed();
     }
 
-    @GameTest(template = FIELD, timeoutTicks = 200)
+    @BubieTest(template = FIELD, timeoutTicks = 200)
     public static void burnsFuelWhenTheBatteryIsEmpty(GameTestHelper helper) {
         floor(helper, Blocks.GRASS_BLOCK);
         BubieEntity bubie = bubie(helper, new BlockPos(7, 1, 7), JobType.FARMER, ItemStack.EMPTY,

@@ -20,24 +20,17 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.phys.BlockHitResult;
 
 import javax.annotation.Nullable;
 
 /** Bubie Station: a Bubie's home. Charges it (FE or fuel), stores what it brings back, optionally loads chunks. */
 public class StationBlock extends BaseEntityBlock {
-    public static final MapCodec<StationBlock> CODEC = simpleCodec(StationBlock::new);
-    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
+    public static final net.minecraft.world.level.block.state.properties.EnumProperty<net.minecraft.core.Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
 
     public StationBlock(Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(FACING, net.minecraft.core.Direction.NORTH));
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
     }
 
     @Override
@@ -74,28 +67,22 @@ public class StationBlock extends BaseEntityBlock {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level, BlockState state, BlockEntityType<T> type) {
-        return level.isClientSide ? null : createTickerHelper(type, com.bubie.Bubie.STATION_BE.get(), StationBlockEntity::serverTick);
+        return level.isClientSide() ? null : createTickerHelper(type, com.bubie.Bubie.STATION_BE.get(), StationBlockEntity::serverTick);
     }
 
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        if (level.isClientSide) return InteractionResult.SUCCESS;
+        if (level.isClientSide()) return InteractionResult.SUCCESS;
         if (level.getBlockEntity(pos) instanceof StationBlockEntity station && player instanceof ServerPlayer sp) {
             sp.openMenu(station, buf -> buf.writeBlockPos(pos));
         }
         return InteractionResult.CONSUME;
     }
 
+    /** The station is gone (its items were dropped by StationBlockEntity#preRemoveSideEffects): stop loading chunks. */
     @Override
-    protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState newState, boolean moved) {
-        if (!state.is(newState.getBlock())) {
-            if (level.getBlockEntity(pos) instanceof StationBlockEntity station) {
-                for (int i = 0; i < station.items().getSlots(); i++) {
-                    Containers.dropItemStack(level, pos.getX(), pos.getY(), pos.getZ(), station.items().getStackInSlot(i));
-                }
-            }
-            if (level instanceof ServerLevel server) StationChunks.set(server, pos, false);
-        }
-        super.onRemove(state, level, pos, newState, moved);
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean moved) {
+        StationChunks.set(level, pos, false);
+        super.affectNeighborsAfterRemoval(state, level, pos, moved);
     }
 }

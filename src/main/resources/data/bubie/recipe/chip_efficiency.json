@@ -7,15 +7,9 @@
     "NRN"
   ],
   "key": {
-    "N": {
-      "item": "minecraft:gold_nugget"
-    },
-    "R": {
-      "item": "minecraft:redstone"
-    },
-    "X": {
-      "tag": "c:storage_blocks/copper"
-    }
+    "N": "minecraft:gold_nugget",
+    "R": "minecraft:redstone",
+    "X": "#c:storage_blocks/copper"
   },
   "result": {
     "id": "bubie:chip_efficiency",

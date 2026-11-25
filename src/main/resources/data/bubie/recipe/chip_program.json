@@ -7,15 +7,9 @@
     "NRN"
   ],
   "key": {
-    "N": {
-      "item": "minecraft:gold_nugget"
-    },
-    "R": {
-      "item": "minecraft:redstone"
-    },
-    "X": {
-      "item": "minecraft:diamond"
-    }
+    "N": "minecraft:gold_nugget",
+    "R": "minecraft:redstone",
+    "X": "minecraft:diamond"
   },
   "result": {
     "id": "bubie:chip_program",

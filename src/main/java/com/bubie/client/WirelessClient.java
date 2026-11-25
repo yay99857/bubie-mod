@@ -9,6 +9,6 @@ public final class WirelessClient {
     }
 
     public static void open(InteractionHand hand) {
-        Minecraft.getInstance().setScreen(new TrackerScreen(hand));
+        Minecraft.getInstance().gui.setScreen(new TrackerScreen(hand));
     }
 }

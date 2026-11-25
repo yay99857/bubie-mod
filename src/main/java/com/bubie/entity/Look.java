@@ -124,8 +124,8 @@ public record Look(int shell, int cloth, int glow, int eyes, int mouth) {
     }
 
     public static Look load(CompoundTag tag) {
-        return new Look(indexOf(SHELLS, tag.getString("Shell")), indexOf(CLOTHS, tag.getString("Cloth")),
-                indexOf(GLOWS, tag.getString("Glow")), EYES.indexOf(tag.getString("Eyes")), MOUTHS.indexOf(tag.getString("Mouth")));
+        return new Look(indexOf(SHELLS, tag.getStringOr("Shell", "")), indexOf(CLOTHS, tag.getStringOr("Cloth", "")),
+                indexOf(GLOWS, tag.getStringOr("Glow", "")), EYES.indexOf(tag.getStringOr("Eyes", "")), MOUTHS.indexOf(tag.getStringOr("Mouth", "")));
     }
 
     private static int indexOf(List<Swatch> list, String id) {

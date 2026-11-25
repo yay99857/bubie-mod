@@ -13,7 +13,7 @@ import com.bubie.menu.StationMenu;
 import com.bubie.network.BubieCommandPayload;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
 import net.minecraft.world.inventory.MenuType;
@@ -49,44 +49,39 @@ public class Bubie {
 
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(MOD_ID);
     public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(MOD_ID);
-    public static final DeferredRegister<EntityType<?>> ENTITIES = DeferredRegister.create(Registries.ENTITY_TYPE, MOD_ID);
+    public static final DeferredRegister.Entities ENTITIES = DeferredRegister.createEntities(MOD_ID);
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, MOD_ID);
     public static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, MOD_ID);
     public static final DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
 
-    public static final DeferredHolder<EntityType<?>, EntityType<BubieEntity>> BUBIE_ENTITY = ENTITIES.register("bubie",
-            () -> EntityType.Builder.of(BubieEntity::new, MobCategory.MISC)
+    public static final DeferredHolder<EntityType<?>, EntityType<BubieEntity>> BUBIE_ENTITY = ENTITIES.registerEntityType("bubie",
+            BubieEntity::new, MobCategory.MISC, b -> b
                     .sized(0.6F, 0.98F)
                     .eyeHeight(0.72F)
-                    .clientTrackingRange(10)
-                    .build(MOD_ID + ":bubie"));
+                    .clientTrackingRange(10));
 
-    public static final DeferredBlock<StationBlock> STATION = BLOCKS.register("bubie_station",
-            () -> new StationBlock(BlockBehaviour.Properties.of()
+    public static final DeferredBlock<StationBlock> STATION = BLOCKS.registerBlock("bubie_station",
+            StationBlock::new, p -> p
                     .mapColor(MapColor.TERRACOTTA_WHITE)
                     .strength(2.5F, 6.0F)
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.COPPER)
-                    .lightLevel(state -> 4)));
+                    .lightLevel(state -> 4));
 
-    public static final DeferredItem<BubieItem> BUBIE_ITEM = ITEMS.register("bubie",
-            () -> new BubieItem(new Item.Properties().stacksTo(1)));
-    public static final DeferredItem<ClipboardItem> CLIPBOARD = ITEMS.register("bubie_clipboard",
-            () -> new ClipboardItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<BubieItem> BUBIE_ITEM = ITEMS.registerItem("bubie", BubieItem::new, p -> p.stacksTo(1));
+    public static final DeferredItem<ClipboardItem> CLIPBOARD = ITEMS.registerItem("bubie_clipboard", ClipboardItem::new, p -> p.stacksTo(1));
     public static final DeferredItem<BlockItem> STATION_ITEM = ITEMS.registerSimpleBlockItem(STATION);
-    public static final DeferredItem<com.bubie.item.WirelessStationItem> WIRELESS_STATION = ITEMS.register("wireless_station",
-            () -> new com.bubie.item.WirelessStationItem(new Item.Properties().stacksTo(1)));
+    public static final DeferredItem<com.bubie.item.WirelessStationItem> WIRELESS_STATION = ITEMS.registerItem("wireless_station", com.bubie.item.WirelessStationItem::new, p -> p.stacksTo(1));
     public static final Map<ChipType, DeferredItem<ChipItem>> CHIPS = new EnumMap<>(ChipType.class);
 
     static {
         for (ChipType type : ChipType.values()) {
-            CHIPS.put(type, ITEMS.register(type.id(), () -> new ChipItem(type, new Item.Properties().stacksTo(16))));
+            CHIPS.put(type, ITEMS.registerItem(type.id(), p -> new ChipItem(type, p), p -> p.stacksTo(16)));
         }
     }
 
-    @SuppressWarnings("DataFlowIssue")
     public static final Supplier<BlockEntityType<StationBlockEntity>> STATION_BE = BLOCK_ENTITIES.register("bubie_station",
-            () -> BlockEntityType.Builder.of(StationBlockEntity::new, STATION.get()).build(null));
+            () -> new BlockEntityType<>(StationBlockEntity::new, STATION.get()));
 
     public static final Supplier<MenuType<BubieMenu>> BUBIE_MENU = MENUS.register("bubie",
             () -> IMenuTypeExtension.create(BubieMenu::fromNetwork));
@@ -106,7 +101,7 @@ public class Bubie {
             .build());
 
     public Bubie(IEventBus modBus, ModContainer container) {
-        container.registerConfig(ModConfig.Type.SERVER, BubieConfig.SPEC);
+        container.registerConfig(ModConfig.Type.SYNCED, BubieConfig.SPEC);
         container.registerConfig(ModConfig.Type.CLIENT, BubieClientConfig.SPEC);
         ITEMS.register(modBus);
         BLOCKS.register(modBus);
@@ -114,12 +109,13 @@ public class Bubie {
         BLOCK_ENTITIES.register(modBus);
         MENUS.register(modBus);
         TABS.register(modBus);
+        com.bubie.gametest.BubieTests.register(modBus);
 
         modBus.addListener((EntityAttributeCreationEvent event) ->
                 event.put(BUBIE_ENTITY.get(), BubieEntity.createAttributes().build()));
         modBus.addListener((RegisterCapabilitiesEvent event) -> {
-            event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, STATION_BE.get(), (be, side) -> be.storageHandler());
-            event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, STATION_BE.get(), (be, side) -> be.energy());
+            event.registerBlockEntity(Capabilities.Item.BLOCK, STATION_BE.get(), (be, side) -> be.storageHandler());
+            event.registerBlockEntity(Capabilities.Energy.BLOCK, STATION_BE.get(), (be, side) -> be.energy());
         });
         modBus.addListener((RegisterPayloadHandlersEvent event) -> event.registrar("1")
                 .playToServer(BubieCommandPayload.TYPE, BubieCommandPayload.STREAM_CODEC, BubieCommandPayload::handle)
@@ -143,7 +139,7 @@ public class Bubie {
         }
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 }

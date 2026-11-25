@@ -121,8 +121,8 @@ public final class TrailerDirector {
                 BubieEntity b = spawn(p, at(0, 0, -6), 180);
                 b.setMode(Mode.STAY);
                 b.showMood(Face.HAPPY, 400);
-                p.serverLevel().sendParticles(ParticleTypes.CLOUD, b.getX(), b.getY() + 0.4, b.getZ(), 12, 0.25, 0.2, 0.25, 0.02);
-                p.serverLevel().playSound(null, b.blockPosition(), net.minecraft.sounds.SoundEvents.NOTE_BLOCK_CHIME.value(),
+                p.level().sendParticles(ParticleTypes.CLOUD, b.getX(), b.getY() + 0.4, b.getZ(), 12, 0.25, 0.2, 0.25, 0.02);
+                p.level().playSound(null, b.blockPosition(), net.minecraft.sounds.SoundEvents.NOTE_BLOCK_CHIME.value(),
                         net.minecraft.sounds.SoundSource.NEUTRAL, 1F, 1.4F);
             }
         };
@@ -183,15 +183,15 @@ public final class TrailerDirector {
         build.cam = new Cam(v(-5.5, 4, 11), v(0, 1, 16), v(-6.5, 2.6, 19.5), v(0, 1.4, 16));
         build.setup = p -> {
             BlockPos chestPos = at(5, 0, 12);
-            p.serverLevel().setBlockAndUpdate(chestPos, Blocks.CHEST.defaultBlockState());
-            if (p.serverLevel().getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
+            p.level().setBlockAndUpdate(chestPos, Blocks.CHEST.defaultBlockState());
+            if (p.level().getBlockEntity(chestPos) instanceof ChestBlockEntity chest) {
                 for (int i = 0; i < 4; i++) chest.setItem(i, new ItemStack(Items.SPRUCE_PLANKS, 64));
             }
             if (com.bubie.compat.BlueprintCompat.loaded()) {
                 BubieEntity b = spawn(p, at(0, 0, 16), 0);
                 b.setChest(chestPos);
                 b.setLook(new Look(7, 5, 6, 3, 4));
-                p.teleportTo(p.serverLevel(), cx + 0.5, g, cz + 24.5, 180, 0); // the door faces the camera side
+                p.teleportTo(p.level(), cx + 0.5, g, cz + 24.5, 180, 0); // the door faces the camera side
                 com.bubie.compat.BlueprintCompat.handOver(b, p, com.bubie.client.BuilderShots.blueprint());
             }
             hidePlayer(p);
@@ -212,7 +212,7 @@ public final class TrailerDirector {
         dusk.walkTo = v(24.5, 0, 19);
         dusk.setup = p -> {
             cmd(p, "time set 12600");
-            p.teleportTo(p.serverLevel(), cx + 12.5, g, cz + 19.5, -90, 0);
+            p.teleportTo(p.level(), cx + 12.5, g, cz + 19.5, -90, 0);
             followers(p);
         };
         dusk.warmup = 60;
@@ -225,7 +225,7 @@ public final class TrailerDirector {
         cave.walkTo = v(34, 0, 19);
         cave.setup = p -> {
             cmd(p, "time set 14000");
-            p.teleportTo(p.serverLevel(), cx + 25.5, g, cz + 19.5, -90, 0);
+            p.teleportTo(p.level(), cx + 25.5, g, cz + 19.5, -90, 0);
             double[][] behind = {{24.0, 18.6}, {23.2, 20.2}, {22.4, 19.2}};
             List<BubieEntity> crew1 = crewOf(p);
             for (int i = 0; i < crew1.size() && i < behind.length; i++) crew1.get(i).teleportTo(cx + behind[i][0], g, cz + behind[i][1]);
@@ -241,7 +241,7 @@ public final class TrailerDirector {
         party.orbitTo = 215;
         party.orbitHeight = 0.9;
         party.setup = p -> {
-            p.teleportTo(p.serverLevel(), cx + 36.0, g, cz + 23.6, -150, 0);
+            p.teleportTo(p.level(), cx + 36.0, g, cz + 23.6, -150, 0);
             List<BubieEntity> crew2 = crewOf(p);
             double[][] spots = {{38, 17.2}, {39.3, 19.5}, {38, 21.8}};
             for (int i = 0; i < crew2.size() && i < spots.length; i++) {
@@ -258,13 +258,13 @@ public final class TrailerDirector {
     // ------------------------------------------------------------------ set and actors
 
     private static void cmd(ServerPlayer p, String c) {
-        p.server.getCommands().performPrefixedCommand(p.createCommandSourceStack().withPermission(4).withSuppressedOutput(), c);
+        p.level().getServer().getCommands().performPrefixedCommand(p.createCommandSourceStack().withPermission(net.minecraft.server.permissions.LevelBasedPermissionSet.OWNER).withSuppressedOutput(), c);
     }
 
     private static BubieEntity spawn(ServerPlayer p, BlockPos pos, float yaw) {
-        ServerLevel level = p.serverLevel();
-        BubieEntity b = Bubie.BUBIE_ENTITY.get().create(level);
-        b.moveTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0);
+        ServerLevel level = p.level();
+        BubieEntity b = Bubie.BUBIE_ENTITY.get().create(level, net.minecraft.world.entity.EntitySpawnReason.SPAWN_ITEM_USE);
+        b.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, yaw, 0);
         b.yHeadRot = yaw;
         b.yBodyRot = yaw;
         b.setOwnerUUID(p.getUUID());
@@ -279,14 +279,14 @@ public final class TrailerDirector {
         bubie.setItemSlot(EquipmentSlot.MAINHAND, tool);
         bubie.setJob(job);
         bubie.setArea(WorkArea.of(a, b));
-        if (!p.serverLevel().getBlockState(chest).is(Blocks.CHEST)) p.serverLevel().setBlockAndUpdate(chest, Blocks.CHEST.defaultBlockState());
+        if (!p.level().getBlockState(chest).is(Blocks.CHEST)) p.level().setBlockAndUpdate(chest, Blocks.CHEST.defaultBlockState());
         bubie.setChest(chest);
         bubie.setMode(Mode.WORK);
         return bubie;
     }
 
     private static java.util.Optional<BubieEntity> heroBubie(ServerPlayer p) {
-        return p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, -6)).inflate(1.5)).stream().findFirst();
+        return p.level().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, -6)).inflate(1.5)).stream().findFirst();
     }
 
     private static void followers(ServerPlayer p) {
@@ -316,15 +316,15 @@ public final class TrailerDirector {
     }
 
     private static List<BubieEntity> crewOf(ServerPlayer p) {
-        return p.serverLevel().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(64), b -> b.getTags().contains("crew"));
+        return p.level().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(64), b -> b.getTags().contains("crew"));
     }
 
     private static void hidePlayer(ServerPlayer p) {
-        p.teleportTo(p.serverLevel(), cx + 0.5, g - 30, cz + 0.5, 0, 0); // under the set: keeps it loaded, out of sight
+        p.teleportTo(p.level(), cx + 0.5, g - 30, cz + 0.5, 0, 0); // under the set: keeps it loaded, out of sight
     }
 
     private static void flatten(ServerPlayer p) {
-        ServerLevel level = p.serverLevel();
+        ServerLevel level = p.level();
         g = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int x = -46; x <= 50; x++) {
@@ -347,7 +347,7 @@ public final class TrailerDirector {
     }
 
     private static void buildSet(ServerPlayer p) {
-        ServerLevel level = p.serverLevel();
+        ServerLevel level = p.level();
         RandomSource r = RandomSource.create(42);
         // a ring of trees around the set, with grass and flowers
         for (int i = 0; i < 70; i++) {
@@ -539,7 +539,7 @@ public final class TrailerDirector {
         switch (phase) {
             case WAIT_WORLD -> {
                 mc.options.pauseOnLostFocus = false;
-                mc.options.hideGui = true;
+                BubieUi.hideHud(mc, true);
                 mc.player.input = PUPPET;
                 phase = Phase.PREPARE;
                 timer = 0;
@@ -550,7 +550,7 @@ public final class TrailerDirector {
                             "gamerule doMobSpawning false", "gamerule doFireTick false", "gamerule randomTickSpeed 0",
                             "difficulty peaceful", "time set 1500", "weather clear", "gamemode creative", "tick rate 20",
                             "kill @e[type=bubie:bubie]")) cmd(p, c);
-                    var found = p.serverLevel().findClosestBiome3d(b -> b.is(net.minecraft.world.level.biome.Biomes.FLOWER_FOREST)
+                    var found = p.level().findClosestBiome3d(b -> b.is(net.minecraft.world.level.biome.Biomes.FLOWER_FOREST)
                             || b.is(net.minecraft.world.level.biome.Biomes.FOREST), new BlockPos(9000, 64, 9000), 6400, 32, 64);
                     if (found != null) {
                         cx = found.getFirst().getX();
@@ -560,7 +560,7 @@ public final class TrailerDirector {
                         cz = 9000;
                     }
                     cmd(p, "forceload add " + (cx - 64) + " " + (cz - 64) + " " + (cx + 64) + " " + (cz + 64));
-                    p.teleportTo(p.serverLevel(), cx, 200, cz, 0, 0);
+                    p.teleportTo(p.level(), cx, 200, cz, 0, 0);
                     p.getAbilities().flying = true;
                     p.onUpdateAbilities();
                 });
@@ -619,11 +619,11 @@ public final class TrailerDirector {
             if (shot.walkFrom != null) {
                 Vec3 f = shot.walkFrom, to = shot.walkTo;
                 float yaw = (float) Math.toDegrees(Math.atan2(-(to.x - f.x), to.z - f.z));
-                p.teleportTo(p.serverLevel(), f.x, f.y, f.z, yaw, 0);
+                p.teleportTo(p.level(), f.x, f.y, f.z, yaw, 0);
             }
         });
         if (rig == null) {
-            rig = new ArmorStand(EntityType.ARMOR_STAND, mc.level);
+            rig = new ArmorStand(net.minecraft.world.entity.EntityTypes.ARMOR_STAND, mc.level);
             rig.setInvisible(true);
         }
         mc.setCameraEntity(rig);

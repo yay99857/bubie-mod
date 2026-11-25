@@ -14,7 +14,7 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipe": "bubie:bubie_clipboard"
+        "recipes": "bubie:bubie_clipboard"
       }
     }
   },

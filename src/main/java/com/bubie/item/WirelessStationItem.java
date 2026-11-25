@@ -8,12 +8,11 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -46,15 +45,15 @@ public class WirelessStationItem extends Item {
         if (custom == null) return null;
         CompoundTag root = custom.copyTag();
         if (!root.contains(KEY)) return null;
-        CompoundTag tag = root.getCompound(KEY);
-        ResourceLocation dimension = ResourceLocation.tryParse(tag.getString("Dim"));
+        CompoundTag tag = root.getCompoundOrEmpty(KEY);
+        Identifier dimension = Identifier.tryParse(tag.getStringOr("Dim", ""));
         if (dimension == null) return null;
-        return new Link(ResourceKey.create(Registries.DIMENSION, dimension), BlockPos.of(tag.getLong("Pos")));
+        return new Link(ResourceKey.create(Registries.DIMENSION, dimension), BlockPos.of(tag.getLongOr("Pos", 0L)));
     }
 
     private static void link(ItemStack stack, Level level, BlockPos station) {
         CompoundTag tag = new CompoundTag();
-        tag.putString("Dim", level.dimension().location().toString());
+        tag.putString("Dim", level.dimension().identifier().toString());
         tag.putLong("Pos", station.asLong());
         CustomData.update(DataComponents.CUSTOM_DATA, stack, root -> root.put(KEY, tag));
     }
@@ -79,36 +78,37 @@ public class WirelessStationItem extends Item {
         Player player = context.getPlayer();
         BlockPos pos = context.getClickedPos();
         if (player == null || !player.isShiftKeyDown() || !level.getBlockState(pos).is(Bubie.STATION.get())) return InteractionResult.PASS;
-        if (!level.isClientSide) {
+        if (!level.isClientSide()) {
             link(context.getItemInHand(), level, pos);
-            player.displayClientMessage(Component.translatable("bubie.wireless.linked", pos.getX(), pos.getY(), pos.getZ())
-                    .withStyle(ChatFormatting.GREEN), true);
+            player.sendOverlayMessage(Component.translatable("bubie.wireless.linked", pos.getX(), pos.getY(), pos.getZ())
+                    .withStyle(ChatFormatting.GREEN));
             level.playSound(null, pos, SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.PLAYERS, 0.7F, 1.6F);
         }
-        return InteractionResult.sidedSuccess(level.isClientSide);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (link(stack) == null) {
-            if (!level.isClientSide) {
-                player.displayClientMessage(Component.translatable("bubie.wireless.unlinked").withStyle(ChatFormatting.YELLOW), true);
+            if (!level.isClientSide()) {
+                player.sendOverlayMessage(Component.translatable("bubie.wireless.unlinked").withStyle(ChatFormatting.YELLOW));
             }
-            return InteractionResultHolder.fail(stack);
+            return InteractionResult.FAIL;
         }
-        if (level.isClientSide) com.bubie.client.WirelessClient.open(hand);
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        if (level.isClientSide()) com.bubie.client.WirelessClient.open(hand);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display,
+            java.util.function.Consumer<Component> tooltip, TooltipFlag flag) {
         Link link = link(stack);
         if (link != null) {
-            tooltip.add(Component.translatable("bubie.ui.tracker.station", link.pos().getX(), link.pos().getY(), link.pos().getZ())
+            tooltip.accept(Component.translatable("bubie.ui.tracker.station", link.pos().getX(), link.pos().getY(), link.pos().getZ())
                     .withStyle(ChatFormatting.GOLD));
         }
-        tooltip.add(Component.translatable("item.bubie.wireless_station.how1").withStyle(ChatFormatting.DARK_GRAY));
-        tooltip.add(Component.translatable("item.bubie.wireless_station.how2").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.accept(Component.translatable("item.bubie.wireless_station.how1").withStyle(ChatFormatting.DARK_GRAY));
+        tooltip.accept(Component.translatable("item.bubie.wireless_station.how2").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

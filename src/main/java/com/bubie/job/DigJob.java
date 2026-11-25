@@ -34,9 +34,9 @@ public class DigJob extends Job {
     public boolean isTarget(ServerLevel level, BlockPos pos, BlockState state) {
         if (state.getBlock() instanceof BrushableBlock) return false; // suspicious sand/gravel: archaeology
         if (!state.getFluidState().isEmpty()) return false;
-        if (on(DigFilter.SAND) && (state.is(BlockTags.SAND) || state.is(Tags.Blocks.SANDS))) return true;
-        if (on(DigFilter.GRAVEL) && (state.is(Blocks.GRAVEL) || state.is(Tags.Blocks.GRAVELS))) return true;
-        if (on(DigFilter.DIRT) && (state.is(BlockTags.DIRT) || state.is(Blocks.DIRT_PATH))) return true;
+        if (on(DigFilter.SAND) && (state.is(BlockTags.SAND) || state.is(Tags.BlockItems.SANDS.block()))) return true;
+        if (on(DigFilter.GRAVEL) && (state.is(Blocks.GRAVEL) || state.is(Tags.BlockItems.GRAVELS.block()))) return true;
+        if (on(DigFilter.DIRT) && (state.is(BlockTags.SUBSTRATE_OVERWORLD) || state.is(Blocks.DIRT_PATH))) return true;
         return on(DigFilter.CLAY) && state.is(Blocks.CLAY);
     }
 

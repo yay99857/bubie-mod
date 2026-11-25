@@ -6,17 +6,12 @@ import com.bubie.entity.Dj;
 import com.bubie.entity.Face;
 import com.bubie.entity.Mode;
 import net.minecraft.core.BlockPos;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /** The DJ on the server: the disc in its slot, and what clients are told to play. */
-@GameTestHolder(Bubie.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class DjGameTests {
     private static BubieEntity dj(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.STONE);
@@ -26,7 +21,7 @@ public class DjGameTests {
     }
 
     /** Near a DJ, only the Bubies sitting in Stay mode dance; the ones following (or working) keep their own face. */
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 100)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 100)
     public static void onlyBubiesThatStayDanceAlong(GameTestHelper helper) {
         BubieEntity dj = dj(helper);
         dj.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_CAT));
@@ -49,7 +44,7 @@ public class DjGameTests {
         });
     }
 
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 100)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 100)
     public static void djPlaysTheDiscInItsSlot(GameTestHelper helper) {
         BubieEntity bubie = dj(helper);
         bubie.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_CAT)); // the DJ tab's disc slot
@@ -71,7 +66,7 @@ public class DjGameTests {
     }
 
     /** Taking the disc out of its slot while it plays stops it; it doesn't play on. */
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 60)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 60)
     public static void djStopsWhenItsDiscIsTakenOut(GameTestHelper helper) {
         BubieEntity bubie = dj(helper);
         bubie.disc().setItem(0, new ItemStack(Items.MUSIC_DISC_CAT));
@@ -82,7 +77,7 @@ public class DjGameTests {
                 "stopped once the disc was taken, plays " + bubie.getDjTrack()));
     }
 
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 20)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 20)
     public static void djWithoutADiscStaysStopped(GameTestHelper helper) {
         BubieEntity bubie = dj(helper);
         bubie.insert(new ItemStack(Items.MUSIC_DISC_PIGSTEP)); // only in storage: cargo

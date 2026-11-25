@@ -11,7 +11,27 @@ base {
     archivesName = project.mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+// DEV ONLY tools (screenshots, logos, trailer) are not ported to this Minecraft version yet; the mod does not use them.
+sourceSets.main.java {
+    exclude 'com/bubie/client/ShotDirector.java', 'com/bubie/client/LogoScreen.java', 'com/bubie/client/trailer/**'
+}
+
+// Base Blueprint for this Minecraft version, built next door (../base-blueprint). Without it the Base Blueprint
+// integration is swapped for the stand-ins in src/nobb (same classes, integration off).
+def blueprintJars = fileTree('../base-blueprint/build/libs') { include 'baseblueprint-*26.3*.jar' }
+def hasBlueprint = !blueprintJars.isEmpty()
+if (!hasBlueprint) {
+    def swapped = ['com/bubie/compat/BlueprintCompat.java', 'com/bubie/compat/BlueprintHelper.java',
+                   'com/bubie/client/BuilderShots.java', 'com/bubie/gametest/BuilderScenarios.java',
+                   'com/bubie/gametest/HelperScenarios.java']
+    def mainDir = file('src/main/java')
+    sourceSets.main.java {
+        srcDir 'src/nobb/java'
+        exclude { e -> swapped.contains(e.relativePath.pathString) && e.file.toPath().startsWith(mainDir.toPath()) }
+    }
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 neoForge {
     version = project.neo_version
@@ -97,22 +117,21 @@ repositories {
         url = 'https://cursemaven.com'
         content { includeGroup 'curse.maven' }
     }
+    maven {
+        url = 'https://api.modrinth.com/maven'
+        content { includeGroup 'maven.modrinth' }
+    }
 }
 
 dependencies {
     // Optional integration: compiled against, never required at runtime (see compat/jade).
-    compileOnly 'curse.maven:jade-324717:8591319'   // Jade 15.10.6
-    runtimeOnly 'curse.maven:jade-324717:8591319'
-    // Optional: the Builder job reads Base Blueprint's plan (see compat/BlueprintCompat). Loaded in dev for the tests.
-    // 1.3.0 adds HelperBuildEvent, 1.4.0 fires it from a click with "Built by: Bubie" set; Bubie still runs with 1.2.1. A jar built
-    // next door (../base-blueprint) wins, so changes there can be tried before they are on CurseForge.
-    def bb = file('../base-blueprint/build/libs/baseblueprint-1.4.0.jar')
-    if (bb.exists()) {
-        compileOnly files(bb)
-        runtimeOnly files(bb)
-    } else {
-        compileOnly 'curse.maven:base-blueprint-1809447:9744795'   // Base Blueprint 1.4.0
-        runtimeOnly 'curse.maven:base-blueprint-1809447:9744795'
+    compileOnly 'maven.modrinth:jade:26.3.5+neoforge'
+    runtimeOnly 'maven.modrinth:jade:26.3.5+neoforge'
+    // Optional: the Builder job reads Base Blueprint's plan (see compat/BlueprintCompat). Only a 26.3 build of Base Blueprint
+    // (../base-blueprint) will do; without it the integration is left out of this build (src/nobb holds the stand-in).
+    if (hasBlueprint) {
+        compileOnly blueprintJars
+        runtimeOnly blueprintJars
     }
 }
 
@@ -136,4 +155,8 @@ processResources {
     filesMatching('META-INF/neoforge.mods.toml') {
         expand modMetadata
     }
+}
+
+tasks.named('compileJava', JavaCompile).configure {
+    options.compilerArgs += ['-Xmaxerrs', '5000']
 }

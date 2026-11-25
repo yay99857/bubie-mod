@@ -7,7 +7,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 
 import java.io.InputStream;
@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public final class LookTextures {
     private static final Logger LOG = LogUtils.getLogger();
-    private static final ResourceLocation BASE = Bubie.id("textures/entity/bubie.png");
+    private static final Identifier BASE = Bubie.id("textures/entity/bubie.png");
     /** Ramp keys of the base texture (manifest.ts RAMP_KEYS) and the two-tone limbs. */
     private static final int[] SHELL_KEYS = {0xFFF9EE, 0xF3E7D5, 0xDDCBB2, 0xBFA586};
     private static final int[] LIMB_KEYS = {0xF7EEE1, 0xE2D2BC};
@@ -35,7 +35,7 @@ public final class LookTextures {
     /** Where that screen sits on the site's 96×96 piece canvas. */
     private static final int SITE_X = 33, SITE_Y = 41;
 
-    private static final Map<String, ResourceLocation> CACHE = new HashMap<>();
+    private static final Map<String, Identifier> CACHE = new HashMap<>();
     private static final Map<String, NativeImage> SOURCES = new HashMap<>();
 
     private LookTextures() {
@@ -55,7 +55,7 @@ public final class LookTextures {
         };
     }
 
-    public static ResourceLocation body(Look look) {
+    public static Identifier body(Look look) {
         String key = "body_" + look.shell() + "_" + look.cloth() + "_" + look.glow();
         return CACHE.computeIfAbsent(key, k -> {
             NativeImage base = source(BASE);
@@ -73,17 +73,17 @@ public final class LookTextures {
             for (int i = 0; i < GLOW_KEYS.length; i++) swap.put(GLOW_KEYS[i], glow[i]);
             for (int y = 0; y < img.getHeight(); y++) {
                 for (int x = 0; x < img.getWidth(); x++) {
-                    int abgr = img.getPixelRGBA(x, y);
+                    int abgr = net.minecraft.util.ARGB.toABGR(img.getPixel(x, y));
                     if ((abgr >>> 24) == 0) continue;
                     Integer to = swap.get(rgb(abgr));
-                    if (to != null) img.setPixelRGBA(x, y, abgr(to, abgr >>> 24));
+                    if (to != null) img.setPixelABGR(x, y, abgr(to, abgr >>> 24));
                 }
             }
             return register(k, img);
         });
     }
 
-    public static ResourceLocation face(Look look, Face face, boolean blink) {
+    public static Identifier face(Look look, Face face, boolean blink) {
         String[] parts = faceParts(look, face, blink);
         String key = "face_" + parts[0] + "_" + parts[1] + "_" + look.glow();
         return CACHE.computeIfAbsent(key, k -> {
@@ -103,7 +103,7 @@ public final class LookTextures {
             {4, 2, 1, 3, 3, 4, 2, 1, 3}, {2, 3, 4, 4, 1, 2, 3, 4, 2}};
 
     /** Happy eyes over a dancing equalizer, in the Bubie's light colour. */
-    public static ResourceLocation music(Look look, int frame) {
+    public static Identifier music(Look look, int frame) {
         int f = Math.floorMod(frame, MUSIC_FRAMES);
         String key = "music_" + f + "_" + look.glow();
         return CACHE.computeIfAbsent(key, k -> {
@@ -114,28 +114,28 @@ public final class LookTextures {
                 int x = SCREEN_X + 7 + bar * 2;
                 for (int h = 0; h < EQ[f][bar]; h++) {
                     int y = SCREEN_Y + 13 - h;
-                    img.setPixelRGBA(x, y, abgr(h == EQ[f][bar] - 1 ? glow[0] : glow[1], 255));
+                    img.setPixelABGR(x, y, abgr(h == EQ[f][bar] - 1 ? glow[0] : glow[1], 255));
                 }
             }
             return register(k, img);
         });
     }
 
-    private static void stamp(NativeImage img, ResourceLocation part, int[] glow) {
+    private static void stamp(NativeImage img, Identifier part, int[] glow) {
         NativeImage src = source(part);
         if (src == null) return;
         for (int y = 0; y < SCREEN_H; y++) {
             for (int x = 0; x < SCREEN_W; x++) {
-                int abgr = src.getPixelRGBA(SITE_X + x, SITE_Y + y);
+                int abgr = net.minecraft.util.ARGB.toABGR(src.getPixel(SITE_X + x, SITE_Y + y));
                 if ((abgr >>> 24) == 0) continue;
                 int c = rgb(abgr);
                 int to = c == GLOW_KEYS[0] ? glow[0] : c == GLOW_KEYS[2] ? glow[2] : glow[1];
-                img.setPixelRGBA(SCREEN_X + x, SCREEN_Y + y, abgr(to, 255));
+                img.setPixelABGR(SCREEN_X + x, SCREEN_Y + y, abgr(to, 255));
             }
         }
     }
 
-    private static NativeImage source(ResourceLocation id) {
+    private static NativeImage source(Identifier id) {
         return SOURCES.computeIfAbsent(id.toString(), k -> {
             try (InputStream in = Minecraft.getInstance().getResourceManager().open(id)) {
                 return NativeImage.read(in);
@@ -146,9 +146,9 @@ public final class LookTextures {
         });
     }
 
-    private static ResourceLocation register(String key, NativeImage img) {
-        ResourceLocation id = Bubie.id("look/" + key);
-        Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(img));
+    private static Identifier register(String key, NativeImage img) {
+        Identifier id = Bubie.id("look/" + key);
+        Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(() -> "bubie:" + key, img));
         return id;
     }
 

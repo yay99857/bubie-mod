@@ -71,7 +71,7 @@ public final class Dj {
         serial++;
         playing = true;
         endsAt = bubie.level().getGameTime() + Math.max(20, song.lengthInTicks()) + 20; // a breath before it starts over
-        bubie.setDjTrack(new Track(serial, song.soundEvent().value().getLocation().toString(), song.description().getString()));
+        bubie.setDjTrack(new Track(serial, song.soundEvent().value().location().toString(), song.description().getString()));
     }
 
     void tick() {
@@ -85,7 +85,7 @@ public final class Dj {
         // the disc it is playing was taken out (or swapped): play what is there now, or stop
         Track track = bubie.getDjTrack();
         if (bubie.tickCount % 5 == 0 && !track.isNone()
-                && !discSong().map(s -> s.value().soundEvent().value().getLocation().toString().equals(track.ref())).orElse(false)) {
+                && !discSong().map(s -> s.value().soundEvent().value().location().toString().equals(track.ref())).orElse(false)) {
             start();
             return;
         }
@@ -94,7 +94,7 @@ public final class Dj {
 
     private Optional<Holder<JukeboxSong>> discSong() {
         ItemStack stack = bubie.disc().getItem(0);
-        return stack.isEmpty() ? Optional.empty() : JukeboxSong.fromStack(bubie.registryAccess(), stack);
+        return stack.isEmpty() ? Optional.empty() : JukeboxSong.fromStack(stack);
     }
 
     // ------------------------------------------------------------------ saving
@@ -108,7 +108,7 @@ public final class Dj {
     void load(CompoundTag tag) {
         playing = false;
         if (!tag.contains("Dj")) return;
-        CompoundTag dj = tag.getCompound("Dj");
-        if (dj.contains("Volume")) bubie.setDjVolume(dj.getByte("Volume"));
+        CompoundTag dj = tag.getCompoundOrEmpty("Dj");
+        if (dj.contains("Volume")) bubie.setDjVolume(dj.getByteOr("Volume", (byte) 0));
     }
 }

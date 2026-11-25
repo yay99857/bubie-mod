@@ -6,7 +6,7 @@ import com.bubie.entity.Mode;
 import com.bubie.entity.Status;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Player;
 import snownee.jade.api.EntityAccessor;
 import snownee.jade.api.IEntityComponentProvider;
@@ -19,7 +19,7 @@ import snownee.jade.api.config.IPluginConfig;
 /** Jade: what a Bubie is doing, its job and its battery, without opening its menu. Everything is synced data. */
 @WailaPlugin(Bubie.MOD_ID)
 public class BubieJadePlugin implements IWailaPlugin {
-    static final ResourceLocation INFO = Bubie.id("bubie");
+    static final Identifier INFO = Bubie.id("bubie");
 
     @Override
     public void registerClient(IWailaClientRegistration registration) {
@@ -53,7 +53,7 @@ public class BubieJadePlugin implements IWailaPlugin {
         }
 
         @Override
-        public ResourceLocation getUid() {
+        public Identifier getUid() {
             return INFO;
         }
     }

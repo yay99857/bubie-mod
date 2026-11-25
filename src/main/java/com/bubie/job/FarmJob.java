@@ -72,7 +72,7 @@ public class FarmJob extends Job {
         if (replant == null || !level.getBlockState(pos).isAir()) return true;
 
         // the seed the crop itself names (its pick-block item), else whatever item places this block
-        Item fromPick = block.getCloneItemStack(level, pos, state).getItem();
+        Item fromPick = state.getCloneItemStack(level, pos, false).getItem();
         Item seed = fromPick != net.minecraft.world.item.Items.AIR ? fromPick : block.asItem();
         if (seed == net.minecraft.world.item.Items.AIR) return true;
         ItemStack one = bubie.takeOne(s -> s.is(seed));

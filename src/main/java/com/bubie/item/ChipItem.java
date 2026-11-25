@@ -22,8 +22,9 @@ public class ChipItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("item.bubie." + type.id() + ".desc").withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.translatable("item.bubie.chip.how").withStyle(ChatFormatting.DARK_GRAY));
+    public void appendHoverText(ItemStack stack, TooltipContext context, net.minecraft.world.item.component.TooltipDisplay display,
+            java.util.function.Consumer<Component> tooltip, TooltipFlag flag) {
+        tooltip.accept(Component.translatable("item.bubie." + type.id() + ".desc").withStyle(ChatFormatting.GRAY));
+        tooltip.accept(Component.translatable("item.bubie.chip.how").withStyle(ChatFormatting.DARK_GRAY));
     }
 }

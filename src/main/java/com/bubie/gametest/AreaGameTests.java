@@ -7,7 +7,6 @@ import com.bubie.entity.Mode;
 import com.bubie.entity.WorkArea;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
@@ -16,14 +15,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.gametest.GameTestHolder;
-import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 
 /** Working without a marked area: around the chest (or Station), with the radius from the menu. */
-@GameTestHolder(Bubie.MOD_ID)
-@PrefixGameTestTemplate(false)
 public class AreaGameTests {
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 1600)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 1600)
     public static void lumberjackFindsTheTreesAroundItsChest(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.GRASS_BLOCK);
         BlockPos trunk = new BlockPos(8, 1, 7);
@@ -44,7 +39,7 @@ public class AreaGameTests {
         });
     }
 
-    @GameTest(template = BubieGameTests.FIELD, timeoutTicks = 20)
+    @BubieTest(template = BubieGameTests.FIELD, timeoutTicks = 20)
     public static void quarryPitOpensInFrontOfTheChestNeverUnderIt(GameTestHelper helper) {
         BubieGameTests.floor(helper, Blocks.STONE);
         BlockPos chestAt = new BlockPos(8, 1, 3);

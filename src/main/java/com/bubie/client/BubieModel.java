@@ -1,12 +1,11 @@
 package com.bubie.client;
 
 import com.bubie.Bubie;
-import com.bubie.entity.BubieEntity;
 import com.bubie.entity.Face;
 import com.bubie.entity.Mode;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.model.ArmedModel;
-import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
@@ -22,13 +21,13 @@ import net.minecraft.world.entity.HumanoidArm;
  * tube sticking out the back), a black hoodie with its hood down, and short cream arms and legs.
  * Texture layout: see tools/gen_textures.py.
  */
-public class BubieModel extends HierarchicalModel<BubieEntity> implements ArmedModel {
+public class BubieModel extends EntityModel<BubieRenderState> implements ArmedModel<BubieRenderState> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(Bubie.id("bubie"), "main");
 
-    private final ModelPart root, head, torso, rightArm, leftArm, rightLeg, leftLeg;
+    private final ModelPart head, torso, rightArm, leftArm, rightLeg, leftLeg;
 
     public BubieModel(ModelPart root) {
-        this.root = root;
+        super(root);
         head = root.getChild("head");
         torso = root.getChild("torso");
         rightArm = root.getChild("right_arm");
@@ -68,14 +67,15 @@ public class BubieModel extends HierarchicalModel<BubieEntity> implements ArmedM
     }
 
     @Override
-    public ModelPart root() {
-        return root;
-    }
-
-    @Override
-    public void setupAnim(BubieEntity bubie, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        root.getAllParts().forEach(ModelPart::resetPose);
-        Face face = bubie.getFace();
+    public void setupAnim(BubieRenderState state) {
+        super.setupAnim(state);
+        Face face = state.face;
+        float limbSwing = state.walkAnimationPos;
+        float limbSwingAmount = state.walkAnimationSpeed;
+        float ageInTicks = state.ageInTicks;
+        float netHeadYaw = state.yRot;
+        float headPitch = state.xRot;
+        float attackTime = state.swingAnimation;
 
         // a heavy head: turns fully, nods only halfway
         head.yRot = netHeadYaw * Mth.DEG_TO_RAD;
@@ -91,7 +91,7 @@ public class BubieModel extends HierarchicalModel<BubieEntity> implements ArmedM
         rightArm.zRot = 0.08F;
         leftArm.zRot = -0.08F;
 
-        if (bubie.getMode() == Mode.STAY) {
+        if (state.mode == Mode.STAY) {
             // sitting: everything drops by a leg's length, legs stick out in front
             for (ModelPart part : new ModelPart[]{head, torso, rightArm, leftArm, rightLeg, leftLeg}) part.y += 3.0F;
             rightLeg.xRot = -Mth.HALF_PI;
@@ -128,13 +128,13 @@ public class BubieModel extends HierarchicalModel<BubieEntity> implements ArmedM
             rightArm.xRot = -1.9F + t * 1.2F;
             rightArm.yRot = -0.2F;
             torso.yRot = Mth.sin(attackTime * Mth.PI) * 0.15F;
-        } else if (!bubie.getMainHandItem().isEmpty() && limbSwingAmount < 0.1F && bubie.getMode() != Mode.STAY) {
+        } else if (!state.rightHandItemStack.isEmpty() && limbSwingAmount < 0.1F && state.mode != Mode.STAY) {
             rightArm.xRot = -0.35F; // holding the tool out a little
         }
     }
 
     @Override
-    public void translateToHand(HumanoidArm arm, PoseStack pose) {
+    public void translateToHand(BubieRenderState state, HumanoidArm arm, PoseStack pose) {
         (arm == HumanoidArm.RIGHT ? rightArm : leftArm).translateAndRotate(pose);
     }
 }
