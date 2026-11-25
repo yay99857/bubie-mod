@@ -68,6 +68,14 @@ public class BuilderJob extends Job {
         return done;
     }
 
+    /** The base, built or not: a way around never goes through it (its door is the way in and out). */
+    @Override
+    public boolean isProtected(BlockPos pos) {
+        BlockPos origin = bubie.getBuildOrigin();
+        return origin != null && Math.abs(pos.getX() - origin.getX()) <= 8 && Math.abs(pos.getZ() - origin.getZ()) <= 8
+                && pos.getY() >= origin.getY() - 1;
+    }
+
     @Override
     public boolean isTarget(ServerLevel level, BlockPos pos, BlockState state) {
         return steps.containsKey(pos) && state.canBeReplaced();

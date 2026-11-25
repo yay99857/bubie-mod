@@ -199,7 +199,7 @@ final class Access {
     // ------------------------------------------------------------------ the changes themselves
 
     private boolean dig(ServerLevel level, BlockPos pos, Job job) {
-        if (!breakable(level, pos)) return false;
+        if (job.isProtected(pos) || !breakable(level, pos)) return false;
         if (!plugAround(level, pos)) return false;
         BlockState before = level.getBlockState(pos);
         boolean wanted = job.area.contains(pos) && job.isTarget(level, pos, before);
@@ -263,8 +263,8 @@ final class Access {
                 || state.is(BlockTags.SUBSTRATE_OVERWORLD) || state.is(BlockTags.SAND) || state.is(Blocks.GRAVEL)
                 || state.is(Blocks.CLAY) || state.is(BlockTags.TERRACOTTA) || state.is(Blocks.SANDSTONE)
                 || state.is(Blocks.RED_SANDSTONE) || state.is(Blocks.SNOW_BLOCK) || state.is(Blocks.SOUL_SAND)
-                || state.is(Blocks.SOUL_SOIL) || state.is(Tags.BlockItems.ORES.block())
-                || state.is(Tags.BlockItems.COBBLESTONES.block()) || state.is(Blocks.COBBLED_DEEPSLATE);
+                || state.is(Blocks.SOUL_SOIL) || state.is(Tags.BlockItems.ORES.block());
+        // not cobblestone: it is what players (and the Builder) build with
     }
 
     // ------------------------------------------------------------------ closing the way again
