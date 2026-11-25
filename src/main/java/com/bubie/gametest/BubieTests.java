@@ -74,9 +74,11 @@ public final class BubieTests {
                 Identifier.fromNamespaceAndPath(Bubie.MOD_ID, "default"), new TestEnvironmentDefinition.AllOf());
         for (Entry e : TESTS) {
             ResourceKey<Consumer<GameTestHelper>> function = ResourceKey.create(Registries.TEST_FUNCTION, e.id());
-            TestData<Holder<TestEnvironmentDefinition<?>>> data = new TestData<>(environment,
-                    Identifier.fromNamespaceAndPath(Bubie.MOD_ID, e.test().template()), e.test().timeoutTicks(),
-                    e.test().setupTicks(), e.test().required());
+            // sky access: no barrier ceiling over the structure (roofs and trees grow above it); 8 blocks of
+            // padding so one test's Bubies never reach into the next test's chests
+            TestData<Holder<TestEnvironmentDefinition<?>>> data = new TestData<>(environment, net.minecraft.world.level.Level.OVERWORLD,
+                    Identifier.fromNamespaceAndPath(Bubie.MOD_ID, e.test().template()), e.test().timeoutTicks(), e.test().setupTicks(), e.test().required(),
+                    net.minecraft.world.level.block.Rotation.NONE, false, 1, 1, true, 8);
             event.registerTest(e.id(), new FunctionGameTestInstance(function, data));
         }
     }

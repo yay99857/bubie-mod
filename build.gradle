@@ -4,7 +4,7 @@ plugins {
     id 'net.neoforged.moddev' version '2.0.148'
 }
 
-version = project.mod_version
+version = "${project.mod_version}-${project.minecraft_version}"
 group = project.mod_group_id
 
 base {
@@ -16,20 +16,10 @@ sourceSets.main.java {
     exclude 'com/bubie/client/ShotDirector.java', 'com/bubie/client/LogoScreen.java', 'com/bubie/client/trailer/**'
 }
 
-// Base Blueprint for this Minecraft version, built next door (../base-blueprint). Without it the Base Blueprint
-// integration is swapped for the stand-ins in src/nobb (same classes, integration off).
-def blueprintJars = fileTree('../base-blueprint/build/libs') { include 'baseblueprint-*26.3*.jar' }
-def hasBlueprint = !blueprintJars.isEmpty()
-if (!hasBlueprint) {
-    def swapped = ['com/bubie/compat/BlueprintCompat.java', 'com/bubie/compat/BlueprintHelper.java',
-                   'com/bubie/client/BuilderShots.java', 'com/bubie/gametest/BuilderScenarios.java',
-                   'com/bubie/gametest/HelperScenarios.java']
-    def mainDir = file('src/main/java')
-    sourceSets.main.java {
-        srcDir 'src/nobb/java'
-        exclude { e -> swapped.contains(e.relativePath.pathString) && e.file.toPath().startsWith(mainDir.toPath()) }
-    }
-}
+// Base Blueprint for this Minecraft version: -PblueprintJar=<path>, else a build next door (../base-blueprint-26.3, its
+// mc-26.3 branch), else the released file from CurseForge (Base Blueprint 1.4.0 for 26.3).
+def blueprintLocal = project.hasProperty('blueprintJar') ? files(project.property('blueprintJar'))
+        : fileTree('../base-blueprint-26.3/build/libs') { include 'baseblueprint-*-26.3.jar' }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
@@ -127,11 +117,13 @@ dependencies {
     // Optional integration: compiled against, never required at runtime (see compat/jade).
     compileOnly 'maven.modrinth:jade:26.3.5+neoforge'
     runtimeOnly 'maven.modrinth:jade:26.3.5+neoforge'
-    // Optional: the Builder job reads Base Blueprint's plan (see compat/BlueprintCompat). Only a 26.3 build of Base Blueprint
-    // (../base-blueprint) will do; without it the integration is left out of this build (src/nobb holds the stand-in).
-    if (hasBlueprint) {
-        compileOnly blueprintJars
-        runtimeOnly blueprintJars
+    // Optional: the Builder job reads Base Blueprint's plan (see compat/BlueprintCompat). Loaded in dev for the tests.
+    if (!blueprintLocal.isEmpty()) {
+        compileOnly blueprintLocal
+        runtimeOnly blueprintLocal
+    } else {
+        compileOnly 'curse.maven:base-blueprint-1809447:9807300'   // Base Blueprint 1.4.0 for 26.3
+        runtimeOnly 'curse.maven:base-blueprint-1809447:9807300'
     }
 }
 
