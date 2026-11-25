@@ -65,13 +65,13 @@ public final class ShotDirector {
         float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
         p.getAbilities().flying = true;
         p.onUpdateAbilities();
-        p.teleportTo(p.level(), x, y, z, yaw, pitch);
+        p.teleportTo(p.level(), x, y, z, java.util.Set.of(), yaw, pitch, true);
         p.setDeltaMovement(0, 0, 0);
     }
 
     private static void shot(String name) {
         Minecraft mc = Minecraft.getInstance();
-        Screenshot.grab(mc.gameDirectory, "bubie_" + name + ".png", mc.getMainRenderTarget(), c -> LOG.info("shot {}", name));
+        Screenshot.grab(mc.gameDirectory, "bubie_" + name + ".png", mc.gameRenderer.mainRenderTarget(), 1, c -> LOG.info("shot {}", name));
     }
 
     private static BlockPos at(int x, int y, int z) {
@@ -236,7 +236,7 @@ public final class ShotDirector {
             p.onUpdateAbilities();
             p.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
             BubieEntity b = p.level().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(0.6)).stream().findFirst().orElse(null);
-            if (b != null) b.interact(p, InteractionHand.MAIN_HAND);
+            if (b != null) b.interact(p, InteractionHand.MAIN_HAND, p.position());
         }));
         add(20, () -> BubieScreen.selectTab(3));
         add(20, () -> shot("menu_dj"));
@@ -267,7 +267,7 @@ public final class ShotDirector {
                 cz = found.getFirst().getZ();
             }
             cmd(p, "forceload add " + (cx - 48) + " " + (cz - 48) + " " + (cx + 48) + " " + (cz + 48));
-            p.teleportTo(p.level(), cx, 200, cz, 0, 0);
+            p.teleportTo(p.level(), cx, 200, cz, java.util.Set.of(), 0, 0, true);
         }));
         if (DJ_ONLY) {
             djSteps(mc);
@@ -305,7 +305,7 @@ public final class ShotDirector {
                 b.insert(new ItemStack(Items.WHEAT_SEEDS, 12));
                 b.extra().setItem(0, new ItemStack(Items.REDSTONE, 9));
                 b.extra().setItem(1, new ItemStack(Bubie.CHIPS.get(com.bubie.item.ChipType.SPEED).get()));
-                b.interact(p, InteractionHand.MAIN_HAND);
+                b.interact(p, InteractionHand.MAIN_HAND, p.position());
             }
         }));
         add(30, () -> shot("menu_job"));

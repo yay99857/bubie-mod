@@ -87,12 +87,12 @@ public final class VoltaicShots {
         float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)));
         p.getAbilities().flying = true;
         p.onUpdateAbilities();
-        p.teleportTo(p.level(), x, y, z, yaw, pitch);
+        p.teleportTo(p.level(), x, y, z, java.util.Set.of(), yaw, pitch, true);
     }
 
     private static void shot(String name) {
         Minecraft mc = Minecraft.getInstance();
-        Screenshot.grab(mc.gameDirectory, "voltaic_" + name + ".png", mc.getMainRenderTarget(), c -> LOG.info("shot {}", name));
+        Screenshot.grab(mc.gameDirectory, "voltaic_" + name + ".png", mc.gameRenderer.mainRenderTarget(), 1, c -> LOG.info("shot {}", name));
     }
 
     /** A machine facing the camera (south). */
@@ -191,10 +191,10 @@ public final class VoltaicShots {
                     "time set 2000", "weather clear", "gamemode creative", "difficulty peaceful"))
                 cmd(p, c);
             cmd(p, "forceload add " + (cx - 32) + " " + (cz - 32) + " " + (cx + 32) + " " + (cz + 32));
-            p.teleportTo(p.level(), cx, 150, cz, 0, 0);
+            p.teleportTo(p.level(), cx, 150, cz, java.util.Set.of(), 0, 0, true);
         }));
         add(160, () -> server(VoltaicShots::build));
-        add(200, () -> BubieUi.hideHud(mc, true)); // let the generators fill the network and the machines start
+        add(200, () -> com.bubie.client.BubieUi.hideHud(mc, true)); // let the generators fill the network and the machines start
         add(20, () -> server(p -> look(p, cx + 0.5, g + 3.2, cz + 9.5, cx + 0.5, g + 0.5, cz - 2)));
         add(60, () -> shot("workshop"));
         add(5, () -> server(p -> look(p, cx - 4.5, g + 1.8, cz + 3.0, cx - 6.5, g + 0.5, cz - 1.5)));
@@ -204,7 +204,7 @@ public final class VoltaicShots {
         add(5, () -> server(p -> look(p, cx + 7.5, g + 2.2, cz + 3.5, cx + 5.5, g + 0.3, cz)));
         add(50, () -> shot("cables"));
         // the alloy smelter's screen
-        add(5, () -> BubieUi.hideHud(mc, false));
+        add(5, () -> com.bubie.client.BubieUi.hideHud(mc, false));
         add(5, () -> server(p -> {
             BlockPos smelter = at(3, 0, -2);
             look(p, cx + 3.5, g, cz + 0.5, cx + 3.5, g + 0.5, cz - 1.5);
@@ -217,7 +217,7 @@ public final class VoltaicShots {
         add(5, () -> mc.gui.setScreen(null));
         // night: the lit machines and the lantern
         add(5, () -> {
-            BubieUi.hideHud(mc, true);
+            com.bubie.client.BubieUi.hideHud(mc, true);
             server(p -> cmd(p, "time set 18000"));
         });
         add(10, () -> server(p -> look(p, cx + 0.5, g + 2.6, cz + 8.5, cx + 0.5, g + 0.5, cz - 2)));

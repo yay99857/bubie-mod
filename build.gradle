@@ -11,11 +11,6 @@ base {
     archivesName = project.mod_id
 }
 
-// DEV ONLY tools (screenshots, logos, trailer) are not ported to this Minecraft version yet; the mod does not use them.
-sourceSets.main.java {
-    exclude 'com/bubie/client/ShotDirector.java', 'com/bubie/client/LogoScreen.java', 'com/bubie/client/trailer/**'
-}
-
 // Base Blueprint for this Minecraft version: -PblueprintJar=<path>, else a build next door (../base-blueprint-26.3, its
 // mc-26.3 branch), else the released file from CurseForge (Base Blueprint 1.4.0 for 26.3).
 def blueprintLocal = project.hasProperty('blueprintJar') ? files(project.property('blueprintJar'))

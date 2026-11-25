@@ -57,8 +57,17 @@ final class Recorder {
     /** Copies the finished frame (after shaders and everything) into the video. */
     void capture(RenderTarget target) {
         if (failed || target.width != width || target.height != height) return; // ffmpeg died, or the window was resized
-        try (NativeImage image = Screenshot.takeScreenshot(target)) {
-            int[] pixels = image.getPixelsRGBA(); // 0xAABBGGRR: little-endian bytes are R, G, B, A
+        // the frame is read back from the GPU and handed over when it is ready
+        Screenshot.takeScreenshot(target, image -> {
+            try (image) {
+                write(image);
+            }
+        });
+    }
+
+    private void write(NativeImage image) {
+        try {
+            int[] pixels = image.getPixelsABGR(); // 0xAABBGGRR: little-endian bytes are R, G, B, A
             byte[] bytes = new byte[pixels.length * 4];
             for (int i = 0, b = 0; i < pixels.length; i++) {
                 int p = pixels[i];

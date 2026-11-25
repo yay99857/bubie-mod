@@ -11,7 +11,7 @@ import com.bubie.entity.Mode;
 import com.bubie.entity.WorkArea;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.Input;
+import net.minecraft.client.player.ClientInput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -191,7 +191,7 @@ public final class TrailerDirector {
                 BubieEntity b = spawn(p, at(0, 0, 16), 0);
                 b.setChest(chestPos);
                 b.setLook(new Look(7, 5, 6, 3, 4));
-                p.teleportTo(p.level(), cx + 0.5, g, cz + 24.5, 180, 0); // the door faces the camera side
+                p.teleportTo(p.level(), cx + 0.5, g, cz + 24.5, java.util.Set.of(), 180, 0, true); // the door faces the camera side
                 com.bubie.compat.BlueprintCompat.handOver(b, p, com.bubie.client.BuilderShots.blueprint());
             }
             hidePlayer(p);
@@ -212,7 +212,7 @@ public final class TrailerDirector {
         dusk.walkTo = v(24.5, 0, 19);
         dusk.setup = p -> {
             cmd(p, "time set 12600");
-            p.teleportTo(p.level(), cx + 12.5, g, cz + 19.5, -90, 0);
+            p.teleportTo(p.level(), cx + 12.5, g, cz + 19.5, java.util.Set.of(), -90, 0, true);
             followers(p);
         };
         dusk.warmup = 60;
@@ -225,7 +225,7 @@ public final class TrailerDirector {
         cave.walkTo = v(34, 0, 19);
         cave.setup = p -> {
             cmd(p, "time set 14000");
-            p.teleportTo(p.level(), cx + 25.5, g, cz + 19.5, -90, 0);
+            p.teleportTo(p.level(), cx + 25.5, g, cz + 19.5, java.util.Set.of(), -90, 0, true);
             double[][] behind = {{24.0, 18.6}, {23.2, 20.2}, {22.4, 19.2}};
             List<BubieEntity> crew1 = crewOf(p);
             for (int i = 0; i < crew1.size() && i < behind.length; i++) crew1.get(i).teleportTo(cx + behind[i][0], g, cz + behind[i][1]);
@@ -241,7 +241,7 @@ public final class TrailerDirector {
         party.orbitTo = 215;
         party.orbitHeight = 0.9;
         party.setup = p -> {
-            p.teleportTo(p.level(), cx + 36.0, g, cz + 23.6, -150, 0);
+            p.teleportTo(p.level(), cx + 36.0, g, cz + 23.6, java.util.Set.of(), -150, 0, true);
             List<BubieEntity> crew2 = crewOf(p);
             double[][] spots = {{38, 17.2}, {39.3, 19.5}, {38, 21.8}};
             for (int i = 0; i < crew2.size() && i < spots.length; i++) {
@@ -316,11 +316,11 @@ public final class TrailerDirector {
     }
 
     private static List<BubieEntity> crewOf(ServerPlayer p) {
-        return p.level().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(64), b -> b.getTags().contains("crew"));
+        return p.level().getEntitiesOfClass(BubieEntity.class, new AABB(at(0, 0, 0)).inflate(64), b -> b.entityTags().contains("crew"));
     }
 
     private static void hidePlayer(ServerPlayer p) {
-        p.teleportTo(p.level(), cx + 0.5, g - 30, cz + 0.5, 0, 0); // under the set: keeps it loaded, out of sight
+        p.teleportTo(p.level(), cx + 0.5, g - 30, cz + 0.5, java.util.Set.of(), 0, 0, true); // under the set: keeps it loaded, out of sight
     }
 
     private static void flatten(ServerPlayer p) {
@@ -479,7 +479,7 @@ public final class TrailerDirector {
         for (int[] l : new int[][]{{35, 16}, {40, 22}, {37, 19}, {41, 15}}) {
             int top = 6;
             while (top > 2 && level.getBlockState(at(l[0], top + 1, l[1])).isAir()) top++;
-            set(level, at(l[0], top, l[1]), Blocks.CHAIN.defaultBlockState());
+            set(level, at(l[0], top, l[1]), Blocks.IRON_CHAIN.defaultBlockState());
             set(level, at(l[0], top - 1, l[1]), Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING, true));
         }
         for (int x = 25; x <= 32; x += 3) {
@@ -504,16 +504,13 @@ public final class TrailerDirector {
     private static final PuppetInput PUPPET = new PuppetInput();
 
     /** A keyboard that walks the player toward a point. */
-    private static final class PuppetInput extends Input {
+    private static final class PuppetInput extends ClientInput {
         boolean walking;
 
         @Override
-        public void tick(boolean slow, float factor) {
-            forwardImpulse = walking ? 1.0F : 0.0F;
-            up = walking;
-            leftImpulse = 0;
-            jumping = false;
-            shiftKeyDown = false;
+        public void tick() {
+            keyPresses = new net.minecraft.world.entity.player.Input(walking, false, false, false, false, false, false);
+            moveVector = walking ? new net.minecraft.world.phys.Vec2(0.0F, 1.0F) : net.minecraft.world.phys.Vec2.ZERO;
         }
     }
 
@@ -539,7 +536,7 @@ public final class TrailerDirector {
         switch (phase) {
             case WAIT_WORLD -> {
                 mc.options.pauseOnLostFocus = false;
-                BubieUi.hideHud(mc, true);
+                com.bubie.client.BubieUi.hideHud(mc, true);
                 mc.player.input = PUPPET;
                 phase = Phase.PREPARE;
                 timer = 0;
@@ -560,7 +557,7 @@ public final class TrailerDirector {
                         cz = 9000;
                     }
                     cmd(p, "forceload add " + (cx - 64) + " " + (cz - 64) + " " + (cx + 64) + " " + (cz + 64));
-                    p.teleportTo(p.level(), cx, 200, cz, 0, 0);
+                    p.teleportTo(p.level(), cx, 200, cz, java.util.Set.of(), 0, 0, true);
                     p.getAbilities().flying = true;
                     p.onUpdateAbilities();
                 });
@@ -619,7 +616,7 @@ public final class TrailerDirector {
             if (shot.walkFrom != null) {
                 Vec3 f = shot.walkFrom, to = shot.walkTo;
                 float yaw = (float) Math.toDegrees(Math.atan2(-(to.x - f.x), to.z - f.z));
-                p.teleportTo(p.level(), f.x, f.y, f.z, yaw, 0);
+                p.teleportTo(p.level(), f.x, f.y, f.z, java.util.Set.of(), yaw, 0, true);
             }
         });
         if (rig == null) {
@@ -637,7 +634,7 @@ public final class TrailerDirector {
 
     private static void startRecording(Minecraft mc, Shot shot) {
         server(p -> cmd(p, "tick rate " + RATE));
-        var target = mc.getMainRenderTarget();
+        var target = mc.gameRenderer.mainRenderTarget();
         try {
             File out = new File(mc.gameDirectory, String.format("out/shots/%02d_%s.mp4", shotIndex + 1, shot.name));
             recorder = new Recorder(out, target.width, target.height, FPS);
@@ -667,9 +664,9 @@ public final class TrailerDirector {
     static void frame(RenderFrameEvent.Post event) {
         if (phase != Phase.RECORD || recorder == null) return;
         Minecraft mc = Minecraft.getInstance();
-        float now = shotTick + mc.getTimer().getGameTimeDeltaPartialTick(false);
+        float now = shotTick + mc.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         if (now < nextFrame) return;
-        recorder.capture(mc.getMainRenderTarget());
+        recorder.capture(mc.gameRenderer.mainRenderTarget());
         nextFrame += TICKS_PER_FRAME;
         if (nextFrame < now - 2) nextFrame = now; // never try to catch up a whole stall
     }

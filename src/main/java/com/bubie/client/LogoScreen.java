@@ -8,7 +8,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
@@ -30,6 +29,7 @@ public class LogoScreen extends Screen {
     public static final int SIZE_PX = 1024;
     private final Kind kind;
     private Identifier background;
+    private static int nextId = -1_000_000;
 
     public LogoScreen(Kind kind) {
         super(Component.literal("logo"));
@@ -37,7 +37,8 @@ public class LogoScreen extends Screen {
     }
 
     private static BubieEntity bubie(Look look, Face face, ItemStack hand, int age) {
-        BubieEntity b = Bubie.BUBIE_ENTITY.get().create(Minecraft.getInstance().level);
+        BubieEntity b = Bubie.BUBIE_ENTITY.get().create(Minecraft.getInstance().level, net.minecraft.world.entity.EntitySpawnReason.LOAD);
+        b.setId(--nextId); // never added to the world, but rendering asks every entity for its id
         b.setLook(look);
         b.setDisplayFace(face);
         b.setItemSlot(EquipmentSlot.MAINHAND, hand);
@@ -55,11 +56,11 @@ public class LogoScreen extends Screen {
                 int r = (int) Mth.lerp(t, inner >> 16 & 255, outer >> 16 & 255);
                 int g = (int) Mth.lerp(t, inner >> 8 & 255, outer >> 8 & 255);
                 int bl = (int) Mth.lerp(t, inner & 255, outer & 255);
-                img.setPixelRGBA(x, y, 0xFF000000 | bl << 16 | g << 8 | r);
+                img.setPixelABGR(x, y, 0xFF000000 | bl << 16 | g << 8 | r);
             }
         }
         Identifier id = Bubie.id("logo/" + kind.name().toLowerCase());
-        Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(img));
+        Minecraft.getInstance().getTextureManager().register(id, new DynamicTexture(() -> "bubie logo", img));
         return id;
     }
 
@@ -73,20 +74,17 @@ public class LogoScreen extends Screen {
     }
 
     @Override
-    public void renderBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
+    public void extractBackground(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         g.fill(0, 0, width, height, 0xFF000000);
     }
 
     @Override
-    public void render(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g, mouseX, mouseY, partialTick);
+    public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float partialTick) {
         double scale = minecraft.getWindow().getGuiScale();
         float side = (float) (SIZE_PX / scale);
         float x0 = (width - side) / 2F, y0 = (height - side) / 2F;
-        g.pose().pushMatrix();
-        g.pose().translate(x0, y0);
-        g.blit(background, 0, 0, (int) side, (int) side, 0, 0, SIZE_PX, SIZE_PX, SIZE_PX, SIZE_PX);
-        g.pose().popMatrix();
+        g.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, background, (int) x0, (int) y0, 0, 0,
+                (int) side, (int) side, SIZE_PX, SIZE_PX, SIZE_PX, SIZE_PX);
         g.enableScissor((int) x0, (int) y0, (int) (x0 + side), (int) (y0 + side));
         if (kind == Kind.MOD) {
             BubieEntity hero = bubie(Look.DEFAULT, Face.HAPPY, ItemStack.EMPTY, 7);
@@ -96,10 +94,8 @@ public class LogoScreen extends Screen {
             float back = side * 0.30F, front = side * 0.44F;
             grass(g, x0 + side * 0.25F, y0 + side * 0.40F, back);
             draw(g, bubie(new Look(1, 3, 2, 6, 1), Face.IDLE, ItemStack.EMPTY, 30), x0 + side * 0.25F, y0 + side * 0.495F, side * 0.25F, -12F, 6F);
-            clearDepth(g);
             grass(g, x0 + side * 0.75F, y0 + side * 0.40F, back);
             draw(g, bubie(new Look(4, 10, 3, 7, 7), Face.IDLE, ItemStack.EMPTY, 52), x0 + side * 0.75F, y0 + side * 0.495F, side * 0.25F, 12F, 6F);
-            clearDepth(g);
             grass(g, x0 + side * 0.5F, y0 + side * 0.53F, front);
             draw(g, bubie(Look.DEFAULT, Face.HAPPY, ItemStack.EMPTY, 7), x0 + side * 0.5F, y0 + side * 0.665F, side * 0.36F, -16F, 6F);
         }
@@ -109,30 +105,28 @@ public class LogoScreen extends Screen {
     /** A grass block item drawn big: centre x, top y, width. */
     private static void grass(GuiGraphicsExtractor g, float cx, float top, float size) {
         g.pose().pushMatrix();
-        g.pose().translate(cx - size / 2F, top, 100);
-        g.pose().scale(size / 16F, size / 16F, size / 16F);
+        g.pose().translate(cx - size / 2F, top);
+        g.pose().scale(size / 16F, size / 16F);
         g.item(new ItemStack(Items.GRASS_BLOCK), 0, 0);
         g.pose().popMatrix();
-        clearDepth(g);
-    }
-
-    private static void clearDepth(GuiGraphicsExtractor g) {
-        g.flush();
-        com.mojang.blaze3d.systems.RenderSystem.clear(256, net.minecraft.client.input.InputQuirks.ON_OSX);
     }
 
     /** One Bubie: feet at (x, y), height h, turned yaw degrees, camera looking down pitch degrees. */
     private static void draw(GuiGraphicsExtractor g, BubieEntity b, float x, float y, float h, float yaw, float pitch) {
-        float angle = 180F + yaw;
-        b.yBodyRot = angle;
-        b.yBodyRotO = angle;
-        b.setYRot(angle);
-        b.setXRot(0);
-        b.yHeadRot = angle;
-        b.yHeadRotO = angle;
+        var state = Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(b).createRenderState(b, 1.0F);
+        state.shadowPieces.clear();
+        state.outlineColor = 0;
+        if (state instanceof net.minecraft.client.renderer.entity.state.LivingEntityRenderState living) {
+            living.bodyRot = 180F + yaw;
+            living.yRot = 0F;
+            living.xRot = 0F;
+        }
         Quaternionf pose = new Quaternionf().rotateZ(Mth.PI).rotateX(-pitch * Mth.DEG_TO_RAD);
         Quaternionf camera = new Quaternionf().rotateX(-pitch * Mth.DEG_TO_RAD);
-        InventoryScreen.renderEntityInInventory(g, x, y, h, new Vector3f(0, 0, 0), pose, camera, b);
+        // a square picture around the Bubie, its feet at (x, y): the picture's origin is its centre
+        int half = Math.round(h);
+        g.entity(state, h, new Vector3f(0, half / h, 0), pose, camera, Math.round(x) - half, Math.round(y) - 2 * half,
+                Math.round(x) + half, Math.round(y));
     }
 
     @Override
