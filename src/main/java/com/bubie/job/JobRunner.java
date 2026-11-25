@@ -49,7 +49,7 @@ public class JobRunner {
     public static final BlockPos NOTHING = new BlockPos(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
     private static final int MAX_CANDIDATES = 64;
 
-    private enum State { SEEK, MOVE, WORK, DEPOSIT, FETCH, IDLE }
+    private enum State { SEEK, MOVE, WORK, DEPOSIT, FETCH, RETURN, RESTORE, IDLE }
 
     private final BubieEntity bubie;
     private State state = State.SEEK;
@@ -86,8 +86,14 @@ public class JobRunner {
     @Nullable
     private BlockPos chestToClose;
 
+    /** Makes a way where none is (dig a step, cut stairs, bridge a gap) and closes it again afterwards. */
+    private final Access access;
+    /** Went back to its chest or home after finishing (so it does not head there again until there is new work). */
+    private boolean returned;
+
     public JobRunner(BubieEntity bubie) {
         this.bubie = bubie;
+        this.access = new Access(bubie);
     }
 
     // ------------------------------------------------------------------ lifecycle
@@ -98,6 +104,8 @@ public class JobRunner {
         unclaim();
         stuckChecks = 0;
         moveFails = 0;
+        access.reset();
+        returned = false;
         bubie.setNeed(ItemStack.EMPTY);
         job = null;
         jobArea = null;
@@ -221,6 +229,8 @@ public class JobRunner {
             case WORK -> work();
             case DEPOSIT -> deposit();
             case FETCH -> fetch();
+            case RETURN -> goBack();
+            case RESTORE -> restore();
         }
     }
 
@@ -335,7 +345,21 @@ public class JobRunner {
                 startDeposit(false);
                 return;
             }
-            if (job.layered() && layersFinished || job.isDone()) {
+            boolean finished = job.layered() && layersFinished || job.isDone();
+            if (finished && !returned) {
+                // done: back to its chest or home (out of the pit it dug, if it has to make a way)
+                BlockPos home = resolveDeposit();
+                if (home != null && bubie.distanceToSqr(Vec3.atCenterOf(home)) > 6 * 6) {
+                    setState(State.RETURN);
+                    return;
+                }
+                returned = true;
+            }
+            if (access.hasScars()) {
+                setState(State.RESTORE);
+                return;
+            }
+            if (finished) {
                 if (!finishedAnnounced) {
                     finishedAnnounced = true;
                     bubie.showMood(Face.HAPPY, 60);
@@ -358,6 +382,7 @@ public class JobRunner {
             return;
         }
         Claims.claim(level(), next, bubie.getId());
+        returned = false;
         target = next;
         itemTarget = null;
         progress = 0;
@@ -529,7 +554,18 @@ public class JobRunner {
         }
         if (stateTicks == 1 || (stateTicks % 20 == 0 && bubie.getNavigation().isDone())) {
             Path path = bubie.getNavigation().createPath(target, 2);
-            if (path == null || !path.canReach() && !endsNear(path, target)) {
+            if (path != null && !path.canReach() && !endsNear(path, target) && !endsHere(path)) {
+                // part of the way can be walked: walk it, then see
+                moveFails = 0;
+                bubie.getNavigation().moveTo(path, 1.0);
+                return;
+            }
+            if (path == null || !path.canReach() && (!endsNear(path, target) || endsHere(path))) {
+                // no way there: make one, a block at a time
+                if (access.step(level(), target, job)) {
+                    moveFails = 0;
+                    return;
+                }
                 // nowhere it can walk to, many times in a row: it is boxed in
                 if (++moveFails >= 12) {
                     moveFails = 0;
@@ -543,7 +579,13 @@ public class JobRunner {
             moveFails = 0;
             bubie.getNavigation().moveTo(path, 1.0);
         }
-        if (stateTicks > 400) fail(target, 1200);
+        if (stateTicks > 400 + access.stepsTaken(target) * 40) fail(target, 1200);
+    }
+
+    /** The best the path can do is where the Bubie already stands. */
+    private boolean endsHere(Path path) {
+        Node end = path.getEndNode();
+        return end != null && end.asBlockPos().distManhattan(bubie.blockPosition()) <= 1;
     }
 
     private static boolean endsNear(Path path, BlockPos target) {
@@ -578,7 +620,9 @@ public class JobRunner {
         bubie.setStatus(Status.WORKING);
 
         boolean harvest = job.isHarvest(state);
-        if (!harvest && bubie.isUnderFeet(target)) {
+        // in a pit with nowhere to step aside, it digs down like a player: the block right under it, onto a floor
+        boolean digDown = stateTicks > 40 && target.equals(bubie.blockPosition().below()) && Access.safeDrop(level, target);
+        if (!harvest && bubie.isUnderFeet(target) && !digDown) {
             // standing on it: step aside first
             if (stateTicks % 20 == 1) {
                 Vec3 spot = LandRandomPos.getPos(bubie, 3, 2);
@@ -766,6 +810,41 @@ public class JobRunner {
         setState(State.FETCH);
     }
 
+    /** Heads for a container; when no path leads there, makes a way (a step at a time). */
+    private void walkOrDig(BlockPos pos) {
+        if (stateTicks % 10 != 1) return;
+        Path path = bubie.getNavigation().createPath(pos, 1);
+        if (path != null && (path.canReach() || !endsHere(path) && path.getEndNode() != null
+                && path.getEndNode().asBlockPos().distSqr(pos) <= 4)) {
+            bubie.getNavigation().moveTo(path, 1.1);
+            return;
+        }
+        access.step(level(), pos, job);
+    }
+
+    // ------------------------------------------------------------------ RETURN
+
+    private void goBack() {
+        bubie.setStatus(Status.WORKING);
+        BlockPos home = resolveDeposit();
+        if (home == null || bubie.distanceToSqr(Vec3.atCenterOf(home)) <= 3 * 3
+                || stateTicks > 1200 + access.stepsTaken(home) * 40) {
+            bubie.getNavigation().stop();
+            returned = true;
+            setState(State.SEEK);
+            return;
+        }
+        walkOrDig(home);
+    }
+
+    // ------------------------------------------------------------------ RESTORE
+
+    /** The job is out of work: close the holes it had to make on the way, then look for work again. */
+    private void restore() {
+        bubie.setStatus(Status.WORKING);
+        if (!access.restore(level(), resolveDeposit())) setState(State.SEEK);
+    }
+
     /** Walks next to a container; true once it is there. */
     private boolean approach(BlockPos pos) {
         if (bubie.distanceToSqr(Vec3.atCenterOf(pos)) <= 2.8 * 2.8) {
@@ -773,11 +852,8 @@ public class JobRunner {
             bubie.lookAtBlock(pos);
             return true;
         }
-        if (stateTicks % 20 == 1 || bubie.getNavigation().isDone()) {
-            Path path = bubie.getNavigation().createPath(pos, 1);
-            if (path != null) bubie.getNavigation().moveTo(path, 1.1);
-        }
-        if (stateTicks > 300 && BubieConfig.TELEPORT_WHEN_STUCK.get()) {
+        walkOrDig(pos);
+        if (stateTicks > 300 + access.stepsTaken(pos) * 40 && BubieConfig.TELEPORT_WHEN_STUCK.get()) {
             bubie.teleportNear(pos);
             stateTicks = 0;
         } else if (stateTicks > 600) {
@@ -854,12 +930,19 @@ public class JobRunner {
     }
 
     /** Anything beyond what the job keeps (seeds, saplings, cobblestone)? */
+    /** What the job keeps of an item, plus enough filler to close the holes it still has to close. */
+    private int keep(ItemStack stack) {
+        int keep = job.keep(stack);
+        if (Job.isFiller(stack)) keep = Math.max(keep, access.scarCount());
+        return keep;
+    }
+
     private boolean depositableItems() {
         Map<Item, Integer> kept = new HashMap<>();
         for (int i = 0; i < BubieEntity.STORAGE_SLOTS; i++) {
             ItemStack stack = bubie.storage().getItem(i);
             if (stack.isEmpty()) continue;
-            int keepLeft = job.keep(stack) - kept.getOrDefault(stack.getItem(), 0);
+            int keepLeft = keep(stack) - kept.getOrDefault(stack.getItem(), 0);
             if (stack.getCount() > keepLeft) return true;
             kept.merge(stack.getItem(), stack.getCount(), Integer::sum);
         }
@@ -884,11 +967,8 @@ public class JobRunner {
         }
         double dist = bubie.distanceToSqr(Vec3.atCenterOf(depositPos));
         if (dist > 2.8 * 2.8) {
-            if (stateTicks % 20 == 1 || bubie.getNavigation().isDone()) {
-                Path path = bubie.getNavigation().createPath(depositPos, 1);
-                if (path != null) bubie.getNavigation().moveTo(path, 1.1);
-            }
-            if (stateTicks > 300 && BubieConfig.TELEPORT_WHEN_STUCK.get()) {
+            walkOrDig(depositPos);
+            if (stateTicks > 300 + access.stepsTaken(depositPos) * 40 && BubieConfig.TELEPORT_WHEN_STUCK.get()) {
                 bubie.teleportNear(depositPos);
                 stateTicks = 0;
             } else if (stateTicks > 600) {
@@ -920,7 +1000,7 @@ public class JobRunner {
                 }
                 if (stack.isEmpty()) continue;
             }
-            int keepLeft = Math.max(0, job.keep(stack) - kept.getOrDefault(stack.getItem(), 0));
+            int keepLeft = Math.max(0, keep(stack) - kept.getOrDefault(stack.getItem(), 0));
             int keepHere = Math.min(keepLeft, stack.getCount());
             kept.merge(stack.getItem(), keepHere, Integer::sum);
             if (stack.getCount() <= keepHere) continue;
