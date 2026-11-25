@@ -681,6 +681,32 @@ public class BubieEntity extends PathfinderMob implements OwnableEntity {
 
     /** Server CPU time spent ticking Bubies (AI, pathfinding, work), for the performance GameTest. */
     public static long profileNanos, profileTicks;
+
+    /**
+     * Client only: the player holding the "show my Bubies" key (null when nobody is). Their Bubies glow with an outline
+     * that shows through walls; set by the key handler on the client, never on a server.
+     */
+    @Nullable
+    public static volatile UUID highlightFor;
+    private static final int HIGHLIGHT_RANGE = 128;
+
+    @Override
+    public boolean isCurrentlyGlowing() {
+        if (level().isClientSide()) {
+            UUID who = highlightFor;
+            if (who != null && who.equals(getOwnerUUID())) {
+                net.minecraft.world.entity.player.Player player = level().getPlayerByUUID(who);
+                if (player != null && player.distanceToSqr(this) < HIGHLIGHT_RANGE * HIGHLIGHT_RANGE) return true;
+            }
+        }
+        return super.isCurrentlyGlowing();
+    }
+
+    /** The outline is the amber of its screen light. */
+    @Override
+    public int getTeamColor() {
+        return highlightFor != null && getTeam() == null ? 0xF4BF69 : super.getTeamColor();
+    }
     /** Only the performance test's own Bubies are timed. */
     public boolean profiled;
 
