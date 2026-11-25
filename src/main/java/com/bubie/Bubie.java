@@ -71,6 +71,11 @@ public class Bubie {
     public static final DeferredItem<BubieItem> BUBIE_ITEM = ITEMS.registerItem("bubie", BubieItem::new, p -> p.stacksTo(1));
     public static final DeferredItem<ClipboardItem> CLIPBOARD = ITEMS.registerItem("bubie_clipboard", ClipboardItem::new, p -> p.stacksTo(1));
     public static final DeferredItem<BlockItem> STATION_ITEM = ITEMS.registerSimpleBlockItem(STATION);
+    /** A Bubie's storage: what it carries lives on the drive (every Bubie comes with a Hard Drive). */
+    public static final DeferredItem<com.bubie.item.DriveItem> HARD_DRIVE = ITEMS.registerItem("hard_drive",
+            p -> new com.bubie.item.DriveItem(18, p));
+    public static final DeferredItem<com.bubie.item.DriveItem> SOLID_STATE_DRIVE = ITEMS.registerItem("solid_state_drive",
+            p -> new com.bubie.item.DriveItem(36, p));
     public static final DeferredItem<com.bubie.item.WirelessStationItem> WIRELESS_STATION = ITEMS.registerItem("wireless_station", com.bubie.item.WirelessStationItem::new, p -> p.stacksTo(1));
     public static final Map<ChipType, DeferredItem<ChipItem>> CHIPS = new EnumMap<>(ChipType.class);
 
@@ -96,7 +101,10 @@ public class Bubie {
                 out.accept(CLIPBOARD.get());
                 out.accept(STATION_ITEM.get());
                 out.accept(WIRELESS_STATION.get());
-                for (ChipType type : ChipType.values()) out.accept(CHIPS.get(type).get());
+                out.accept(HARD_DRIVE.get());
+                out.accept(SOLID_STATE_DRIVE.get());
+                // the Storage Chip is only an ingredient now (of the SSD): not offered on its own
+                for (ChipType type : ChipType.values()) if (type != ChipType.STORAGE) out.accept(CHIPS.get(type).get());
             })
             .build());
 

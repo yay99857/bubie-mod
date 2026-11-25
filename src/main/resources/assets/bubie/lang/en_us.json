@@ -13,7 +13,7 @@
   "item.bubie.chip_speed": "Speed Chip",
   "item.bubie.chip_speed.desc": "+50% mining speed and +20% walking speed.",
   "item.bubie.chip_storage": "Storage Chip",
-  "item.bubie.chip_storage.desc": "+9 slots in the Bubie's inventory.",
+  "item.bubie.chip_storage.desc": "Old part: two of them and a diamond make a Solid-State Drive.",
   "item.bubie.chip_range": "Range Chip",
   "item.bubie.chip_range.desc": "Allows bigger work areas.",
   "item.bubie.chip_magnet": "Magnet Chip",
@@ -118,7 +118,7 @@
   "bubie.ui.chips": "Chips",
   "bubie.ui.energy": "Energy",
   "bubie.ui.health": "Health",
-  "bubie.ui.locked": "Storage Chip",
+  "bubie.ui.locked": "Solid-State Drive: more room",
   "bubie.ui.charging": "Charging",
   "bubie.ui.hint.tool": "Tool: the Bubie uses it up. Axe, shovel or pickaxe, depending on the job.",
   "bubie.ui.hint.fuel": "Fuel: redstone dust or blocks… or a battery with FE (Voltaic pocket accumulator, Mekanism energy tablet, Powah battery), which charges the Bubie and is not used up. Coal does not work: it is a robot.",
@@ -259,5 +259,12 @@
   "key.bubie.highlight": "Show my Bubies through walls",
   "key.category.bubie.bubie": "Bubie",
   "bubie.ui.rename": "Name",
-  "bubie.ui.rename.tip": "Click to rename it (leave it empty for plain \"Bubie\")"
+  "bubie.ui.rename.tip": "Click to rename it (leave it empty for plain \"Bubie\")",
+  "item.bubie.hard_drive": "Hard Drive",
+  "item.bubie.solid_state_drive": "Solid-State Drive",
+  "item.bubie.drive.capacity": "%s slots for a Bubie",
+  "item.bubie.drive.empty": "Empty",
+  "item.bubie.drive.more": "and %s more…",
+  "bubie.ui.hint.drive": "Its drive: what it carries lives on it. A Hard Drive holds 18 slots, a Solid-State Drive 36. Take it out and the cargo goes with it.",
+  "bubie.ui.locked.no_drive": "No drive: put a Hard Drive in"
 }

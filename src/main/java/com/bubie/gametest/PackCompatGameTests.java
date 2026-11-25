@@ -311,7 +311,7 @@ public class PackCompatGameTests {
     @BubieTest(template = FIELD, timeoutTicks = 20)
     public static void recipesLoad(GameTestHelper helper) {
         var recipes = helper.getLevel().recipeAccess();
-        for (String id : new String[]{"bubie", "bubie_clipboard", "bubie_station"}) {
+        for (String id : new String[]{"bubie", "bubie_clipboard", "bubie_station", "hard_drive", "solid_state_drive"}) {
             var holder = recipes.byKey(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, Bubie.id(id)));
             helper.assertTrue(holder.isPresent(), "recipe bubie:" + id + " is loaded");
             StringBuilder items = new StringBuilder();
@@ -323,6 +323,7 @@ public class PackCompatGameTests {
         }
         // the chips: crafted, or in the Bubie Pack alloyed in Voltaic's Alloy Smelter
         for (com.bubie.item.ChipType chip : com.bubie.item.ChipType.values()) {
+            if (chip == com.bubie.item.ChipType.STORAGE) continue; // not crafted any more: it goes into a Solid-State Drive
             String id = "chip_" + chip.name().toLowerCase();
             var holder = recipes.byKey(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.RECIPE, Bubie.id(id)));
             helper.assertTrue(holder.isPresent(), "recipe bubie:" + id + " is loaded");

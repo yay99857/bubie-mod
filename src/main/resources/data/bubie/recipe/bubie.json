@@ -3,14 +3,21 @@
   "category": "misc",
   "pattern": [
     "CGC",
-    "CRC",
-    " W "
+    "CHC",
+    "RWR"
   ],
   "key": {
     "C": "#c:ingots/copper",
     "G": "#c:glass_panes",
     "R": "minecraft:redstone",
-    "W": "minecraft:black_wool"
+    "W": "minecraft:black_wool",
+    "H": {
+      "neoforge:ingredient_type": "neoforge:components",
+      "items": "bubie:hard_drive",
+      "components": {
+        "!minecraft:container": {}
+      }
+    }
   },
   "result": {
     "id": "bubie:bubie",

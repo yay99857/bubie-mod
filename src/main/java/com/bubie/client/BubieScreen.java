@@ -77,6 +77,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         if (hoveredSlot != null && !hoveredSlot.hasItem() && menu.getCarried().isEmpty()) {
             int index = hoveredSlot.index;
             String key = index == BubieMenu.TOOL ? "bubie.ui.hint.tool" : index == BubieMenu.FUEL ? "bubie.ui.hint.fuel"
+                    : index == BubieMenu.DRIVE ? "bubie.ui.hint.drive"
                     : index >= BubieMenu.CHIPS && index < BubieMenu.DISC ? "bubie.ui.hint.chip"
                     : index == BubieMenu.DISC ? "bubie.ui.hint.disc" : null;
             if (key != null) g.setTooltipForNextFrame(font, font.split(Component.translatable(key), 160), mouseX, mouseY);
@@ -110,6 +111,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
         if (tab == Tab.DJ) BubieUi.slot(g, x + BubieMenu.DISC_X, y + BubieMenu.DISC_Y);
         BubieUi.slot(g, x + BubieMenu.GRID_X, y + BubieMenu.EQUIP_Y);
         BubieUi.slot(g, x + BubieMenu.GRID_X + 24, y + BubieMenu.EQUIP_Y);
+        BubieUi.slot(g, x + BubieMenu.GRID_X + BubieMenu.DRIVE_X, y + BubieMenu.EQUIP_Y);
         for (int i = 0; i < BubieEntity.CHIP_SLOTS; i++) BubieUi.slot(g, x + BubieMenu.GRID_X + 72 + i * 18, y + BubieMenu.EQUIP_Y);
         for (int i = 0; i < 27; i++) BubieUi.slot(g, x + BubieMenu.GRID_X + (i % 9) * 18, y + BubieMenu.INV_Y + (i / 9) * 18);
         for (int i = 0; i < 9; i++) BubieUi.slot(g, x + BubieMenu.GRID_X + i * 18, y + BubieMenu.INV_Y + 58);
@@ -197,7 +199,7 @@ public class BubieScreen extends AbstractContainerScreen<BubieMenu> {
             int open = menu.openSlots();
             if (open < BubieEntity.STORAGE_SLOTS) {
                 int rowY = BubieMenu.GRID_Y + (open / 9) * 18 + 4;
-                Component lock = Component.translatable("bubie.ui.locked");
+                Component lock = Component.translatable(bubie.drive().isEmpty() ? "bubie.ui.locked.no_drive" : "bubie.ui.locked");
                 g.text(font, lock, BubieMenu.GRID_X + (162 - font.width(lock)) / 2, rowY, BubieUi.CREAM_DEEP, false);
             }
         }

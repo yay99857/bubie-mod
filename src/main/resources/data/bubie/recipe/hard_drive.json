@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "IRI",
+    "RGR",
+    "IRI"
+  ],
+  "key": {
+    "I": "#c:ingots/iron",
+    "R": "minecraft:redstone",
+    "G": "#c:ingots/gold"
+  },
+  "result": {
+    "id": "bubie:hard_drive",
+    "count": 1
+  }
+}

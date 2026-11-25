@@ -2,17 +2,18 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "NRN",
-    "RXR",
-    "NRN"
+    "QGQ",
+    "RDR",
+    "QGQ"
   ],
   "key": {
-    "N": "minecraft:gold_nugget",
+    "Q": "#c:gems/quartz",
+    "G": "#c:ingots/gold",
     "R": "minecraft:redstone",
-    "X": "#c:chests/wooden"
+    "D": "#c:gems/diamond"
   },
   "result": {
-    "id": "bubie:chip_storage",
+    "id": "bubie:solid_state_drive",
     "count": 1
   }
 }

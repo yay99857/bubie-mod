@@ -1,12 +1,12 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_copper": {
+    "has_material": {
       "trigger": "minecraft:inventory_changed",
       "conditions": {
         "items": [
           {
-            "items": "#c:ingots/copper"
+            "items": "#c:ingots/iron"
           }
         ]
       }
@@ -14,19 +14,19 @@
     "has_the_recipe": {
       "trigger": "minecraft:recipe_unlocked",
       "conditions": {
-        "recipes": "bubie:chip_storage"
+        "recipes": "bubie:hard_drive"
       }
     }
   },
   "requirements": [
     [
-      "has_copper",
+      "has_material",
       "has_the_recipe"
     ]
   ],
   "rewards": {
     "recipes": [
-      "bubie:chip_storage"
+      "bubie:hard_drive"
     ]
   }
 }
