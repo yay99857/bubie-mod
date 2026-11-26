@@ -1,6 +1,6 @@
 package com.bubie.data;
 
-
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -9,8 +9,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +22,54 @@ import java.util.UUID;
 public class BubieRegistry extends SavedData {
     private static final String NAME = "bubie_registry";
     private final Map<UUID, Set<UUID>> byOwner = new HashMap<>();
+    private final Map<UUID, Sighting> sightings = new HashMap<>();
+
+    /**
+     * Where a Bubie that has a home was last seen and what it was doing, for its Station's tracker. Kept for
+     * unloaded Bubies too: that is the point.
+     *
+     * @param doing the job's ordinal while working, else -1 - the mode's ordinal
+     */
+    public record Sighting(String name, String dimension, long pos, long home, int doing, int status, int face, int energy,
+                           int look) {
+        CompoundTag save() {
+            CompoundTag tag = new CompoundTag();
+            tag.putString("Name", name);
+            tag.putString("Dim", dimension);
+            tag.putLong("Pos", pos);
+            tag.putLong("Home", home);
+            tag.putInt("Doing", doing);
+            tag.putInt("Status", status);
+            tag.putInt("Face", face);
+            tag.putInt("Energy", energy);
+            tag.putInt("Look", look);
+            return tag;
+        }
+
+        static Sighting load(CompoundTag tag) {
+            return new Sighting(tag.getString("Name"), tag.getString("Dim"), tag.getLong("Pos"), tag.getLong("Home"),
+                    tag.getInt("Doing"), tag.getInt("Status"), tag.getInt("Face"), tag.getInt("Energy"), tag.getInt("Look"));
+        }
+    }
+
+    /** A Bubie reports in (every couple of seconds while it is loaded). */
+    public void sight(UUID bubie, Sighting now) {
+        if (!now.equals(sightings.put(bubie, now))) setDirty();
+    }
+
+    /** The Bubie is gone for good, or no longer has a home. */
+    public void forget(UUID bubie) {
+        if (sightings.remove(bubie) != null) setDirty();
+    }
+
+    /** The Bubies whose home is this Station, by name. */
+    public List<Sighting> livingAt(String dimension, BlockPos station) {
+        long home = station.asLong();
+        List<Sighting> list = new ArrayList<>();
+        for (Sighting s : sightings.values()) if (s.home() == home && s.dimension().equals(dimension)) list.add(s);
+        list.sort(Comparator.comparing(Sighting::name).thenComparingLong(Sighting::pos));
+        return list;
+    }
 
     public static BubieRegistry get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(BubieRegistry::load, BubieRegistry::new, NAME);
@@ -53,6 +104,13 @@ public class BubieRegistry extends SavedData {
             owners.add(entry);
         });
         tag.put("Owners", owners);
+        ListTag seen = new ListTag();
+        sightings.forEach((bubie, sighting) -> {
+            CompoundTag entry = sighting.save();
+            entry.putUUID("Bubie", bubie);
+            seen.add(entry);
+        });
+        tag.put("Sightings", seen);
         return tag;
     }
 
@@ -63,6 +121,10 @@ public class BubieRegistry extends SavedData {
             Set<UUID> set = new HashSet<>();
             for (Tag id : entry.getList("Bubies", Tag.TAG_INT_ARRAY)) set.add(NbtUtils.loadUUID(id));
             registry.byOwner.put(entry.getUUID("Owner"), set);
+        }
+        for (Tag t : tag.getList("Sightings", Tag.TAG_COMPOUND)) {
+            CompoundTag entry = (CompoundTag) t;
+            if (entry.hasUUID("Bubie")) registry.sightings.put(entry.getUUID("Bubie"), Sighting.load(entry));
         }
         return registry;
     }

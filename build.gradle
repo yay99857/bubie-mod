@@ -4,7 +4,7 @@ plugins {
     id 'net.neoforged.moddev.legacyforge' version '2.0.148'
 }
 
-// Forge 1.20.1 backport of Bubie 1.5. Frozen: bug fixes only, new features go to the NeoForge 1.21.1 version (main).
+// Forge 1.20.1 backport of Bubie 2.0.1. Frozen: final version for Forge 1.20.1.
 version = project.mod_version
 group = project.mod_group_id
 
@@ -53,12 +53,20 @@ repositories {
         url = 'https://api.modrinth.com/maven'
         content { includeGroup 'maven.modrinth' }
     }
+    flatDir {
+        dirs '../base-blueprint-forge-1.20.1/build/libs'
+    }
 }
 
 dependencies {
     // Optional integration: compiled against, never required at runtime (see compat/jade).
     modCompileOnly 'maven.modrinth:jade:11.13.3+forge'
     modRuntimeOnly 'maven.modrinth:jade:11.13.3+forge'
+    // Optional: the Builder job reads Base Blueprint's plan (see compat/BlueprintCompat). Loaded in dev for the tests.
+    if (file('../base-blueprint-forge-1.20.1/build/libs/baseblueprint-forge-1.20.1-1.4.0.jar').exists()) {
+        modCompileOnly 'com.baseblueprint:baseblueprint-forge-1.20.1:1.4.0'
+        modRuntimeOnly 'com.baseblueprint:baseblueprint-forge-1.20.1:1.4.0'
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

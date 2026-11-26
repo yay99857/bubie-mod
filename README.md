@@ -2,10 +2,9 @@
 
 # Bubie
 
-> **Branch `forge-1.20.1`: versão congelada.** É o Bubie 1.5.x portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
-> o mesmo jar roda no NeoForge 1.20.1)**. Só recebe correção de bug; as novidades saem na versão de NeoForge 1.21.1 (`main`).
-> Diferenças para a 1.21.1: a tarefa **Construtor** não existe aqui (o mod Base Blueprint é só de 1.21.1), e as
-> ferramentas de trailer e screenshots ficaram só no `main`.
+> **Branch `forge-1.20.1`: versão final congelada.** É o Bubie 2.0.1 portado para **Minecraft 1.20.1 (Forge 47.1.3 ou mais novo;
+> o mesmo jar roda no NeoForge 1.20.1)**, incluindo a tarefa **Construtor** com o port do Base Blueprint 1.4.0 para Forge 1.20.1.
+> Após o 2.0.1, esta branch está congelada; as novidades seguem na versão de NeoForge 1.21.1 (`main`).
 
 Mod para **Minecraft 1.20.1 (Forge 47)**. O Bubie é um robozinho
 (tela CRT creme, olhos âmbar, moletom preto) como ajudante: segue você, carrega itens e, com uma tarefa e uma
@@ -119,7 +118,7 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 ## Configuração (`serverconfig/bubie-server.toml`)
 `maxPerPlayer` (3 por jogador em servidor dedicado), `maxPerPlayerSingleplayer` (12 no single player e em LAN), `requireEnergy` (true), `maxEnergy`, `fuelMultiplier`, `fePerEnergy`, `breakSpeed` (0.75 = mais lento que você),
 `areaSize` (32), `scanPerTick`, `restAtNight`, `stationLoadsChunks` (false), `teleportWhenStuck` (true), `homeRadius`,
-`advancedJobsNeedChip` (false).
+`advancedJobsNeedChip` (false). No cliente (`config/bubie-client.toml`): `buildGhosts` (true).
 
 ## Compatibilidade
 
@@ -154,6 +153,14 @@ Fundição (minérios saem em barra) e Eficiência (−40% de energia). Chips ig
 O plano do mod está em [docs/PLANO.md](docs/PLANO.md).
 
 ## Changelog
+### 2.0.1 (Forge 1.20.1 — versão final congelada)
+- **Drives:** o que o Bubie carrega agora fica no drive dele (**HD** com 18 espaços de fábrica, **SSD** com 36). Tirar o drive leva a carga junto. Bubies antigos com Chip de Armazenamento ganham um SSD automaticamente (e há receita para converter 2 Chips de Armazenamento + diamante em SSD).
+- **Nomear no menu:** clique no nome do Bubie sobre o inventário para renomeá-lo.
+- **Abre o próprio caminho:** quando não há rota até o trabalho ou o baú, planeja com A* e cava/constrói degraus, túneis ou pontes temporários, fechando os buracos ao terminar; se ficar preso de verdade, mostra **?**.
+- **Alt + B:** destaque os seus Bubies através das paredes em âmbar.
+- **Rastreador e Estação Sem Fio:** acompanhe posição, distância, direção e estado de cada Bubie vinculado à Estação, inclusive à distância ou em outra dimensão.
+- **Construtor com Base Blueprint 1.4.0 (Forge 1.20.1):** blocos fantasma no mundo para construir junto e suporte a **Quem constrói: Bubie**.
+
 ### 1.5.3
 - The DJ plays music discs only: audio links are gone (they did not work reliably). The jar no longer carries an mp3 decoder.
 

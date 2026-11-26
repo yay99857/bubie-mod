@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " T ",
+    "CGC",
+    "CKC"
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:redstone_torch"
+    },
+    "C": {
+      "tag": "forge:ingots/copper"
+    },
+    "G": {
+      "tag": "forge:glass_panes"
+    },
+    "K": {
+      "item": "minecraft:compass"
+    }
+  },
+  "result": {
+    "item": "bubie:wireless_station",
+    "count": 1
+  }
+}

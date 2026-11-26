@@ -2,8 +2,10 @@ package com.bubie.menu;
 
 import com.bubie.Bubie;
 import com.bubie.block.StationBlockEntity;
+import com.bubie.network.StationBubiesPayload;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -11,10 +13,11 @@ import net.minecraft.world.inventory.ContainerData;
 import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
+
+import java.util.List;
 
 public class StationMenu extends AbstractContainerMenu {
     public static final int FUEL_X = 8, FUEL_Y = 92, INV_Y = 122;
@@ -24,7 +27,7 @@ public class StationMenu extends AbstractContainerMenu {
     private final BlockPos pos;
     private final Player player;
     private int ticks;
-    private java.util.List<com.bubie.network.StationBubiesPayload.Entry> sent;
+    private List<StationBubiesPayload.Entry> sent;
 
     public StationMenu(int id, Inventory inventory, StationBlockEntity station, ContainerData data) {
         this(id, inventory, station.items(), data, station.getBlockPos());
@@ -66,22 +69,16 @@ public class StationMenu extends AbstractContainerMenu {
         return data.get(3) != 0;
     }
 
-    /** Once a second, the Bubies living at this station go to the screen (only when something changed). */
+    /** Once a second, the Bubies living at this station go to the screen's tracker (only when something changed). */
     @Override
     public void broadcastChanges() {
         super.broadcastChanges();
-        if (!(player instanceof net.minecraft.server.level.ServerPlayer server) || ticks++ % 20 != 0) return;
-        java.util.List<com.bubie.network.StationBubiesPayload.Entry> list = new java.util.ArrayList<>();
-        for (com.bubie.entity.BubieEntity b : server.serverLevel().getEntitiesOfClass(com.bubie.entity.BubieEntity.class,
-                new net.minecraft.world.phys.AABB(pos).inflate(128), b -> pos.equals(b.getHome()))) {
-            if (list.size() >= com.bubie.network.StationBubiesPayload.MAX) break;
-            list.add(new com.bubie.network.StationBubiesPayload.Entry(b.getName().getString(), b.getMode() == com.bubie.entity.Mode.WORK
-                    ? b.getJob().ordinal() : -1 - b.getMode().ordinal(), b.getStatus().ordinal(), b.getFace().ordinal(),
-                    Math.round(b.energyFraction() * 100), b.getLook().pack()));
-        }
-        if (list.equals(sent)) return;
-        sent = list;
-        new com.bubie.network.StationBubiesPayload(list).sendTo(server);
+        if (!(player instanceof ServerPlayer server) || ticks++ % 20 != 0) return;
+        StationBubiesPayload now = StationBubiesPayload.of(server.server,
+                server.level().dimension(), pos, server.level().dimension());
+        if (now.bubies().equals(sent)) return;
+        sent = now.bubies();
+        now.sendTo(server);
     }
 
     @Override
