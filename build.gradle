@@ -40,26 +40,6 @@ neoForge {
             jvmArgument '-da'
             programArguments.addAll('--quickPlaySingleplayer', 'Shots', '--width', '1920', '--height', '1080')
         }
-        // ./gradlew runTrailer : DEV ONLY, records the trailer (client/TrailerDirector) with Iris + Complementary from
-        // runs/trailer (mods/, shaderpacks/), as the player yay99857 so the skin is theirs. Frames go to runs/trailer/frames.
-        trailer {
-            client()
-            gameDirectory = project.file('runs/trailer')
-            systemProperty 'bubie.trailer', project.findProperty('trailerShot')?.toString() ?: 'all'
-            systemProperty 'bubie.ffmpeg', System.getenv('FFMPEG') ?: 'ffmpeg'
-            jvmArguments.addAll('-Xmx4G', '-da')
-            programArguments.addAll('--quickPlaySingleplayer', 'Trailer', '--width', '1920', '--height', '1080',
-                    '--username', 'yay99857', '--uuid', '6658ea8afd9c45788af9e2f0ae723c11')
-        }
-        // ./gradlew runVoltaicShots : DEV ONLY, screenshots of Voltaic Dynamics machines (client/trailer/VoltaicShots) for its
-        // page, with the shaders of runs/trailer; put the voltaicdynamics jar in runs/trailer/mods first.
-        voltaicShots {
-            client()
-            gameDirectory = project.file('runs/trailer')
-            systemProperty 'bubie.voltaicshots', 'true'
-            jvmArguments.addAll('-Xmx4G', '-da')
-            programArguments.addAll('--quickPlaySingleplayer', 'VoltaicShots', '--width', '1920', '--height', '1080')
-        }
         // ./gradlew runPackGameTest : the same tests with the Bubie Pack's mods loaded (tools/prepare-pack-test.sh first)
         packGameTest {
             type = "gameTestServer"
